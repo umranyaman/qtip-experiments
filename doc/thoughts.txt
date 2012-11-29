@@ -1,4 +1,4 @@
-Some directions this work could go in:
+Some directions:
 - What's the difference between a "perfect" (e.g. very slow dynamic-
   programming-based) aligner and an off-the-shelf aligner using the
   same scoring scheme?

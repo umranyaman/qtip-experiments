@@ -37,9 +37,9 @@ modelAltogether <- function(x, sca=2.0) {
 
 # Plot the ZC.i values sorted by mapq, along with mapqs
 plotLinesAndDots <- function(x, plotReps=F) {
-	ordr <- order(x$mapq)
+	ordr <- order(x$model_mapq)
 	plot(jitter(x$ZC.i[ordr]), col=rgb(0, 0, 0, 0.1))
-	mapq <- bt0and1(x$mapq[ordr])
+	mapq <- bt0and1(x$model_mapq[ordr])
 	points(mapq, col=rgb(1.0, 0.0, 0.0, 0.1))
 	xsi <- bt0and1(x$XS.i[ordr])
 	asi <- bt0and1(x$AS.i[ordr])
@@ -52,10 +52,10 @@ plotLinesAndDots <- function(x, plotReps=F) {
 }
 
 # Plot a histogram of the mapqs for the incorrectly aligned reads. 
-incorrectMapqHist <- function(x) { hist(x$mapq[x$ZC.i == 0]) }
+incorrectMapqHist <- function(x) { hist(x$model_mapq[x$ZC.i == 0]) }
 
 # Return a table of the mapqs for the incorrectly aligned reads 
-incorrectMapqTable <- function(x) { return(table(x$mapq[x$ZC.i == 0])) }
+incorrectMapqTable <- function(x) { return(table(x$model_mapq[x$ZC.i == 0])) }
 
 # Given filenames for SAM files emitted by two tools, analyze 
 fitMapqModels <- function(x) {
@@ -63,9 +63,9 @@ fitMapqModels <- function(x) {
 	tab.1 <- tab[selectAlignedOnce(tab),]
 	tab.2 <- tab[selectAlignedMoreThanOnce(tab),]
 	tab.all <- rbind(tab.1, tab.2)
-	fit.1 <- modelAlignedOnce(tab.1); tab.1$mapq <- bt0and1(fit.1$mapq)
-	fit.2 <- modelAlignedMoreThanOnce(tab.2); tab.2$mapq <- bt0and1(fit.2$mapq)
-	fit.all <- modelAltogether(tab.all, sca=2.0); tab.all$mapq <- bt0and1(fit.all$mapq)
+	fit.1 <- modelAlignedOnce(tab.1); tab.1$model_mapq <- bt0and1(fit.1$mapq)
+	fit.2 <- modelAlignedMoreThanOnce(tab.2); tab.2$model_mapq <- bt0and1(fit.2$mapq)
+	fit.all <- modelAltogether(tab.all, sca=2.0); tab.all$model_mapq <- bt0and1(fit.all$mapq)
 	rankingError(tab.all)
 	rankingError(rbind(tab.1, tab.2))
 }

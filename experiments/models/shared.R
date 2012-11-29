@@ -55,5 +55,7 @@ rankingError2 <- function(x) {
 # number of correct alignments on the vertical axis and number of
 # incorrect alignments on the horizontal axis would be better. 
 plotRoc <- function(x) {
-	roc.plot(x$ZC.i, x$mapq)
+	model_mapq <- bt0and1(x$model_mapq)
+	mapq <- bt0and1(x$mapq)
+	return(roc.plot(x$ZC.i, cbind(model_mapq, mapq)))
 }
