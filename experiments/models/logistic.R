@@ -23,25 +23,6 @@ source("shared.R")
 #    edge and improved ranking error.
 #
 
-# Given data frame containing alignments that aligned just once, return
-# a fit for a linear model with response = mapq ranking and terms =
-# alignment score.
-modelAlignedOnce <- function(x) {
-	model <- lm(ZC.i ~ AS.i, x)
-	mapq <- model$coefficients[1] + model$coefficients[2] * x$AS.i
-	return(list(model=model, mapq=mapq))
-}
-
-# Given data frame containing alignments that aligned just once, return
-# a fit for a linear model with response = mapq ranking and terms =
-# alignment score.
-modelAlignedMoreThanOnce <- function(x, exp=1) {
-	x$AS.iMXS.i <- x$AS.i - x$XS.i
-	model <- lm(ZC.i ~ AS.i + I(AS.iMXS.i ^ exp), x)
-	mapq <- model$coefficients[1] + model$coefficients[2] * x$AS.i + model$coefficients[3] * x$AS.iMXS.i
-	return(list(model=model, mapq=mapq))
-}
-
 # Given a data frame containing all aligned reads (including those that
 # align just once or many times) return a fit for a linear model with
 # response = mapq ranking and terms = alignment scores.
@@ -49,7 +30,7 @@ modelAlignedMoreThanOnce <- function(x, exp=1) {
 # Second argument is a scaling factor, which determines how XS.i values
 # should be assigned to reads that align only once.  Right now we set
 # them equal to max(AS.i) - 2 * (max(AS.i) - min(AS.i)).  
-modelAllLinear <- function(x, replace.na=T, sca=2.0, exp=1.0) {
+modelAllLogistic <- function(x, replace.na=F, sca=2.0) {
 	if(replace.na) {
 		repl <- max(x$AS.i) - sca * (max(x$AS.i) - min(x$AS.i))
 		xs <- ifelse(is.na(x$XS.i), repl, x$XS.i)
@@ -57,26 +38,22 @@ modelAllLinear <- function(x, replace.na=T, sca=2.0, exp=1.0) {
 		xs <- x$XS.i
 	}
 	x$AS.iMXS.i <- x$AS.i - xs # could have some NAs
-	model <- lm(ZC.i ~ AS.i + I(AS.iMXS.i ^ exp), x)
+	model <- glm(ZC.i ~ AS.i + AS.iMXS.i, data=x, family=binomial("logit"))
 	mapq <- model$coefficients[1] + model$coefficients[2] * x$AS.i + model$coefficients[3] * x$AS.iMXS.i
 	return(list(model=model, mapq=mapq))
 }
 
 # Given filenames for SAM files emitted by two tools, analyze 
-fitMapqModelsLinear <- function(x) {
+fitMapqModelsLogistic <- function(x) {
 	tab <- openTabulatedSam(x)
-	tab.1 <- tab[selectAlignedOnce(tab),]
-	tab.2 <- tab[selectAlignedMoreThanOnce(tab),]
-	tab.all <- rbind(tab.1, tab.2)
-	fit.1 <- modelAlignedOnce(tab.1); tab.1$model_mapq <- bt0and1(fit.1$mapq)
-	fit.2 <- modelAlignedMoreThanOnce(tab.2); tab.2$model_mapq <- bt0and1(fit.2$mapq)
-	fit.all <- modelAllLinear(tab.all, sca=2.0); tab.all$model_mapq <- bt0and1(fit.all$mapq)
-	rankingError1(tab.all)
-	rankingError2(tab.all)
+	tab.all <- tab[selectAligned(tab),]
+	fit.all <- modelAllLogistic(tab.all, replace.na=T, sca=1.2)
+	tab.all$model_mapq <- bt0and1(fit.all$mapq)
+	return(rankingError2(tab.all))
 }
 
 if(False) {
 	dr <- "/Users/langmead/Documents/workspace/mapq"
 	x <- paste(dr, "examples/mason/r0_ill_100_100k.bt2_s.sat.bz2", sep="/")
-	fitMapqModelsLinear(x)
+	fitMapqModelsLogistic(x)
 }

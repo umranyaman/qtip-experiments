@@ -36,8 +36,10 @@ bt0and1 <- function(x) {
 # number of elements.
 rankingError1 <- function(x) {
 	ordr <- order(x$mapq)
+	ordr_model <- order(x$model_mapq)
 	dif <- x$ZC.i[ordr] - seq(0, 1, length.out=nrow(x))
-	return(sum(abs(dif)))
+	dif_model <- x$ZC.i[ordr_model] - seq(0, 1, length.out=nrow(x))
+	return(c(sum(abs(dif)), sum(abs(dif_model))))
 }
 
 # Another way to assess the quality of ranking.  Here for each
@@ -45,7 +47,24 @@ rankingError1 <- function(x) {
 # worst-ranked alignment has rank 1.
 rankingError2 <- function(x) {
 	ordr <- order(x$mapq)
-	return(sum(which(x$ZC.i[ordr] == 0)))
+	ordr_model <- order(x$model_mapq)
+	return(c(sum(which(x$ZC.i[ordr] == 0)), sum(which(x$ZC.i[ordr_model] == 0))))
+}
+
+# Plot the ZC.i values sorted by mapq, along with mapqs
+plotLinesAndDots <- function(x, plotReps=F) {
+	ordr <- order(x$model_mapq)
+	plot(jitter(x$ZC.i[ordr]), col=rgb(0, 0, 0, 0.1))
+	mapq <- bt0and1(x$model_mapq[ordr])
+	points(mapq, col=rgb(1.0, 0.0, 0.0, 0.1))
+	xsi <- bt0and1(x$XS.i[ordr])
+	asi <- bt0and1(x$AS.i[ordr])
+	points(asi - xsi, col=rgb(0.0, 0.0, 1.0, 0.1))
+	points(asi, col=rgb(1.0, 0.5, 0.25, 0.1))
+	if(plotReps) {
+		re <- bt0and1(x$AllRepeats[ordr])
+		points(re, col=rgb(0.0, 0.5, 0.0, 0.1))
+	}
 }
 
 # Plot a ROC.  Not really appropriate for comparing two different sets
@@ -57,5 +76,11 @@ rankingError2 <- function(x) {
 plotRoc <- function(x) {
 	model_mapq <- bt0and1(x$model_mapq)
 	mapq <- bt0and1(x$mapq)
-	return(roc.plot(x$ZC.i, cbind(model_mapq, mapq)))
+	return(roc.plot(x$ZC.i, cbind(model_mapq, mapq), thresholds=seq(0.1, 0.9, 0.1)))
 }
+
+# Plot a histogram of the mapqs for the incorrectly aligned reads. 
+incorrectMapqHist <- function(x) { hist(x$model_mapq[x$ZC.i == 0]) }
+
+# Return a table of the mapqs for the incorrectly aligned reads 
+incorrectMapqTable <- function(x) { return(table(x$model_mapq[x$ZC.i == 0])) }
