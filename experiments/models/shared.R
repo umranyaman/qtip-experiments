@@ -87,6 +87,15 @@ plotRoc <- function(x) {
 	return(roc.plot(x$ZC.i, cbind(model_mapq, mapq), thresholds=seq(0.1, 0.9, 0.1)))
 }
 
+# Among the incorrect alignments, return the top n according to
+# highest mapping quality.
+topNincorrect <- function(x, mapq, n) {
+	x.incor <- x[x$ZC.i == 0,]
+	mapq.incor <- mapq[x$ZC.i == 0]
+	ordr <- order(mapq.incor, decreasing=T)
+	return(head(x.incor[ordr,], n=n))
+}
+
 # Plot a histogram of the mapqs for the incorrectly aligned reads. 
 incorrectMapqHist <- function(x) { hist(x$model_mapq[x$ZC.i == 0]) }
 
