@@ -51,11 +51,19 @@ rankingError2 <- function(x) {
 	return(c(sum(which(x$ZC.i[ordr] == 0)), sum(which(x$ZC.i[ordr_model] == 0))))
 }
 
+# Another way to assess the quality of ranking.  Here for each
+# correct alignment we add its rank to the score.  Higher is better.
+rankingQuality1 <- function(x) {
+	ordr <- order(x$mapq)
+	ordr_model <- order(x$model_mapq)
+	return(c(sum(which(x$ZC.i[ordr] == 1)/length(x$ZC.i)), sum(which(x$ZC.i[ordr_model] == 1)/length(x$ZC.i))))
+}
+
 # Plot the ZC.i values sorted by mapq, along with mapqs
-plotLinesAndDots <- function(x, plotReps=F) {
-	ordr <- order(x$model_mapq)
+plotLinesAndDots <- function(x, mapq, plotReps=F) {
+	ordr <- order(mapq)
 	plot(jitter(x$ZC.i[ordr]), col=rgb(0, 0, 0, 0.1))
-	mapq <- bt0and1(x$model_mapq[ordr])
+	mapq <- bt0and1(mapq[ordr])
 	points(mapq, col=rgb(1.0, 0.0, 0.0, 0.1))
 	xsi <- bt0and1(x$XS.i[ordr])
 	asi <- bt0and1(x$AS.i[ordr])
