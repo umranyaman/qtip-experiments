@@ -1,0 +1,5 @@
+- Try paired-end data
+- Try data of different lengths
+- See if there's a better way of keeping and presenting alignment info,
+  including # alignments at the best scores, 3rd best score, incl.
+  scores that are below minimum threshold
