@@ -31,24 +31,12 @@ bt0and1 <- function(x) {
 	return(x)
 }
 
-# Assess quality of ranking.  In this case we add up all absolute
-# differences between element at rank i, and N/i where N is the total
-# number of elements.
-rankingError1 <- function(x) {
-	ordr <- order(x$mapq)
-	ordr_model <- order(x$model_mapq)
-	dif <- x$ZC.i[ordr] - seq(0, 1, length.out=nrow(x))
-	dif_model <- x$ZC.i[ordr_model] - seq(0, 1, length.out=nrow(x))
-	return(c(sum(abs(dif)), sum(abs(dif_model))))
-}
-
 # Another way to assess the quality of ranking.  Here for each
 # incorrect alignment we add its rank to the penalty, where the
 # worst-ranked alignment has rank 1.
-rankingError2 <- function(x) {
-	ordr <- order(x$mapq)
-	ordr_model <- order(x$model_mapq)
-	return(c(sum(which(x$ZC.i[ordr] == 0)), sum(which(x$ZC.i[ordr_model] == 0))))
+rankingError <- function(x, mapq) {
+	ordr <- order(mapq)
+	return(sum(which(x$ZC.i[ordr] == 0)))
 }
 
 # Another way to assess the quality of ranking.  Here for each
@@ -73,18 +61,6 @@ plotLinesAndDots <- function(x, mapq, plotReps=F) {
 		re <- bt0and1(x$AllRepeats[ordr])
 		points(re, col=rgb(0.0, 0.5, 0.0, 0.1))
 	}
-}
-
-# Plot a ROC.  Not really appropriate for comparing two different sets
-# of alignments, since the "hit rate" and "false alarm rate" ignore the
-# fact that one set of alignments might contain more/different
-# alignments than the other.  A similar function that simply plots the
-# number of correct alignments on the vertical axis and number of
-# incorrect alignments on the horizontal axis would be better. 
-plotRoc <- function(x) {
-	model_mapq <- bt0and1(x$model_mapq)
-	mapq <- bt0and1(x$mapq)
-	return(roc.plot(x$ZC.i, cbind(model_mapq, mapq), thresholds=seq(0.1, 0.9, 0.1)))
 }
 
 # Among the incorrect alignments, return the top n according to

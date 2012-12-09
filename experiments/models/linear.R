@@ -71,12 +71,12 @@ fitMapqModelsLinear <- function(x) {
 	fit.1 <- modelAlignedOnce(tab.1); tab.1$model_mapq <- bt0and1(fit.1$mapq)
 	fit.2 <- modelAlignedMoreThanOnce(tab.2); tab.2$model_mapq <- bt0and1(fit.2$mapq)
 	fit.all <- modelAllLinear(tab.all, sca=2.0); tab.all$model_mapq <- bt0and1(fit.all$mapq)
-	rankingError1(tab.all)
-	rankingError2(tab.all)
+	return(list(tb=tab.all, fit=fit.all, err1=rankingError(tab.all, tab.all$model_mapq), err2=rankingError(tab.all, tab.all$mapq)))
 }
 
-if(False) {
+if(F) {
 	dr <- "/Users/langmead/Documents/workspace/mapq"
 	x <- paste(dr, "examples/mason/r0_ill_100_100k.bt2_s.sat.bz2", sep="/")
-	fitMapqModelsLinear(x)
+	fit <- fitMapqModelsLinear(x)
+	roc_table_compare(fit$tb, fit$tb$model_mapq, fit$tb$mapq)
 }

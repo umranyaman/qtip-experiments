@@ -21,8 +21,8 @@ roc_table_compare <- function(x, mapq1, mapq2, strata=50) {
 	mapq2 <- bt0and1(round(bt0and1(mapq2)*strata))
 	tab1 <- roc_table(x, mapq1)
 	tab2 <- roc_table(x, mapq2)
-	npareto <- c(0, 0)
-	auc <- c(0, 0)
+	front1 <- c()
+	front2 <- c()
 	cor1 <- cumsum(tab1$cor)
 	cor2 <- cumsum(tab2$cor)
 	incor1 <- cumsum(tab1$incor)
@@ -35,9 +35,7 @@ roc_table_compare <- function(x, mapq1, mapq2, strata=50) {
 				break
 			}
 		}
-		if(frontier) {
-			npareto[1] <- npareto[1] + 1
-		}
+		if(frontier) { front1 <- append(front1, i) }
 	}
 	for(i in 1:length(cor2)) {
 		frontier <- T
@@ -47,39 +45,38 @@ roc_table_compare <- function(x, mapq1, mapq2, strata=50) {
 				break
 			}
 		}
-		if(frontier) {
-			npareto[2] <- npareto[2] + 1
-		}
+		if(frontier) { front2 <- append(front2, i) }
 	}
-	return(npareto)
+	return(list(front1=front1, front2=front2))
 }
 
-# 
-roc_plot <- function(x, mapq, color="blue", first=T, xlim=NULL, ylim=NULL) {
+# Plot a roc-like curve (except using absolute numbers of true
+# positives and false negatives) for the given alignments (x) and
+# mapping-quality ranking (mapq).
+roc_plot <- function(x, mapq, color="blue", first=T, xlim=NULL, ylim=NULL, main="True pos vs false neg", xlab="False negatives", ylab="True positives") {
 	tab <- roc_table(x, mapq)
 	if(first) {
-		plot(cumsum(tab$incor), cumsum(tab$cor), col="blue", type="o", xlim=xlim, ylim=ylim)
+		plot(cumsum(tab$incor), cumsum(tab$cor), col="blue", type="o", xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, main=main)
 	} else {
-		lines(cumsum(tab$incor), cumsum(tab$cor), col="red", type="o", xlim=xlim, ylim=ylim)
+		lines(cumsum(tab$incor), cumsum(tab$cor), col="red", type="o")
 	}
 }
 
-# 
-roc_2plot <- function(x, mapq, mapq2, colors=c("blue", "red"), sca=1, round_digits=2) {
+# Plot two roc-like curves (except using absolute numbers of true
+# positives and false negatives) for the given alignments (x) and the
+# given two mapping-quality rankings (mapq1 and mapq2).
+roc_2plot <- function(x, mapq1, mapq2, colors=c("blue", "red"), sca=1, round_digits=2) {
 	if(round_digits > 0) {
-		mapq <- round(mapq, digits=round_digits)
+		mapq1 <- round(mapq1, digits=round_digits)
 		mapq2 <- round(mapq2, digits=round_digits)
 	}
-	xroc <- roc_table(x, mapq)
+	xroc <- roc_table(x, mapq1)
 	xroc2 <- roc_table(x, mapq2)
 	mx_x <- max(max(cumsum(xroc$incor)), max(cumsum(xroc2$incor)))
 	mn_x <- min(min(cumsum(xroc$incor)), min(cumsum(xroc2$incor)))
 	mx_y <- max(max(cumsum(xroc$cor)), max(cumsum(xroc2$cor)))
 	mn_y <- min(min(cumsum(xroc$cor)), min(cumsum(xroc2$cor)))
-	print(mn_x)
-	print(mx_x)
-	print(mn_y)
-	print(mx_y)
-	roc_plot(x, mapq,  color=colors[0], first=T, xlim=c(mn_x, mn_x + (mx_x - mn_x) * sca), ylim=c(mn_y + (mx_y - mn_y) * (1-sca), mx_y))
+	roc_plot(x, mapq1,  color=colors[0], first=T, xlim=c(mn_x, mn_x + (mx_x - mn_x) * sca), ylim=c(mn_y + (mx_y - mn_y) * (1-sca), mx_y))
 	roc_plot(x, mapq2, color=colors[1], first=F, xlim=c(mn_x, mn_x + (mx_x - mn_x) * sca), ylim=c(mn_y + (mx_y - mn_y) * (1-sca), mx_y))
+	legend("bottomright", c("MAPQ 1", "MAPQ 2"), col=colors, pch=c(1, 1), lty=c(1, 1))
 }
