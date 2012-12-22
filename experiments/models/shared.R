@@ -72,6 +72,50 @@ topNincorrect <- function(x, mapq, n) {
 	return(head(x.incor[ordr,], n=n))
 }
 
+# Given an table of aligned reads, return a list of vectors to use as
+# alignment score-related covariates
+getCovars <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
+	if(replace.na) {
+		repl <- max(x$AS.i) - sca * (max(x$AS.i) - min(x$AS.i))
+		xs <- ifelse(is.na(x$XS.i), repl, x$XS.i)
+		if(incl.Xs) {
+			xs <- pmax(xs, x$Xs.i, na.rm=T)
+		}
+	} else {
+		xs <- x$XS.i
+	}
+	xs <- x$AS.i - xs # could have some NAs
+	return(list(as=x$AS.i, xs=xs))
+}
+
+scatterCorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
+	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
+	as_cor <- res$as[x$ZC.i == 1]
+	xs_cor <- res$xs[x$ZC.i == 1]
+	as_incor <- res$as[x$ZC.i == 0]
+	xs_incor <- res$xs[x$ZC.i == 0]
+	plot(jitter(as_cor, factor=2), jitter(xs_cor, factor=2), col=rgb(0.0, 0.0, 1.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
+}
+
+scatterIncorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
+	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
+	as_cor <- res$as[x$ZC.i == 1]
+	xs_cor <- res$xs[x$ZC.i == 1]
+	as_incor <- res$as[x$ZC.i == 0]
+	xs_incor <- res$xs[x$ZC.i == 0]
+	plot(jitter(as_incor, factor=2), jitter(xs_incor, factor=2), col=rgb(1.0, 0.0, 0.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
+}
+
+scatterCorrectIncorrect <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
+	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
+	as_cor <- res$as[x$ZC.i == 1]
+	xs_cor <- res$xs[x$ZC.i == 1]
+	as_incor <- res$as[x$ZC.i == 0]
+	xs_incor <- res$xs[x$ZC.i == 0]
+	plot(jitter(as_cor, factor=2), jitter(xs_cor, factor=2), col=rgb(0.0, 0.0, 1.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
+	points(jitter(as_incor, factor=2), jitter(xs_incor, factor=2), col=rgb(1.0, 0.0, 0.0, 0.3))
+}
+
 # Plot a histogram of the mapqs for the incorrectly aligned reads. 
 incorrectMapqHist <- function(x) { hist(x$model_mapq[x$ZC.i == 0]) }
 

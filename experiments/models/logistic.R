@@ -31,17 +31,8 @@ source("shared.R")
 # should be assigned to reads that align only once.  Right now we set
 # them equal to max(AS.i) - 2 * (max(AS.i) - min(AS.i)).  
 modelAllLogistic <- function(x, do.rpart=F, incl.Xs=F, incl.repeats=F, incl.xd=F, replace.na=F, sca=2.0) {
-	if(replace.na) {
-		repl <- max(x$AS.i) - sca * (max(x$AS.i) - min(x$AS.i))
-		xs <- ifelse(is.na(x$XS.i), repl, x$XS.i)
-		if(incl.Xs) {
-			xs <- pmax(xs, x$Xs.i, na.rm=T)
-		}
-	} else {
-		xs <- x$XS.i
-	}
-	x$AS.iMXS.i <- x$AS.i - xs # could have some NAs
-	form <- "x$ZC.i ~ x$AS.i + x$AS.iMXS.i"
+	cov <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
+	form <- "x$ZC.i ~ cov$as + cov$xs"
 	if(incl.repeats) {
 		form <- paste(form, "+ x$AllRepeats")
 	}
@@ -56,8 +47,8 @@ modelAllLogistic <- function(x, do.rpart=F, incl.Xs=F, incl.repeats=F, incl.xd=F
 		model <- glm(form, family=binomial("logit"))
 	}
 	coef <- coefficients(model)
-	mapq <- 1.0 / (1.0 + exp(-(coef[1] + coef[2] * x$AS.i + coef[3] * x$AS.iMXS.i)))
-	mapq2 <- coef[1] + coef[2] * x$AS.i + coef[3] * x$AS.iMXS.i
+	mapq <- 1.0 / (1.0 + exp(-(coef[1] + coef[2] * cov$as + coef[3] * cov$xs)))
+	mapq2 <- coef[1] + coef[2] * cov$as + coef[3] * cov$xs
 	return(list(model=model, mapq=mapq, mapq2=mapq2, coef=coef))
 }
 
