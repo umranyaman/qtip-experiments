@@ -55,8 +55,10 @@ modelAllLogistic <- function(x, do.rpart=F, incl.Xs=F, incl.repeats=F, incl.xd=F
 	} else {
 		model <- glm(form, family=binomial("logit"))
 	}
-	mapq <- model$coefficients[1] + model$coefficients[2] * x$AS.i + model$coefficients[3] * x$AS.iMXS.i
-	return(list(model=model, mapq=mapq))
+	coef <- coefficients(model)
+	mapq <- 1.0 / (1.0 + exp(-(coef[1] + coef[2] * x$AS.i + coef[3] * x$AS.iMXS.i)))
+	mapq2 <- coef[1] + coef[2] * x$AS.i + coef[3] * x$AS.iMXS.i
+	return(list(model=model, mapq=mapq, mapq2=mapq2, coef=coef))
 }
 
 bestSca <- function(tab, do.rpart=F, incl.Xs=F, incl.repeats=F, incl.xd=F, sca=1.2, maxit=25, method="SANN") {
@@ -79,18 +81,25 @@ bestSca <- function(tab, do.rpart=F, incl.Xs=F, incl.repeats=F, incl.xd=F, sca=1
 
 # Given filenames for SAM files emitted by two tools, analyze 
 fitMapqModelsLogistic <- function(x, do.rpart=F, incl.Xs=T, incl.repeats=F, incl.xd=F, sca=1.2) {
-	tab <- openTabulatedSam(x)
-	tab.all <- tab[selectAligned(tab),]
+	tab.all <- x
 	opt <- bestSca(tab.all, method="Nelder-Mead", maxit=1, sca=sca)
 	sca <- opt$par
 	fit.all <- modelAllLogistic(tab.all, do.rpart=do.rpart, incl.Xs=incl.Xs, incl.repeats=incl.repeats, incl.xd=incl.xd, replace.na=T, sca=sca)
 	tab.all$model_mapq <- bt0and1(fit.all$mapq)
+	tab.all$model_mapq2 <- bt0and1(fit.all$mapq2)
 	return(list(tb=tab.all, fit=fit.all, err1=rankingError(tab.all, tab.all$model_mapq), err2=rankingError(tab.all, tab.all$mapq)))
+}
+
+# Given filenames for SAM files emitted by two tools, analyze 
+fitMapqModelsLogisticFile <- function(x, do.rpart=F, incl.Xs=T, incl.repeats=F, incl.xd=F, sca=1.2) {
+	tab <- openTabulatedSam(x)
+	tab.all <- tab[selectAligned(tab),]
+	return(fitMapqModelsLogistic(tab.all))
 }
 
 if(F) {
 	dr <- "/Users/langmead/Documents/workspace/mapq"
 	x <- paste(dr, "examples/mason/r0_ill_100_100k.bt2_s.sat.bz2", sep="/")
-	fit <- fitMapqModelsLogistic(x)
+	fit <- fitMapqModelsLogisticFile(x)
 	roc_table_compare(fit$tb, fit$tb$model_mapq, fit$tb$mapq)
 }
