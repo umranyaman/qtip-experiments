@@ -88,6 +88,9 @@ getCovars <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	return(list(as=x$AS.i, xs=xs))
 }
 
+# Make a scatterplot of all the correct alignments, showing alignment
+# score of best alignment on the x axis and difference in alignment
+# score between best and second-best on the y axis.
 scatterCorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
 	as_cor <- res$as[x$ZC.i == 1]
@@ -97,6 +100,18 @@ scatterCorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	plot(jitter(as_cor, factor=2), jitter(xs_cor, factor=2), col=rgb(0.0, 0.0, 1.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
 }
 
+# Same as scatterCorrect, but makes a smooth scatterplot
+smoothScatterCorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
+	require('graphics')
+	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
+	as_cor <- res$as[x$ZC.i == 1]
+	xs_cor <- res$xs[x$ZC.i == 1]
+	as_incor <- res$as[x$ZC.i == 0]
+	xs_incor <- res$xs[x$ZC.i == 0]
+	smoothScatter(as_cor, xs_cor, col=rgb(0.0, 0.0, 1.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
+}
+
+# Same as scatterCorrect, but plots incorrect alignments
 scatterIncorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
 	as_cor <- res$as[x$ZC.i == 1]
@@ -104,6 +119,17 @@ scatterIncorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	as_incor <- res$as[x$ZC.i == 0]
 	xs_incor <- res$xs[x$ZC.i == 0]
 	plot(jitter(as_incor, factor=2), jitter(xs_incor, factor=2), col=rgb(1.0, 0.0, 0.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
+}
+
+# Same as scatterCorrect, but plots incorrect alignments and makes a
+# smooth scatterplot
+smoothScatterInorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
+	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
+	as_cor <- res$as[x$ZC.i == 1]
+	xs_cor <- res$xs[x$ZC.i == 1]
+	as_incor <- res$as[x$ZC.i == 0]
+	xs_incor <- res$xs[x$ZC.i == 0]
+	smoothScatter(as_incor, xs_incor, col=rgb(1.0, 0.0, 0.0, 0.3), main="Incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
 }
 
 scatterCorrectIncorrect <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
