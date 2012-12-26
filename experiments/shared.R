@@ -3,7 +3,7 @@ library(verification)
 
 # Open a tabulated sam file
 openTabulatedSam <- function(fn) {
-	return(read.table(fn, comment.char="", quote="", header=T))
+	return(read.table(fn, comment.char="", quote="", header=T, stringsAsFactors=F))
 }
 
 # Given data frame of alignments, return data frame with just aligned reads
@@ -31,12 +31,16 @@ bt0and1 <- function(x) {
 	return(x)
 }
 
+rescale <- function(x, minimum, maximum) {
+	return((x - minimum) / (maximum - minimum))
+}
+
 # Another way to assess the quality of ranking.  Here for each
 # incorrect alignment we add its rank to the penalty, where the
 # worst-ranked alignment has rank 1.
 rankingError <- function(x, mapq) {
 	ordr <- order(mapq)
-	return(sum(which(x$ZC.i[ordr] == 0)))
+	return(sum(as.numeric(which(x$ZC.i[ordr] == 0))))
 }
 
 # Another way to assess the quality of ranking.  Here for each
@@ -74,7 +78,7 @@ topNincorrect <- function(x, mapq, n) {
 
 # Given an table of aligned reads, return a list of vectors to use as
 # alignment score-related covariates
-getCovars <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
+getCovars <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, rescale=F, sca=1.5) {
 	if(replace.na) {
 		repl <- max(x$AS.i) - sca * (max(x$AS.i) - min(x$AS.i))
 		xs <- ifelse(is.na(x$XS.i), repl, x$XS.i)
@@ -85,6 +89,10 @@ getCovars <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 		xs <- x$XS.i
 	}
 	xs <- x$AS.i - xs # could have some NAs
+	if(rescale) {
+		as <- rescale(as, x$YN.i, x$Yn.i)
+		xs <- rescale(xs, 0, sca * (x$Yn.i - x$YN.i))
+	}
 	return(list(as=x$AS.i, xs=xs))
 }
 
@@ -93,53 +101,106 @@ getCovars <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 # score between best and second-best on the y axis.
 scatterCorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
-	as_cor <- res$as[x$ZC.i == 1]
-	xs_cor <- res$xs[x$ZC.i == 1]
-	as_incor <- res$as[x$ZC.i == 0]
-	xs_incor <- res$xs[x$ZC.i == 0]
-	plot(jitter(as_cor, factor=2), jitter(xs_cor, factor=2), col=rgb(0.0, 0.0, 1.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
+	as <- rescale(res$as, x$YN.i, x$Yn.i)
+	xs <- rescale(res$xs, 0, sca * (x$Yn.i - x$YN.i))
+	as_cor <- as[x$ZC.i == 1]
+	xs_cor <- xs[x$ZC.i == 1]
+	as_incor <- as[x$ZC.i == 0]
+	xs_incor <- xs[x$ZC.i == 0]
+	plot(
+		jitter(as_cor, factor=2),
+		jitter(xs_cor, factor=2),
+		col=rgb(0.0, 0.0, 1.0, 0.3),
+		main="Correct/incorrect scatter",
+		ylab="Alignment score diff b/t best, second-best",
+		xlab="Alignment score of best",
+		xlim=c(0, 1),
+		ylim=c(0, 1))
 }
 
 # Same as scatterCorrect, but makes a smooth scatterplot
 smoothScatterCorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	require('graphics')
 	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
-	as_cor <- res$as[x$ZC.i == 1]
-	xs_cor <- res$xs[x$ZC.i == 1]
-	as_incor <- res$as[x$ZC.i == 0]
-	xs_incor <- res$xs[x$ZC.i == 0]
-	smoothScatter(as_cor, xs_cor, col=rgb(0.0, 0.0, 1.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
+	as <- rescale(res$as, x$YN.i, x$Yn.i)
+	xs <- rescale(res$xs, 0, sca * (x$Yn.i - x$YN.i))
+	as_cor <- as[x$ZC.i == 1]
+	xs_cor <- xs[x$ZC.i == 1]
+	as_incor <- as[x$ZC.i == 0]
+	xs_incor <- xs[x$ZC.i == 0]
+	smoothScatter(
+		as_cor,
+		xs_cor,
+		col=rgb(0.0, 0.0, 1.0, 0.3),
+		main="Correct/incorrect scatter",
+		ylab="Alignment score diff b/t best, second-best",
+		xlab="Alignment score of best",
+		xlim=c(0, 1),
+		ylim=c(0, 1))
 }
 
 # Same as scatterCorrect, but plots incorrect alignments
 scatterIncorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
-	as_cor <- res$as[x$ZC.i == 1]
-	xs_cor <- res$xs[x$ZC.i == 1]
-	as_incor <- res$as[x$ZC.i == 0]
-	xs_incor <- res$xs[x$ZC.i == 0]
-	plot(jitter(as_incor, factor=2), jitter(xs_incor, factor=2), col=rgb(1.0, 0.0, 0.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
+	as <- rescale(res$as, x$YN.i, x$Yn.i)
+	xs <- rescale(res$xs, 0, sca * (x$Yn.i - x$YN.i))
+	as_cor <- as[x$ZC.i == 1]
+	xs_cor <- xs[x$ZC.i == 1]
+	as_incor <- as[x$ZC.i == 0]
+	xs_incor <- xs[x$ZC.i == 0]
+	plot(
+		jitter(as_incor, factor=2),
+		jitter(xs_incor, factor=2),
+		col=rgb(1.0, 0.0, 0.0, 0.3),
+		main="Correct/incorrect scatter",
+		ylab="Alignment score diff b/t best, second-best",
+		xlab="Alignment score of best",
+		xlim=c(0, 1),
+		ylim=c(0, 1))
 }
 
 # Same as scatterCorrect, but plots incorrect alignments and makes a
 # smooth scatterplot
 smoothScatterInorrect<- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
-	as_cor <- res$as[x$ZC.i == 1]
-	xs_cor <- res$xs[x$ZC.i == 1]
-	as_incor <- res$as[x$ZC.i == 0]
-	xs_incor <- res$xs[x$ZC.i == 0]
-	smoothScatter(as_incor, xs_incor, col=rgb(1.0, 0.0, 0.0, 0.3), main="Incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
+	as <- rescale(res$as, x$YN.i, x$Yn.i)
+	xs <- rescale(res$xs, 0, sca * (x$Yn.i - x$YN.i))
+	as_cor <- as[x$ZC.i == 1]
+	xs_cor <- xs[x$ZC.i == 1]
+	as_incor <- as[x$ZC.i == 0]
+	xs_incor <- xs[x$ZC.i == 0]
+	smoothScatter(
+		as_incor,
+		xs_incor,
+		col=rgb(1.0, 0.0, 0.0, 0.3),
+		main="Incorrect scatter",
+		ylab="Alignment score diff b/t best, second-best",
+		xlab="Alignment score of best",
+		xlim=c(0, 1),
+		ylim=c(0, 1))
 }
 
 scatterCorrectIncorrect <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, sca=2.0) {
 	res <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, sca=sca)
-	as_cor <- res$as[x$ZC.i == 1]
-	xs_cor <- res$xs[x$ZC.i == 1]
-	as_incor <- res$as[x$ZC.i == 0]
-	xs_incor <- res$xs[x$ZC.i == 0]
-	plot(jitter(as_cor, factor=2), jitter(xs_cor, factor=2), col=rgb(0.0, 0.0, 1.0, 0.3), main="Correct/incorrect scatter", ylab="Alignment score diff b/t best, second-best", xlab="Alignment score of best")
-	points(jitter(as_incor, factor=2), jitter(xs_incor, factor=2), col=rgb(1.0, 0.0, 0.0, 0.3))
+	as <- rescale(res$as, x$YN.i, x$Yn.i)
+	xs <- rescale(res$xs, 0, sca * (x$Yn.i - x$YN.i))
+	as_cor <- as[x$ZC.i == 1]
+	xs_cor <- xs[x$ZC.i == 1]
+	as_incor <- as[x$ZC.i == 0]
+	xs_incor <- xs[x$ZC.i == 0]
+	plot(
+		jitter(as_cor, factor=2),
+		jitter(xs_cor, factor=2),
+		col=rgb(0.0, 0.0, 1.0, 0.3),
+		main="Correct/incorrect scatter",
+		ylab="Alignment score diff b/t best, second-best",
+		xlab="Alignment score of best",
+		xlim=c(0, 1),
+		ylim=c(0, 1))
+	points(
+		jitter(as_incor, factor=2),
+		jitter(xs_incor, factor=2),
+		col=rgb(1.0, 0.0, 0.0, 0.3))
 }
 
 # Plot a histogram of the mapqs for the incorrectly aligned reads. 
