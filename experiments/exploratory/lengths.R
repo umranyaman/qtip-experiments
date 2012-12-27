@@ -5,38 +5,38 @@ source(file.path('..', 'models', 'logistic.R'), chdir=T)
 # using including alignment scores and differences between them in the model,
 # we capture read length to an extent, since longer reads have wider ranges of
 # scores than shorter reads.
-#
-# $err1
-# $err1[[1]]
-# [1] 10360516 10292714    67802
 # 
-# $err1[[2]]
-# [1] 6023027 5977758   45269
-# 
-# $err1[[3]]
-# [1] 4099201 4081545   17656
-# 
-# $err1[[4]]
-# [1] 3007227 3014557   -7330
-# 
-# $err1[[5]]
-# [1] 2394542 2390405    4137
-# 
-# err2: 
+# > errs.1
 # [[1]]
-# [1] 10310499 10292524    17975
+# [1] 10339087 10281300    57787
 # 
 # [[2]]
-# [1] 5990684 5977746   12938
+# [1] 6006029 5976588   29441
 # 
 # [[3]]
-# [1] 4088405 4082700    5705
+# [1] 4099877 4079940   19937
 # 
 # [[4]]
-# [1] 3004069 3014557  -10488
+# [1] 3004331 3010722   -6391
 # 
 # [[5]]
-# [1] 2389853 2390555    -702
+# [1] 2385858 2351157   34701
+# 
+# > errs.2
+# [[1]]
+# [1] 10358917 10281300    77617
+# 
+# [[2]]
+# [1] 5985028 5976588    8440
+# 
+# [[3]]
+# [1] 4086075 4079940    6135
+# 
+# [[4]]
+# [1] 3032209 3010722   21487
+# 
+# [[5]]
+# [1] 2348697 2351157   -2460
 # 
 exploreModelingLengths <- function() {
 	lens = c(75, 100, 125, 150, 175)
@@ -58,6 +58,9 @@ exploreModelingLengths <- function() {
 			return(c(errc, err, errc - err))
 		}))
 	}
+	
+	# Print warnings as they occur
+	options(warn=1)
 	
 	#
 	# Strategy 1: let the alignment scores capture the read

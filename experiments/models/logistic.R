@@ -1,28 +1,5 @@
 source(file.path('..', 'shared.R'), chdir=T)
 
-#
-# Problems with this model:
-#
-# 1. It's clear from plotLinesAndDots(tab.all, replace.na=T) that the
-#    unique alignments mostly segregate to the right (higher mapqs)
-#    which causes some of the incorrectly-aligned unique alignments to
-#    receive high ranks.  At the same time, fiddling with the 'sca'
-#    parameter to plotLinesAndDots (which determines how we replace the
-#    "NA" second-best alignment scores) doesn't do much to reduce
-#    ranking error.
-# 2. If we fit separate models for the unique alignments and for the
-#    non-unique alignments, we might get more sensible rankings within
-#    each subset, but then we don't know how to combine them into one
-#    overall ranking, which is needed to compare models.
-# 3. It's clear from plotLinesAndDots(tab.2) that the alignments where
-#    AS.i - XS.i = 0 are in a special class, and using
-#    modelAlignedMoreThanOnce with exp=1 seems to rank them too high
-#    (they appear together in a chunk in the middle/left).
-#    Experimenting with setting exp by hand did seem to improve this.
-#    exp=0.8 mostly shifted the AS.i - XS.i = 0 alignments to the left
-#    edge and improved ranking error.
-#
-
 # Given a data frame containing all aligned reads (including those that
 # align just once or many times) return a fit for a logistic regression
 # model with response = mapq ranking and terms = alignment scores.
@@ -31,33 +8,75 @@ source(file.path('..', 'shared.R'), chdir=T)
 # assigned to reads that align only once.  Right now we set them equal
 # to max(AS.i) - 2 * (max(AS.i) - min(AS.i)).  
 modelAllLogistic <- function(
-	x,
-	incl.Xs=F,
-	incl.repeats=F,
-	incl.xd=F,
-	incl.len=F,
-	replace.na=T,
-	rescale=F,
-	sca=1.0)
+	x,              # alignment table - only aligned reads
+	incl.Xs=T,      # use Xs.i field when calculating score gap
+	incl.repeats=F, # include AllRepeats as term in model
+	incl.xd=F,      # include XD.i as term in model
+	incl.len=F,     # include read length as term in model
+	replace.na=T,   # replace NA XS.i field with gaps = (sca * max gap)
+	rescale=F,      # standardize alignment scores, differences to be in [0, 1]
+	sca=1.0)        # scaling factor to use when replacing NA XS.i field
 {
-	cov <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, rescale=rescale, sca=sca)
+	# Get vectors for main covariates (scores and gaps)
+	cov <- getCovars(
+		x,
+		incl.Xs=incl.Xs,
+		incl.xd=incl.xd,
+		replace.na=replace.na,
+		rescale=rescale,
+		sca=sca)
+	if(any(is.na(cov$as))) {
+		warning("Error: one or more AS:is are NA")
+	}
+	if(length(cov$as) != length(cov$xs)) {
+		warning("Error: best score vector and gap vector are different lengths")
+	}
 	form <- "x$ZC.i ~ cov$as + cov$xs"
-	if(incl.repeats) { form <- paste(form, "+ x$AllRepeats") }
-	if(incl.xd)      { form <- paste(form, "+ x$XD.i") }
-	if(incl.len)     { form <- paste(form, "+ nchar(x$seq)") }
+	# Add extra covariates if requested
+	if(incl.repeats && length(unique(nchar(x$AllRepeats))) > 1) {
+		form <- paste(form, "+ x$AllRepeats")
+	}
+	if(incl.xd && length(unique(nchar(x$XD.i))) > 1) {
+		form <- paste(form, "+ x$XD.i")
+	}
+	if(incl.len && length(unique(nchar(x$seq))) > 1) {
+		form <- paste(form, "+ nchar(x$seq)")
+	}
+	# Fit logistic regression model
 	model <- glm(as.formula(form), family=binomial("logit"))
+	# Extract coefficients
 	coef <- coefficients(model)
-	ex <- coef[1] + coef[2] * cov$as + coef[3] * cov$xs
+	# Calculate predicted p's
+	ex <- coef[1] + (coef[2] * cov$as) + (coef[3] * cov$xs)
 	next_coef <- 4
-	if(incl.repeats) { ex <- ex + coef[next_coef] * x$AllRepeats; next_coef <- next_coef + 1 }
-	if(incl.xd)      { ex <- ex + coef[next_coef] * x$XD.i;       next_coef <- next_coef + 1 }
-	if(incl.len)     { ex <- ex + coef[next_coef] * nchar(x$seq); next_coef <- next_coef + 1 }
-	mapq <- 1.0 / (1.0 + exp(-ex))
+	if(incl.repeats && length(unique(nchar(x$AllRepeats))) > 1) {
+		ex <- ex + coef[next_coef] * x$AllRepeats; next_coef <- next_coef + 1
+	}
+	if(incl.xd && length(unique(nchar(x$XD.i))) > 1) {
+		ex <- ex + coef[next_coef] * x$XD.i; next_coef <- next_coef + 1
+	}
+	if(incl.len && length(unique(nchar(x$seq))) > 1) {
+		ex <- ex + coef[next_coef] * nchar(x$seq); next_coef <- next_coef + 1
+	}
+	mapq <- (1.0 / (1.0 + exp(-ex)))
+	if(any(is.na(mapq))) {
+		warning("Error: one or more MAPQs are NA")
+		print(summary(model))
+		print(coef)
+	}
 	return(list(model=model, mapq=mapq, coef=coef))
 }
 
 # Use "optim" to search for the best scaling factor to use for the dataset
-bestSca <- function(tab, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F, rescale=F, sca=1.0, maxit=60, method="SANN") {
+bestSca <- function(
+	tab,            # alignment table - only aligned reads
+	incl.Xs=T,      # use Xs.i field when calculating score gap
+	incl.repeats=F, # include AllRepeats as term in model
+	incl.xd=F,      # include XD.i as term in model
+	incl.len=F,     # include read length as term in model
+	rescale=F,      # standardize alignment scores, differences to be in [0, 1]
+	sca=1.0)        # how to substitute 
+{
 	fn <- function(x) {
 		fit <- modelAllLogistic(
 			tab,
@@ -69,18 +88,25 @@ bestSca <- function(tab, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F, resca
 			rescale=rescale,
 			sca=x)
 		err <- rankingError(tab, fit$mapq)
-		print(paste("Called with x=", x, " error=", err, sep=""))
+		print(paste("Called with x=", x, " err=", err))
 		return(err)
 	}
-	opt <- optim(sca, fn, method=method, control=list(maxit=maxit))
-	return(opt)
+	opt <- optimize(fn, c(0.1, 1.5), tol = 0.001)
+	return(opt$minimum)
 }
 
 # Given filenames for SAM files emitted by two tools, analyze 
-fitMapqModelsLogistic <- function(x, incl.Xs=T, incl.repeats=F, incl.xd=F, incl.len=F, rescale=F, sca=1.0, maxit=80) {
+fitMapqModelsLogistic <- function(
+	x,
+	incl.Xs=T,
+	incl.repeats=F,
+	incl.xd=F,
+	incl.len=F,
+	rescale=F,
+	sca=1.0)
+{
 	tab.all <- x
-	opt <- bestSca(tab.all, maxit=maxit, rescale=rescale, sca=sca)
-	sca <- opt$par
+	sca <- bestSca(tab.all, rescale=rescale, sca=sca)
 	fit.all <- modelAllLogistic(
 		tab.all,
 		incl.Xs=incl.Xs, incl.repeats=incl.repeats, incl.xd=incl.xd,
