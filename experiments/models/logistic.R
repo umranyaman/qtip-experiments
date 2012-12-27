@@ -30,7 +30,7 @@ source("shared.R")
 # "sca" is a scaling factor, which determines how XS.i values should be
 # assigned to reads that align only once.  Right now we set them equal
 # to max(AS.i) - 2 * (max(AS.i) - min(AS.i)).  
-modelAllLogistic <- function(x, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F, replace.na=T, rescale=T, sca=2.0) {
+modelAllLogistic <- function(x, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F, replace.na=T, rescale=F, sca=2.0) {
 	cov <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, rescale=rescale, sca=sca)
 	form <- "x$ZC.i ~ cov$as + cov$xs"
 	if(incl.repeats) { form <- paste(form, "+ x$AllRepeats") }
@@ -44,7 +44,7 @@ modelAllLogistic <- function(x, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F
 }
 
 # Use "optim" to search for the best scaling factor to use for the dataset
-bestSca <- function(tab, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F, rescale=T, sca=1.2, maxit=60, method="SANN") {
+bestSca <- function(tab, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F, rescale=F, sca=1.0, maxit=60, method="SANN") {
 	fn <- function(x) {
 		fit <- modelAllLogistic(
 			tab,
@@ -64,7 +64,7 @@ bestSca <- function(tab, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F, resca
 }
 
 # Given filenames for SAM files emitted by two tools, analyze 
-fitMapqModelsLogistic <- function(x, incl.Xs=T, incl.repeats=F, incl.xd=F, incl.len=F, rescale=T, sca=1.2, maxit=60) {
+fitMapqModelsLogistic <- function(x, incl.Xs=T, incl.repeats=F, incl.xd=F, incl.len=F, rescale=F, sca=1.0, maxit=60) {
 	tab.all <- x
 	opt <- bestSca(tab.all, maxit=maxit, rescale=rescale, sca=sca)
 	sca <- opt$par
@@ -75,10 +75,10 @@ fitMapqModelsLogistic <- function(x, incl.Xs=T, incl.repeats=F, incl.xd=F, incl.
 }
 
 # Given filenames for SAM files emitted by two tools, analyze 
-fitMapqModelsLogisticFile <- function(x, incl.Xs=T, incl.repeats=F, incl.xd=F, incl.len=F, rescale=T, sca=1.2) {
+fitMapqModelsLogisticFile <- function(x, incl.Xs=T, incl.repeats=F, incl.xd=F, incl.len=F, rescale=F, sca=1.0) {
 	tab <- openTabulatedSam(x)
 	tab.all <- tab[selectAligned(tab),]
-	return(fitMapqModelsLogistic(tab.all))
+	return(fitMapqModelsLogistic(tab.all, incl.Xs=incl.Xs, incl.repeats=incl.repeats, incl.xd=incl.xd, incl.len=incl.len, rescale=rescale, sca=sca))
 }
 
 if(F) {
@@ -94,17 +94,23 @@ if(F) {
 	tabl$all <- do.call("rbind", tabl)
 	
 	# Fit each read length separately
-	fitl <- mclapply(tabl,
+	fitl.1 <- mclapply(tabl,
 		function(x) {
 			fitMapqModelsLogistic(x)
 		}, mc.cores=6)
 	# Compare the mapping qualities from the overall fit with the qualities
 	# from the fit over just the 100-length data.
-	errs <- lapply(lens, function(x) {
+	errs.1 <- lapply(lens, function(x) {
 		tab <- fitl[[toString(x)]]$tb;
 		tabc <- fitl[["all"]]$tb[nchar(fitl[["all"]]$tb$seq) == x,];
 		errc <- rankingError(tabc, tabc$model_mapq)
 		err <- rankingError(tab, tab$model_mapq)
 		return(c(errc, err, errc - err))
 	})
+
+	# Fit each read length separately
+	fitl.2 <- mclapply(tabl,
+		function(x) {
+			fitMapqModelsLogistic(x)
+		}, mc.cores=6)
 }

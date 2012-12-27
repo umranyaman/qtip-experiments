@@ -78,7 +78,7 @@ topNincorrect <- function(x, mapq, n) {
 
 # Given an table of aligned reads, return a list of vectors to use as
 # alignment score-related covariates
-getCovars <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, rescale=F, sca=1.5) {
+getCovars <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, rescale=F, sca=1.0) {
 	if(replace.na) {
 		repl <- max(x$AS.i) - sca * (max(x$AS.i) - min(x$AS.i))
 		xs <- ifelse(is.na(x$XS.i), repl, x$XS.i)
@@ -89,11 +89,12 @@ getCovars <- function(x, incl.Xs=F, incl.xd=F, replace.na=F, rescale=F, sca=1.5)
 		xs <- x$XS.i
 	}
 	xs <- x$AS.i - xs # could have some NAs
+	as <- x$AS.i
 	if(rescale) {
 		as <- rescale(as, x$YN.i, x$Yn.i)
 		xs <- rescale(xs, 0, sca * (x$Yn.i - x$YN.i))
 	}
-	return(list(as=x$AS.i, xs=xs))
+	return(list(as=as, xs=xs))
 }
 
 # Make a scatterplot of all the correct alignments, showing alignment

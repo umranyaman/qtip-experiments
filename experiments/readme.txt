@@ -9,3 +9,10 @@ Bowtie 2 was augmented in a few specific ways to enable these analyses:
   + Xs:i: Best invalid alignment score of this mate
   + Ys:i: Best invalid alignment score of opposite mate
 - 
+
+
+Logistic regression:
+- p / (1 - p) = beta * x, where beta has intercept and terms for alignment
+  score of best and difference between alignment score for best and second best
+- How to model read length?
+  + In an experiment
