@@ -1,4 +1,4 @@
-source("shared.R")
+source(file.path('..', 'shared.R'), chdir=T)
 
 #
 # Problems with this model:
@@ -30,7 +30,16 @@ source("shared.R")
 # "sca" is a scaling factor, which determines how XS.i values should be
 # assigned to reads that align only once.  Right now we set them equal
 # to max(AS.i) - 2 * (max(AS.i) - min(AS.i)).  
-modelAllLogistic <- function(x, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F, replace.na=T, rescale=F, sca=2.0) {
+modelAllLogistic <- function(
+	x,
+	incl.Xs=F,
+	incl.repeats=F,
+	incl.xd=F,
+	incl.len=F,
+	replace.na=T,
+	rescale=F,
+	sca=1.0)
+{
 	cov <- getCovars(x, incl.Xs=incl.Xs, incl.xd=incl.xd, replace.na=replace.na, rescale=rescale, sca=sca)
 	form <- "x$ZC.i ~ cov$as + cov$xs"
 	if(incl.repeats) { form <- paste(form, "+ x$AllRepeats") }
@@ -38,9 +47,13 @@ modelAllLogistic <- function(x, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F
 	if(incl.len)     { form <- paste(form, "+ nchar(x$seq)") }
 	model <- glm(as.formula(form), family=binomial("logit"))
 	coef <- coefficients(model)
-	mapq <- 1.0 / (1.0 + exp(-(coef[1] + coef[2] * cov$as + coef[3] * cov$xs)))
-	mapq2 <- coef[1] + coef[2] * cov$as + coef[3] * cov$xs
-	return(list(model=model, mapq=mapq, mapq2=mapq2, coef=coef))
+	ex <- coef[1] + coef[2] * cov$as + coef[3] * cov$xs
+	next_coef <- 4
+	if(incl.repeats) { ex <- ex + coef[next_coef] * x$AllRepeats; next_coef <- next_coef + 1 }
+	if(incl.xd)      { ex <- ex + coef[next_coef] * x$XD.i;       next_coef <- next_coef + 1 }
+	if(incl.len)     { ex <- ex + coef[next_coef] * nchar(x$seq); next_coef <- next_coef + 1 }
+	mapq <- 1.0 / (1.0 + exp(-ex))
+	return(list(model=model, mapq=mapq, coef=coef))
 }
 
 # Use "optim" to search for the best scaling factor to use for the dataset
@@ -64,13 +77,15 @@ bestSca <- function(tab, incl.Xs=F, incl.repeats=F, incl.xd=F, incl.len=F, resca
 }
 
 # Given filenames for SAM files emitted by two tools, analyze 
-fitMapqModelsLogistic <- function(x, incl.Xs=T, incl.repeats=F, incl.xd=F, incl.len=F, rescale=F, sca=1.0, maxit=60) {
+fitMapqModelsLogistic <- function(x, incl.Xs=T, incl.repeats=F, incl.xd=F, incl.len=F, rescale=F, sca=1.0, maxit=80) {
 	tab.all <- x
 	opt <- bestSca(tab.all, maxit=maxit, rescale=rescale, sca=sca)
 	sca <- opt$par
-	fit.all <- modelAllLogistic(tab.all, incl.Xs=incl.Xs, incl.repeats=incl.repeats, incl.xd=incl.xd, incl.len=incl.len, replace.na=T, rescale=rescale, sca=sca)
+	fit.all <- modelAllLogistic(
+		tab.all,
+		incl.Xs=incl.Xs, incl.repeats=incl.repeats, incl.xd=incl.xd,
+		incl.len=incl.len, replace.na=T, rescale=rescale, sca=sca)
 	tab.all$model_mapq <- bt0and1(fit.all$mapq)
-	tab.all$model_mapq2 <- bt0and1(fit.all$mapq2)
 	return(list(tb=tab.all, fit=fit.all, err1=rankingError(tab.all, tab.all$model_mapq), err2=rankingError(tab.all, tab.all$mapq), rescale=rescale, sca=sca))
 }
 

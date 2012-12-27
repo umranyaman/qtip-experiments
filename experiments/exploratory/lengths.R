@@ -1,17 +1,5 @@
-source("../shared.R")
-source("../models/logistic.R")
-
-if(F) {
-	require("multicore")
-	lens = c(75, 100, 125, 150, 175)
-	dir <- "/Users/langmead/cvs/bowtie2/paper/experiments/mason_bwa/"
-	fn.all <- paste(dir, "r0_ill_", lens, "_100k.bt2_s.sat", sep="")
-	tabl <- mclapply(fn.all,
-			function(x) {
-				xtab <- openTabulatedSam(x); xtab.al <- xtab[selectAligned(xtab),]; return(xtab)
-			}, mc.cores=6)
-	names(tabl) <- lens
-}
+source(file.path('..', 'shared.R'), chdir=T)
+source(file.path('..', 'models', 'logistic.R'), chdir=T)
 
 # An attempt to figure out the best way to include length in the model.  By
 # using including alignment scores and differences between them in the model,
@@ -34,32 +22,30 @@ if(F) {
 # $err1[[5]]
 # [1] 2394542 2390405    4137
 # 
+# err2: 
+# [[1]]
+# [1] 10310499 10292524    17975
 # 
-# $err2
-# $err2[[1]]
-# [1] 10476561 10292663   183898
+# [[2]]
+# [1] 5990684 5977746   12938
 # 
-# $err2[[2]]
-# [1] 6042912 5978330   64582
+# [[3]]
+# [1] 4088405 4082700    5705
 # 
-# $err2[[3]]
-# [1] 4099580 4080398   19182
+# [[4]]
+# [1] 3004069 3014557  -10488
 # 
-# $err2[[4]]
-# [1] 3019592 3014849    4743
-# 
-# $err2[[5]]
-# [1] 2420784 2390214   30570
+# [[5]]
+# [1] 2389853 2390555    -702
 # 
 exploreModelingLengths <- function() {
-	require("multicore")
 	lens = c(75, 100, 125, 150, 175)
 	dir <- "/Users/langmead/cvs/bowtie2/paper/experiments/mason_bwa/"
 	fn.all <- paste(dir, "r0_ill_", lens, "_100k.bt2_s.sat", sep="")
-	tabl <- mclapply(fn.all,
+	tabl <- lapply(fn.all,
 			function(x) {
 				xtab <- openTabulatedSam(x); xtab.al <- xtab[selectAligned(xtab),]; return(xtab.al)
-			}, mc.cores=6)
+			})
 	names(tabl) <- lens
 	tabl$all <- do.call("rbind", tabl)
 	
@@ -78,10 +64,10 @@ exploreModelingLengths <- function() {
 	#
 	
 	# Fit each read length separately
-	fitl.1 <- mclapply(tabl,
+	fitl.1 <- lapply(tabl,
 		function(x) {
 			fitMapqModelsLogistic(x)
-		}, mc.cores=6)
+		})
 	# Compare the mapping qualities from the overall fit with the qualities
 	# from the fit over just the 100-length data.
 	errs.1 <- evalModel(fitl.1)
@@ -91,13 +77,15 @@ exploreModelingLengths <- function() {
 	#
 	
 	# Fit each read length separately
-	fitl.2 <- mclapply(tabl,
+	fitl.2 <- lapply(tabl,
 		function(x) {
 			fitMapqModelsLogistic(x, incl.len=T, rescale=T)
-		}, mc.cores=6)
+		})
 	# Compare the mapping qualities from the overall fit with the qualities
 	# from the fit over just the 100-length data.
 	errs.2 <- evalModel(fitl.2)
 	
-	return(list(err1=errs.1, err2=errs.2))
+	save(fitl.1, errs.1, fitl.2, errs.2, file="lengths.rda")
 }
+
+exploreModelingLengths()
