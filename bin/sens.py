@@ -14,12 +14,16 @@ and the number, configuration and lengths of the gaps.
 
 import sys
 import os
+import re
 import math
 import random
 import bisect
 import string
 import argparse
 import global_align
+import threading
+import subprocess
+from subprocess import Popen
 
 parser = argparse.ArgumentParser(\
     description='Evaluate the sensitivity of an alignment tool w/r/t given'
@@ -47,6 +51,12 @@ parser.add_argument(\
 parser.add_argument(\
     '--sampling', metavar='scheme', type=str, default="score",
     required=False, help='"score" or "nedit"')
+parser.add_argument(\
+    '--bt2-exe', metavar='path', dest='bt2_exe', type=str,
+    help='Path to Bowtie 2 exe')
+parser.add_argument(\
+    '--bt2-args', metavar='args', dest='bt2_args', type=str,
+    help='Arguments to pass to Bowtie 2 (besides input an output)')
 parser.add_argument(\
     '--sanity', dest='sanity', action='store_const', const=True, default=False,
     help='Do various sanity checks')
@@ -247,22 +257,24 @@ class Mutator(object):
         if verbose:
             print >>sys.stderr, "Sorting combos by # edits..."
         self.combos_by_nedit.sort()
-        print >>sys.stderr, "...done"
+        if verbose:
+            print >>sys.stderr, "...done"
         if verbose:
             print >>sys.stderr, "Sorting combos by score..."
         self.combos_by_score.sort()
-        print >>sys.stderr, "...done"
+        if verbose:
+            print >>sys.stderr, "...done"
         # Build a list parallel to self.combos_by_score containing maximum
         # score seen so far up to each point
         min_sc, max_sc = float('inf'), float('-inf')
         for i in xrange(0, len(self.combos_by_score)):
             min_sc = min(min_sc, self.combos_by_score[i][0])
             max_sc = max(max_sc, self.combos_by_score[i][0])
-            print(min_sc, max_sc)
+            #print(min_sc, max_sc)
             self.combos_min_score.append(min_sc) 
             self.combos_max_score.append(max_sc) 
     
-    def __addEdits(self, orig_rd, sc, nmm, nrdg, nrfg, maxAttempts=10, verbose=False):
+    def __addEdits(self, orig_rd, sc, nmm, nrdg, nrfg, maxAttempts=10, checkScore=False, verbose=False):
         
         """ Given a substring extracted from the reference genome (s) and given
             a # of mismatches, # of read gaps, and # of reference gaps, mutate
@@ -322,20 +334,24 @@ class Mutator(object):
                     c = random.choice(['A', 'C', 'G', 'T'])
                     rd.set(gapi, c + rd.get(gapi))
             
-            rdstr = str(rd)
-            if not self.affine:
-                scg, _, _ = global_align.globalAlign(rdstr, rf, lambda x, y: self.scoring.mmp[1] if x != y else 0, self.scoring.rdg[0] + self.scoring.rdg[1], self.scoring.rfg[0] + self.scoring.rfg[1], backtrace=False)
-            else:
-                scg, _, _ = global_align.globalAlignAffine(rdstr, rf, lambda x, y: self.scoring.mmp[1] if x != y else 0, self.scoring.rdg[0], self.scoring.rdg[1], self.scoring.rfg[0], self.scoring.rfg[1], backtrace=False)
-
-            print "Shooting for %d, got %d (%d mismatches, %d read gaps, %d ref gaps)" % (sc, scg, nmm, nrdg, nrfg)
-            if scg == sc:
-                # Success!
-                break
-        # Check w/ global alignment that the final answer has expected score
-        return rd, True
+            if checkScore:
+                rdstr = str(rd)
+                if not self.affine:
+                    scg, _, _ = global_align.globalAlign(rdstr, rf, lambda x, y: self.scoring.mmp[1] if x != y else 0, self.scoring.rdg[0] + self.scoring.rdg[1], self.scoring.rfg[0] + self.scoring.rfg[1], backtrace=False)
+                else:
+                    scg, _, _ = global_align.globalAlignAffine(rdstr, rf, lambda x, y: self.scoring.mmp[1] if x != y else 0, self.scoring.rdg[0], self.scoring.rdg[1], self.scoring.rfg[0], self.scoring.rfg[1], backtrace=False)
     
-    def mutate(self, rd, verbose=False):
+                print "Shooting for %d, got %d (%d mismatches, %d read gaps, %d ref gaps)" % (sc, scg, nmm, nrdg, nrfg)
+                if scg == sc:
+                    # Success!
+                    break
+            else:
+                break
+            
+        # Check w/ global alignment that the final answer has expected score
+        return str(rd), True
+    
+    def mutate(self, rd, maxAttempts=10, checkScore=False, verbose=False):
         
         """ First we find some (perhaps all) combinations that don't fall below
             the minimum identity threshold.  From among these, we pick one
@@ -353,7 +369,8 @@ class Mutator(object):
             # uniformly at random.
             combo = self.combos_by_nedit[random.randint(0, max_elt-1)]
             (nedit, sc, nmm, nrdg, nrfg) = combo
-            print ("selected combo: " + str(combo))
+            if verbose:
+                print ("selected combo: " + str(combo))
             # TODO: Actually mutate the read sequence
             return (rd, sc)
         elif self.sampling == "score":
@@ -375,9 +392,10 @@ class Mutator(object):
                 assert min_sc_i < len(self.combos_by_score)
                 assert min_sc_f > min_sc_i, "sc=%d, from [minsc=%d, maxsc=%d]; min_sc top, bot=%d, %d, len(combos)=%d" % (sc, min_sc, max_sc, min_sc_i, min_sc_f, len(self.combos_by_score))
                 rndi = random.randint(min_sc_i, min_sc_f-1)
-                print "Combo: %s, read len: %d, attempt: %d" % (str(self.combos_by_score[rndi]), len(rd), attempt)
+                if verbose:
+                    print "Combo: %s, read len: %d, attempt: %d" % (str(self.combos_by_score[rndi]), len(rd), attempt)
                 sc, nedit, nmm, nrdg, nrfg = self.combos_by_score[rndi]
-                mutrd, succ = self.__addEdits(rd, sc, nmm, nrdg, nrfg)
+                mutrd, succ = self.__addEdits(rd, sc, nmm, nrdg, nrfg, maxAttempts=maxAttempts, checkScore=checkScore)
             assert sc is not None
             assert mutrd is not None
             return (mutrd, sc)
@@ -445,16 +463,71 @@ class CaseGen(object):
     
     def next(self):
         ln = self.rlg.next()
-        ref, off, fw, seq = self.sim.sim(ln, verbose=self.verbose)
-        mseq, sc = self.mut.mutate(seq, verbose=self.verbose)
-        return seq
+        ref, off, fw, seq = self.sim.sim(ln, verbose=False)
+        mseq, sc = self.mut.mutate(seq, verbose=False)
+        #print ("%s\n%s" % (seq, mseq))
+        return (seq, mseq, sc)
+
+class SamChecker(threading.Thread):
+
+    def __init__(self, stdout):
+        threading.Thread.__init__(self)
+        self.stdout = stdout
+        self.re_as = re.compile("AS:i:(-?[0-9]+)")
+        # Following dictionaries hold the # correct / # incorrect results
+        # stratified by expected score, and by both expected score and read
+        # length
+        self.res_by_sc = dict()
+        self.res_by_sc_len = dict()
+    
+    def run(self):
+        for l in self.stdout:
+            if l.startswith('@'):
+                continue
+            succ = False # assume we didn't find fit with appropriate score
+            nm, flags, _, _, _, _, _, _, _, seq, _ = string.split(l, '\t', 10)
+            rdlen = len(seq)
+            rfseq, sc_ex = string.split(nm, '_')
+            sc_ex = -int(sc_ex)
+            if (int(flags) & 4) == 0:
+                mat = self.re_as.search(l)
+                as_str = mat.group(1)
+                assert len(as_str) > 0
+                as_i = int(as_str)
+                if as_i >= sc_ex:
+                    succ = True
+            # succ is true iff read aligned and matched with a score greater
+            # than or equal to the "correct" score according to the simulator
+            if sc_ex not in self.res_by_sc:
+                self.res_by_sc[sc_ex] = [0, 0]
+            self.res_by_sc[sc_ex][0 if succ else 1] += 1
+            if (sc_ex, rdlen) not in self.res_by_sc_len:
+                self.res_by_sc_len[(sc_ex, rdlen)] = [0, 0]
+            self.res_by_sc_len[(sc_ex, rdlen)][0 if succ else 1] += 1
 
 def go():
+    # Open pipe to bowtie 2 process
+    bt2_cmd = "bowtie2 "
+    if args.bt2_exe is not None:
+        bt2_cmd = args.bt2_exe
+    bt2_cmd += args.bt2_args
+    bt2_cmd += " --reorder --sam-no-qname-trunc -f -U -"
+    print >> sys.stderr, "Bowtie 2 command: '%s'" % bt2_cmd
+    pipe = Popen(bt2_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    samcheck = SamChecker(pipe.stdout)
+    samcheck.start()
     sctok = map(int, string.split(args.scoring, ','))
     scoring = Scoring(sctok[0], (sctok[1], sctok[2]), sctok[3], (sctok[4], sctok[5]), (sctok[6], sctok[7]))
     cg = CaseGen(args.fasta, scoring, args.sampling, args.minlen, args.maxlen, args.minid, verbose=args.verbose)
     for x in xrange(0, args.num_reads):
-        c = cg.next()
+        seq, mseq, sc = cg.next()
+        nm = "_".join([seq, str(sc)])
+        pipe.stdin.write(">%s\n%s" % (nm, mseq))
+    pipe.stdin.close()
+    samcheck.join()
+    for sc in sorted(samcheck.res_by_sc.iterkeys()):
+        ci = samcheck.res_by_sc[sc]
+        print "%d: %d correct (%0.3f%%), %d incorrect (%0.3f%%)" % (sc, ci[0], 100.0*float(ci[0])/(ci[0]+ci[1]), ci[1], 100.0*float(ci[1])/(ci[0]+ci[1]))
 
 if args.profile:
     import cProfile
