@@ -8,8 +8,11 @@ find best-stratum alignments when aligning reads to that genome.  The tool uses
 pseudo-random numbers to vary the number and configuration of the mismatches,
 and the number, configuration and lengths of the gaps.
 
-(Do we try to infer the scoring scheme?)
-(Do we introduce Ns?) 
+TODO:
+- Inject Ns
+- It could be that we want to look for special cutoffs/limits, like how many Ns
+  the tool can handle, how many gaps, etc.
+
 """
 
 import sys
@@ -153,9 +156,7 @@ class ReadLengthGen(object):
 
 class MyMutableString(object):
     
-    """ A string vaguely like Python's built-in string type but where it's
-        easier and more efficient to insert things in the middle and delete
-        stretches. """
+    """ A string supporting efficient insertions and deletions """
     
     def __init__(self, s=None):
         self.slist = []
@@ -171,6 +172,7 @@ class MyMutableString(object):
     def delete(self, i, j=None):
         if j is None:
             j = i + 1
+        # Set the appropriate elements to the empty string
         for k in xrange(i, j):
             self.slist[k] = ""
     
@@ -407,28 +409,40 @@ class Simulator(object):
     """ Class that, given a collection of FASTA files, samples intervals of
         specified length from the strings contained in them. """
     
-    def __init__(self, fafns):
+    def __init__(self, fafns, verbose=False):
         self.refs = dict()
         self.names = []
         self.lens = []
+        totlen = 0
+        pt_sz = 50000000
+        last_pt = 0
         for fafn in fafns:
             fafh = open(fafn, 'r')
             name = None
             for line in fafh:
                 line = line.rstrip()
+                ln = len(line)
                 if line.startswith('>'):
                     ind = line.index(" ")
                     if ind == -1: ind = len(line)
                     line = line[1:ind]
                     name = line
-                    self.refs[name] = ""
+                    self.refs[name] = []
                     self.names.append(name)
                     self.lens.append(0)
                 else:
                     assert name is not None
-                    self.refs[name] += line
-                    self.lens[-1] += len(line)
+                    self.refs[name].append(line)
+                    self.lens[-1] += ln
+                    totlen += ln
+                    if verbose:
+                        pt = totlen / pt_sz
+                        if pt > last_pt:
+                            print >> sys.stderr, "Read %d FASTA bytes..." % totlen
+                        last_pt = pt
             fafh.close()
+        for k in self.refs.iterkeys():
+            self.refs[k] = ''.join(self.refs[k])
         self.rnd = WeightedRandomGenerator(self.lens)
     
     def sim(self, ln, verbose=False):
@@ -449,13 +463,16 @@ class Simulator(object):
 
 class CaseGen(object):
     
+    """ Generate test read by (a) picking a read length (b) picking a reference
+        to simulate from, (c) simulating the read, (d) mutating it. """
+    
     def __init__(self, fafns, scoring, sampling, minlen, maxlen, minId, verbose=False):
         self.minlen = minlen
         self.maxlen = maxlen
         self.scoring = scoring
         self.verbose = verbose
         self.rlg = ReadLengthGen(mn=minlen, mx=maxlen)
-        self.sim = Simulator(args.fasta)
+        self.sim = Simulator(args.fasta, verbose)
         self.mut = Mutator(scoring, sampling, minId, maxlen, verbose)
 
     def __iter__(self):
@@ -465,10 +482,15 @@ class CaseGen(object):
         ln = self.rlg.next()
         ref, off, fw, seq = self.sim.sim(ln, verbose=False)
         mseq, sc = self.mut.mutate(seq, verbose=False)
-        #print ("%s\n%s" % (seq, mseq))
+        # return sequence, mutated sequence, expected score of alignment
         return (seq, mseq, sc)
 
 class SamChecker(threading.Thread):
+    
+    """ A thread that takes a stream of SAM records and, for each, checks
+        whether the aligner found an alignment at least as good as the expected
+        score.  We learn the expected score by parsing the read name, where it
+        is encoded. """
 
     def __init__(self, stdout):
         threading.Thread.__init__(self)
@@ -483,21 +505,24 @@ class SamChecker(threading.Thread):
     def run(self):
         for l in self.stdout:
             if l.startswith('@'):
-                continue
+                continue # skip headers
             succ = False # assume we didn't find fit with appropriate score
             nm, flags, _, _, _, _, _, _, _, seq, _ = string.split(l, '\t', 10)
             rdlen = len(seq)
+            # Parse expected score, sc_ex
             rfseq, sc_ex = string.split(nm, '_')
             sc_ex = -int(sc_ex)
             if (int(flags) & 4) == 0:
+                # read aligned
                 mat = self.re_as.search(l)
                 as_str = mat.group(1)
                 assert len(as_str) > 0
                 as_i = int(as_str)
                 if as_i >= sc_ex:
+                    # read aligned and score was as good or better than expected
                     succ = True
             # succ is true iff read aligned and matched with a score greater
-            # than or equal to the "correct" score according to the simulator
+            # than or equal to the score according to the simulator
             if sc_ex not in self.res_by_sc:
                 self.res_by_sc[sc_ex] = [0, 0]
             self.res_by_sc[sc_ex][0 if succ else 1] += 1
@@ -505,11 +530,27 @@ class SamChecker(threading.Thread):
                 self.res_by_sc_len[(sc_ex, rdlen)] = [0, 0]
             self.res_by_sc_len[(sc_ex, rdlen)][0 if succ else 1] += 1
 
+def writeRecoveryTable(res_by_sc, oh):
+    for sc in sorted(res_by_sc.iterkeys()):
+        ci = res_by_sc[sc]
+        cor, incor = ci
+        print "\t".join(map(str, [sc, cor, incor]))
+
+def writeCumulativeRecoveryTable(res_by_sc, oh):
+    cor_cum, incor_cum = 0, 0
+    for sc in xrange(max(res_by_sc.keys()), min(res_by_sc.keys())-1, -1):
+        cor, incor = 0, 0
+        if sc in res_by_sc:
+            cor, incor = res_by_sc[sc]
+        print "\t".join(map(str, [sc, cor_cum, incor_cum]))
+        cor_cum += cor
+        incor_cum += incor
+
 def go():
     # Open pipe to bowtie 2 process
     bt2_cmd = "bowtie2 "
     if args.bt2_exe is not None:
-        bt2_cmd = args.bt2_exe
+        bt2_cmd = args.bt2_exe + " "
     bt2_cmd += args.bt2_args
     bt2_cmd += " --reorder --sam-no-qname-trunc -f -U -"
     print >> sys.stderr, "Bowtie 2 command: '%s'" % bt2_cmd
@@ -525,9 +566,7 @@ def go():
         pipe.stdin.write(">%s\n%s" % (nm, mseq))
     pipe.stdin.close()
     samcheck.join()
-    for sc in sorted(samcheck.res_by_sc.iterkeys()):
-        ci = samcheck.res_by_sc[sc]
-        print "%d: %d correct (%0.3f%%), %d incorrect (%0.3f%%)" % (sc, ci[0], 100.0*float(ci[0])/(ci[0]+ci[1]), ci[1], 100.0*float(ci[1])/(ci[0]+ci[1]))
+    writeCumulativeRecoveryTable(samcheck.res_by_sc, sys.stdout)
 
 if args.profile:
     import cProfile
