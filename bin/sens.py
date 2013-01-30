@@ -43,6 +43,9 @@ parser.add_argument(\
     '--num-reads', metavar='int', dest='num_reads', type=int, default=100,
     required=False, help='Number of reads to simulate')
 parser.add_argument(\
+    '--max-ref-bases', metavar='int', dest='max_bases', type=int, default=None,
+    required=False, help='Stop reading in FASTA once we exceed this many reference nucleotides')
+parser.add_argument(\
     '--min-id', metavar='fraction', dest='minid', type=float, default=0.95,
     required=False, help='Minimum pct identity to allow')
 parser.add_argument(\
@@ -60,6 +63,9 @@ parser.add_argument(\
 parser.add_argument(\
     '--bt2-args', metavar='args', dest='bt2_args', type=str,
     help='Arguments to pass to Bowtie 2 (besides input an output)')
+parser.add_argument(\
+    '--surprise', metavar='path', type=str,
+    help='Dump surprising SAM records here')
 parser.add_argument(\
     '--sanity', dest='sanity', action='store_const', const=True, default=False,
     help='Do various sanity checks')
@@ -416,6 +422,10 @@ class Simulator(object):
         totlen = 0
         pt_sz = 50000000
         last_pt = 0
+        max_bases = sys.maxint
+        if args.max_bases is not None:
+            max_bases = args.max_bases
+        abort = False
         for fafn in fafns:
             fafh = open(fafn, 'r')
             name = None
@@ -440,20 +450,32 @@ class Simulator(object):
                         if pt > last_pt:
                             print >> sys.stderr, "Read %d FASTA bytes..." % totlen
                         last_pt = pt
+                    if totlen > max_bases:
+                        abort = True
+                        break
             fafh.close()
+            if abort:
+                break
         for k in self.refs.iterkeys():
             self.refs[k] = ''.join(self.refs[k])
         self.rnd = WeightedRandomGenerator(self.lens)
+        self.__re = re.compile('[^ACGTacgt]')
     
     def sim(self, ln, verbose=False):
         if verbose:
             print >>sys.stderr, "sim called..."
         refi = self.rnd.next()
         assert refi < len(self.names)
-        off = random.randint(0, self.lens[refi] - ln)
         fw = True
         nm = self.names[refi]
+        off = random.randint(0, self.lens[refi] - ln)
         seq = self.refs[nm][off:off+ln]
+        # The simulated read can't overlap a non-A-C-G-T character in the
+        # reference
+        while self.__re.match(seq):
+            off = random.randint(0, self.lens[refi] - ln)
+            seq = self.refs[nm][off:off+ln]
+        # Pick some reads to reverse-complement
         if random.random() > 0.5:
             fw = False
             seq = revcomp(seq)
@@ -485,16 +507,17 @@ class CaseGen(object):
         # return sequence, mutated sequence, expected score of alignment
         return (seq, mseq, sc)
 
-class SamChecker(threading.Thread):
+class RecoveryChecker(threading.Thread):
     
     """ A thread that takes a stream of SAM records and, for each, checks
         whether the aligner found an alignment at least as good as the expected
         score.  We learn the expected score by parsing the read name, where it
         is encoded. """
 
-    def __init__(self, stdout):
+    def __init__(self, stdout, sink=None):
         threading.Thread.__init__(self)
         self.stdout = stdout
+        self.sink = sink
         self.re_as = re.compile("AS:i:(-?[0-9]+)")
         # Following dictionaries hold the # correct / # incorrect results
         # stratified by expected score, and by both expected score and read
@@ -503,15 +526,21 @@ class SamChecker(threading.Thread):
         self.res_by_sc_len = dict()
     
     def run(self):
+        
+        """ Consume lines of SAM and check each to see if target score was
+            recovered. """
+        
         for l in self.stdout:
             if l.startswith('@'):
                 continue # skip headers
+            l = l.rstrip()
             succ = False # assume we didn't find fit with appropriate score
             nm, flags, _, _, _, _, _, _, _, seq, _ = string.split(l, '\t', 10)
             rdlen = len(seq)
             # Parse expected score, sc_ex
             rfseq, sc_ex = string.split(nm, '_')
             sc_ex = -int(sc_ex)
+            as_i = None
             if (int(flags) & 4) == 0:
                 # read aligned
                 mat = self.re_as.search(l)
@@ -529,6 +558,10 @@ class SamChecker(threading.Thread):
             if (sc_ex, rdlen) not in self.res_by_sc_len:
                 self.res_by_sc_len[(sc_ex, rdlen)] = [0, 0]
             self.res_by_sc_len[(sc_ex, rdlen)][0 if succ else 1] += 1
+            # Check for surprising cases where the expected score is very good
+            # (i.e. perfect or 1 mismatch) but we failed to recover it
+            if self.sink is not None:
+                self.sink(sc_ex, as_i, l)
 
 def writeRecoveryTable(res_by_sc, oh):
     for sc in sorted(res_by_sc.iterkeys()):
@@ -546,6 +579,13 @@ def writeCumulativeRecoveryTable(res_by_sc, oh):
         cor_cum += cor
         incor_cum += incor
 
+def samSink(scoring, ofh, sc_ex, as_i, l):
+    if (as_i is None or as_i < sc_ex) and sc_ex >= -6:
+        as_i_str = "None"
+        if as_i is not None:
+            as_i_str = str(as_i)
+        ofh.write("SURPRISE!  AS:i is %s, sc_ex is %d\n%s\n" % (as_i_str, sc_ex, l))
+
 def go():
     # Open pipe to bowtie 2 process
     bt2_cmd = "bowtie2 "
@@ -555,17 +595,24 @@ def go():
     bt2_cmd += " --reorder --sam-no-qname-trunc -f -U -"
     print >> sys.stderr, "Bowtie 2 command: '%s'" % bt2_cmd
     pipe = Popen(bt2_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    samcheck = SamChecker(pipe.stdout)
-    samcheck.start()
     sctok = map(int, string.split(args.scoring, ','))
     scoring = Scoring(sctok[0], (sctok[1], sctok[2]), sctok[3], (sctok[4], sctok[5]), (sctok[6], sctok[7]))
     cg = CaseGen(args.fasta, scoring, args.sampling, args.minlen, args.maxlen, args.minid, verbose=args.verbose)
+    sinkFh = None
+    sink = None
+    if args.surprise is not None:
+        sinkFh = open(args.surprise, 'w')
+        sink = lambda x, y, z: samSink(scoring, sinkFh, x, y, z)
+    samcheck = RecoveryChecker(pipe.stdout, sink)
+    samcheck.start()
     for x in xrange(0, args.num_reads):
         seq, mseq, sc = cg.next()
         nm = "_".join([seq, str(sc)])
         pipe.stdin.write(">%s\n%s" % (nm, mseq))
     pipe.stdin.close()
     samcheck.join()
+    if args.surprise is not None:
+        sinkFh.close()
     writeCumulativeRecoveryTable(samcheck.res_by_sc, sys.stdout)
 
 if args.profile:

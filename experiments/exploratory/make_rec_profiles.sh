@@ -16,6 +16,8 @@ sens() {
 	IDFRAC=$5
 	NM=$6
 	$SENS \
+		--max-ref-bases 1000000 \
+		--surprise ${NM}_surprise.sam \
 		--verbose \
 		--fasta $1 \
 		--scoring "1,2,6,1,5,3,5,3" \
