@@ -40,6 +40,7 @@ import subprocess
 import tempfile
 import signal
 import traceback
+import pickle
 from Queue import Queue
 
 def quit_handler(signum,frame):
@@ -266,11 +267,183 @@ class QualitySimulator(object):
     def sim(self, ln):
         return 'I' * ln
 
+class FastaSeqIdx(object):
+    
+    ''' Object encapsulating a FASTA file that has been indexed by sequence.
+        That is, the index makes it easy to seek directly to the beginning of
+        a specific sequence (but not to specific points within it). '''
+    
+    def __init__(self, fa_fns, truncate=True, idx_fn=None):
+        self.fa_fns = fa_fns  # FASTA filenames to open/index
+        self.idx_fn = idx_fn  # filename where index should be stored/retrieved
+        self.idx = {}         # The index!!
+        self.idxIval = 10 * 1024
+        self.truncate = truncate
+        self.fh = None
+        self._lastc = ''
+        if idx_fn is not None and os.path.exists(idx_fn):
+            self.loadIdx(idx_fn)
+        else:
+            self.buildIdx()
+        if idx_fn is not None and not os.path.exists(idx_fn):
+            self.saveIdx(idx_fn)
+    
+    def __del__(self):
+        if self.fh is not None: self.fh.close()
+    
+    def close(self):
+        if self.fh is not None: self.fh.close()
+    
+    def nextc(self, n=1, skip=False):
+        ''' Return a string consisting of the next n non-whitespace characters.
+            The read is with respect to the current file cursor. '''
+        self._lastc = ''
+        if n == 1:
+            c = self.fh.read(1)
+            while c.isspace():
+                c = self.fh.read(1)
+            self._lastc = c
+            return c # Empty string if EOF
+        else:
+            s = []
+            slen = 0
+            lastc = None
+            while slen < n:
+                c = self.fh.read(1)
+                while c.isspace():
+                    c = self.fh.read(1)
+                if not skip:
+                    s.append(c)
+                lastc = c
+                slen += 1
+            if slen > 0 and lastc is not None:
+                self._lastc = lastc
+            return ''.join(s)
+    
+    def get(self, ref, off=0, ln=None):
+        ''' Get the string at 0-based offset off, with length ln '''
+        if off == 0 and ln is None:
+            return self.getWhole(ref)
+        if ln is None: ln = self.idx[ref][1]
+        self.scanTo(ref, off)
+        return self.nextc(n=ln, skip=False)
+    
+    def getpad(self, ref, off=0, ln=None, pad='x'):
+        ''' Get the string at 0-based offset off, with length ln.  If this
+            string falls off either end of the reference, fill those slots with
+            the "pad" string. '''
+        if off == 0 and ln is None:
+            return self.getWhole(ref)
+        if ln is None: ln = self.idx[ref][1]
+        lf, rt = '', ''
+        if off < 0: lf = pad * -off
+        if off+ln > self.idx[ref][1]: rt = pad * (off+ln - self.idx[ref][1])
+        self.scanTo(ref, off)
+        return lf + self.nextc(n=ln, skip=False) + rt
+    
+    def getWhole(self, ref):
+        """ Return an entire sequence from the FASTA file. """ 
+        self.scanTo(ref, 0)
+        lns = []
+        while True:
+            ln = self.fh.readline().rstrip()
+            if len(ln) == 0 or ln[0] == '>': break
+            lns.append(ln)
+        return "".join(lns)
+    
+    def peek(self):
+        ''' Take a peek at the next non-whitespace character and return it. '''
+        off = self.fh.tell()
+        c = self.fh.read(1)
+        while c.isspace():
+            c = self.fh.read(1)
+        self.fh.seek(off)
+        return c
+    
+    def lastc(self):
+        ''' Return last character read '''
+        return self._lastc
+    
+    def scanTo(self, ref, off):
+        ''' Scan to the beginning of the FASTA sequence of the given name '''
+        if self.fh is not None:
+            self.fh.close()
+            self.fh = None
+        if self.truncate:
+            idx = ref.find(' ')
+            # Truncate name at first whitespace
+            if idx >= 0:
+                ref = ref[:idx]
+        # Reference should be in the index
+        assert ref in self.idx
+        fn, seekoff = self.idx[ref]
+        offlist = self.idx[ref][3]
+        i = bisect.bisect_right(offlist, (off, sys.maxint))
+        assert i <= len(offlist)
+        self.fh = open(fn, 'rb')
+        if i == 0:
+            self.fh.seek(self.idx[ref][2], 0)
+            self.nextc(off, skip=True)
+        else:
+            diff = offlist[i][0] - off
+            self.fh.seek(offlist[i][1], 0)
+            self.nextc(diff, skip=True)
+    
+    def loadIdx(self, idx_fn):
+        ''' Load an already-calculated index from a file. '''
+        with open(self.idx_fn, 'rb') as pkl_file:
+            self.idx = pickle.load(pkl_file)
+    
+    def saveIdx(self, idx_fn):
+        ''' Save an index to a file. '''
+        with open(self.idx_fn, 'wb') as pkl_file:
+            pickle.dump(self.idx, pkl_file)
+    
+    def length(self, nm):
+        assert nm in self.idx
+        return self.idx[nm][1]
+    
+    def buildIdx(self):
+        ''' Build an index dictionary over for all the reference sequences in
+            all the FASTA files. '''
+        for fn in self.fa_fns:
+            with open(fn, 'rb') as fh:
+                cur = None
+                while 1:
+                    line = fh.readline()
+                    if not line: break
+                    line = line.rstrip()
+                    off = fh.tell()
+                    if len(line) == 0:
+                        continue
+                    if line[0] == '>': # Header
+                        refid = line[1:]
+                        if self.truncate:
+                            idx = refid.find(' ')
+                            if idx >= 0:
+                                refid = refid[:idx]
+                        assert refid not in self.idx, "Already saw refid '%s' from line '%s'" % (refid, line)
+                        # Index record is:
+                        # 1. Filename
+                        # 2. Length of sequence
+                        # 3. File offset
+                        # 4. List of internal offsets
+                        self.idx[refid] = [fn, 0, off, []]
+                        cur = refid
+                    elif cur is not None:
+                        ln = self.idx[cur][1]
+                        ln_old, ln_new = ln, ln + len(line)
+                        if (ln_old % self.idxIval) != (ln_new % self.idxIval):
+                            self.idx[cur][3].append((ln_new, off))
+                        # See if we want to add an offset to the index
+                        self.idx[cur][1] += len(line)
+
 class SequenceSimulator(object):
     """ Class that, given a collection of FASTA files, samples intervals of
         specified length from the strings contained in them. """
     
-    def __init__(self, fafns, verbose=False):
+    def __init__(self, fafns, idx_fn=None, verbose=False):
+        #fa = FastaSeqIdx(fafns, idx_fn=idx_fn)
         self.refs = dict()
         self.names = []
         self.lens = []
@@ -912,7 +1085,7 @@ def go():
     # Create object that captures the scoring scheme used by the aligner
     scoring = Scoring(sctok[0], (sctok[1], sctok[2]), sctok[3], (sctok[4], sctok[5]), (sctok[6], sctok[7]))
     # Construct sequence and quality simulators
-    sim, qsim = SequenceSimulator(args.ref), QualitySimulator(qdistUnp, qdistM1, qdistM2)
+    sim, qsim = SequenceSimulator(args.ref, idx_fn=args.ref_idx), QualitySimulator(qdistUnp, qdistM1, qdistM2)
     simw = SimulatorWrapper(\
         sim,       # sequence simulator
         qsim,      # quality-value simulator
@@ -990,7 +1163,11 @@ def go():
     
     # Now we train our model
     from sklearn.neighbors import KNeighborsClassifier
-    mapqClassifier = KNeighborsClassifier(n_neighbors=10, warn_on_equidistant=False)
+    weights = 'uniform'
+    if args.distance_weight:
+        weights = 'distance'
+    mapqClassifier = KNeighborsClassifier(\
+        n_neighbors=args.num_neighbors, warn_on_equidistant=False, weights=weights)
     mapqClassifier.fit(trainingData, labels)
     
     with open(args.S, 'w') as samOfh:
@@ -1047,6 +1224,8 @@ if __name__ == "__main__":
     parser.add_argument(\
         '--ref', metavar='path', type=str, nargs='+', help='FASTA file(s) containing reference genome sequences')
     parser.add_argument(\
+        '--ref-idx', metavar='path', type=str, help='File containing index for FASTA file(s)')
+    parser.add_argument(\
         '--U', metavar='path', type=str, nargs='+', help='Unpaired read files')
     parser.add_argument(\
         '--S', metavar='path', type=str, required=True, help='Write SAM output here')
@@ -1066,6 +1245,9 @@ if __name__ == "__main__":
         '--num-reads', metavar='int', type=int, default=100,
         required=False, help='Number of reads to simulate')
     parser.add_argument(\
+        '--num-neighbors', metavar='int', type=int, default=20,
+        required=False, help='Number of neighbors to use for k-nearest-neighbors')
+    parser.add_argument(\
         '--upto', metavar='int', type=int, default=None,
         required=False, help='Stop after this many input reads')
     parser.add_argument(\
@@ -1080,6 +1262,9 @@ if __name__ == "__main__":
     parser.add_argument(\
         '--bt2-args', metavar='args', dest='bt2_args', type=str,
         help='Arguments to pass to Bowtie 2 (besides input an output)')
+    parser.add_argument(\
+        '--distance-weight', action='store_const', const=True, default=False,
+        help='Do distance weighting when doing KNN')
     parser.add_argument(\
         '--sanity', dest='sanity', action='store_const', const=True, default=False,
         help='Do various sanity checks')
