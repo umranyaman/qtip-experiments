@@ -58,6 +58,7 @@ class Read(object):
         self.seq = seq
         self.qual = qual
         self.orig = orig
+        assert self.repOk()
     
     @classmethod
     def fromSimulator(cls, seq, qual, refid, refoff, fw):
@@ -74,9 +75,16 @@ class Read(object):
         if self.orig is not None:
             return self.orig # original string preferred
         elif self.qual is not None:
+            assert len(self.seq) == len(self.qual)
             return "@%s\n%s\n+\n%s\n" % (self.name, self.seq, self.qual)
         else:
             return ">%s\n%s\n" % (self.name, self.seq)
+    
+    def repOk(self):
+        """ Check that read is internally consistent """
+        if self.qual is not None:
+            assert len(self.seq) == len(self.qual)
+        return True
 
 class ReadPair(object):
     """ Encapsulates a pair of reads with mate1/mate2 labels """
@@ -89,6 +97,7 @@ class Alignment(object):
     __asRe = re.compile('AS:i:([-]?[0-9]+)')
     __xsRe = re.compile('XS:i:([-]?[0-9]+)')
     __ytRe = re.compile('YT:Z:([A-Z]+)')
+    __ysRe = re.compile('YS:i:([-]?[0-9]+)')
     
     def __init__(self, ln):
         self.name, self.flags, self.refid, self.pos, self.mapq, self.cigar, \
@@ -102,6 +111,9 @@ class Alignment(object):
         self.pos = int(self.pos)
         self.mapq = int(self.mapq)
         self.tlen = int(self.tlen)
+        self.mate1 = (self.flags & 64) != 0
+        self.mate2 = (self.flags & 128) != 0
+        self.paired = self.mate1 or self.mate2
         se = Alignment.__asRe.search(self.extra)
         self.bestScore = None
         if se is not None:
@@ -114,20 +126,37 @@ class Alignment(object):
         self.alType = None
         if se is not None:
             self.alType = se.group(1)
-        assert self.alType is not None
-        assert not self.isAligned() or self.bestScore is not None, ln
+        se = Alignment.__ysRe.search(self.extra)
+        self.mateBest = None
+        if se is not None:
+            self.mateBest = int(se.group(1))
+        assert self.repOk()
     
     def isAligned(self):
+        """ Return true iff read aligned """
         return (self.flags & 4) == 0
     
     def orientation(self):
+        """ Return orientation as + or - """
         if (self.flags & 16) != 0:
             return "-"
         else:
             return "+"
     
+    def fragmentLength(self):
+        """ Return fragment length """
+        return abs(self.tlen)
+    
     def __len__(self):
+        """ Return read length """
         return len(self.seq)
+    
+    def repOk(self):
+        """ Check alignment for internal consistency """
+        assert self.alType is not None
+        assert self.paired or self.fragmentLength() == 0
+        assert not self.isAligned() or self.bestScore is not None
+        return True
 
 class AlignmentPair(object):
     """ Encapsulates a pair of alignments for two ends of a paired-end read """
@@ -307,22 +336,29 @@ class SequenceSimulator(object):
             print >>sys.stderr, "...done"
         return (nm, refoff, fw, seq) # return ref id, ref offset, orientation, sequence
 
-__addToMemo = {}
-__addToLastSummands = None
-def addTo(total, summands=[1]):
+def addTo(total, summands=[1], memo = {}):
     """ Given a list of integers, perhaps with some integers repeated,
         calculate all ways to add those numbers to get the given total.
-        Uses top-down dynamic programming. """ 
-    global __addToLastSummands, __addToMemo
-    if __addToLastSummands is None:
-        __addToLastSummands = summands
-    elif summands != __addToLastSummands:
-        __addToMemo = {}
+        Uses top-down dynamic programming.
+        
+        Problems with this idea:
+        1. It doesn't necessarily generate 'realistic' combinations of gaps
+           and mismatches
+        2. The lower penalties are going to tend to be overrepresented.  For
+           instance, what about N getting a penalty of -1?  It will show up in
+           most combinations produced.
+        3. Could take far longer if summands are mix of positive and negative
+        
+        What we might do instead is capture patterns of gaps and mismatches
+        that occur in alignments.  We can't trust these 100% because they've
+        been through the filter of the aligner.  So we might "smooth" them or
+        otherwise try to include a bunch of "nearby" score combinations as
+        well. """ 
     def addToHelper(total, totalSofar):
         solns = set()
         left = total - totalSofar
-        if left in __addToMemo:
-            return __addToMemo[left]
+        if left in memo:
+            return memo[left]
         for i in xrange(0, len(summands)):
             if totalSofar + summands[i] < total:
                 newSolns = addToHelper(total, totalSofar + summands[i])
@@ -334,7 +370,7 @@ def addTo(total, summands=[1]):
                 soln = [0] * len(summands)
                 soln[i] = 1
                 solns.add(tuple(soln))
-        __addToMemo[left] = solns
+        memo[left] = solns
         return solns
     return addToHelper(total, 0)
 
@@ -380,8 +416,12 @@ class Mutator(object):
         self.summands = [ self.scoring.mmp[1],
                           self.scoring.rfgPenalty(),
                           self.scoring.rdgPenalty() ]
+        self.summandsWithN = self.summands + [ self.scoring.np ]
+        self.addToMemo = {}
+        self.addToMemoWithN = {}
     
-    def __addEdits(self, orig_rd, sc, nmm, nrdg, nrfg, maxAttempts=10, checkScore=False, verbose=False):
+    def __addEdits(self, orig_rd, sc, nmm, nrdg, nrfg, nn, maxAttempts=10,
+                   checkScore=False, verbose=False):
         
         """ Given a substring extracted from the reference genome (s) and given
             a # of mismatches, # of read gaps, and # of reference gaps, mutate
@@ -403,6 +443,7 @@ class Mutator(object):
         # elsewhere in the genome with a better score than it does to its true
         # point of origin.  This is probably impossible to avoid, and it's very
         # expensive to check.
+        
         attempts = 0
         rd, qu = None, None
         rf = orig_rd.seq[:]
@@ -415,10 +456,15 @@ class Mutator(object):
             if attempts > 1:
                 print >> sys.stderr, "Warning: attempt #%d" % attempts
             # Generate mismatches and gaps and place them randomly
-            mmset, rdgset, rfgset = set(), set(), set()
+            mmset, rdgset, rfgset, nset = set(), set(), set(), set()
             while len(mmset) < nmm:
                 # Insert a mismatch
                 mmset.add(random.randint(0, len(orig_rd)-1))
+            while len(nset) < nn:
+                # Insert an N
+                ri = random.randint(0, len(orig_rd)-1)
+                if ri not in mmset:
+                    nset.add(ri)
             while len(rdgset) < nrdg:
                 # Insert a read gap
                 rdgset.add(random.randint(0, len(orig_rd)-1))
@@ -434,6 +480,9 @@ class Mutator(object):
                 while c == origc:
                     c = random.choice(['A', 'C', 'G', 'T'])
                 rd.set(mm, c)
+
+            # Apply Ns to the read string
+            for n in nset: rd.set(n, 'N')
             
             # Apply read and reference gaps
             for gapi in sorted(list(rdgset) + list(rfgset), reverse=True):
@@ -448,7 +497,7 @@ class Mutator(object):
                     # build a model as we go about what sorts of quality values
                     # are associated with reference gap characters??  Or just
                     # average over the adjacent quality values?
-                    qu.set(gapi, 'I')
+                    qu.set(gapi, 'I' + qu.get(gapi))
             
             if checkScore:
                 # A check to see if the pattern of gaps and mismatches we
@@ -480,13 +529,22 @@ class Mutator(object):
         mutrd = None
         succ = False
         # Pick combination of gaps and mismatches that add to desired score
-        sol = random.choice(list(addTo(sc, self.summands)))
-        nmm, nrdg, nrfg = sol
+        nmm, nrdg, nrfg, nn = 0, 0, 0, 0
+        if sc != 0:
+            combos = list(addTo(abs(sc), self.summands, self.addToMemo))
+            if len(combos) == 0:
+                combos = list(addTo(abs(sc), self.summandsWithN, self.addToMemoWithN))
+                assert len(combos) > 0
+                sol = random.choice(combos)
+                nmm, nrdg, nrfg, nn = sol
+            else:
+                sol = random.choice(combos)
+                nmm, nrdg, nrfg = sol
         attempts = 0
         while not succ and attempts < maxAttempts:
             attempts += 1
             mutrd, succ = self.__addEdits(
-                rd, sc, nmm, nrdg, nrfg,
+                rd, sc, nmm, nrdg, nrfg, nn,
                 maxAttempts=maxAttempts, checkScore=checkScore)
         if attempts == maxAttempts:
             raise RuntimeError("Exceeded maximum attempts in mutate")
@@ -523,7 +581,10 @@ class SimulatorWrapper(object):
             refid, refoff, fw, seq = self.sim.sim(rl) # simulate it
             assert rl == len(seq)
             qual = self.qsim.sim(rl)
-            return Read.fromSimulator(seq, qual, refid, refoff, fw), None
+            read = Read.fromSimulator(seq, qual, refid, refoff, fw)
+            # mutate sequence
+            mutRead = self.mut.mutate(read, self.scd.draw())
+            return mutRead, None
         else:
             # Simulating paired-end read
             sc1, sc2 = self.scd1.draw(), self.scd2.draw() # draw scores
@@ -534,14 +595,19 @@ class SimulatorWrapper(object):
             # get mates from fragment
             seq1 = seq[:rl1]
             seq2 = seq[-rl2:]
+            # possibly reverse-comp according to paired-end parameters
             if not m1fw: seq1 = revcomp(seq1)
             if not m2fw: seq2 = revcomp(seq2)
             refoff1, refoff2 = refoff, refoff
             if fw: refoff2 = refoff + fl - rl2
             else:  refoff1 = refoff + fl - rl1
             qual1, qual2 = self.qsim.sim(len(seq1)), self.qsim.sim(len(seq2))
-            return Read.fromSimulator(seq1, qual1, refid, refoff1, fw), \
-                   Read.fromSimulator(seq2, qual2, refid, refoff2, fw)
+            rd1 = Read.fromSimulator(seq1, qual1, refid, refoff1, fw)
+            rd2 = Read.fromSimulator(seq2, qual2, refid, refoff2, fw)
+            # mutate them
+            mutRd1 = self.mut.mutate(rd1, self.scd1.draw())
+            mutRd2 = self.mut.mutate(rd2, self.scd2.draw())
+            return mutRd1, mutRd2
 
 class Input(object):
     """ Class that parses reads from input files and yields the reads/pairs
@@ -621,6 +687,55 @@ class InputWrapper(object):
                 for q in map(lambda x: ord(x)-33, rd1.qual): self.qdistUnp.add(q)
             yield (rd1, rd2)
 
+class TrainingRecord(object):
+    """ A single tuple of per-read training data including:
+        1. Read length
+        2. Alignment type (UU, CP, DP, UP)
+        3. Read's best score
+        4. Read's second-best score
+        5. Fragment length (if from a pair)
+        6. Mate's best score (if from a pair)
+        7. Mate's second-best score (if from a pair)
+        8. Correct (outcome) """
+    def __init__(self, rdlen, altype, bestSc, secbestSc, fraglen, mBestSc):
+        self.rdlen = rdlen
+        self.altype = altype
+        self.bestSc = bestSc
+        self.secbestSc = secbestSc
+        self.fraglen = fraglen
+        self.mBestSc = mBestSc
+
+        if secbestSc is not None:
+            self.scDiff = abs(self.bestSc - self.secbestSc)
+        else:
+            self.scDiff = 10000
+        
+        self.mBestSc = self.mBestSc or -10000
+        
+        assert self.repOk()
+    
+    @classmethod
+    def fromAlignment(cls, al):
+        """ Initialize training record with respect to an alignment and a
+            boolean indicating whether it is correct. """
+        return cls(len(al), al.alType, al.bestScore, al.secondBestScore,
+                   al.fragmentLength(), al.mateBest)
+    
+    def toList(self):
+        """ Return simple list form """
+        return [ self.rdlen, self.bestSc, self.scDiff,
+                 self.fraglen, self.mBestSc ]
+    
+    def repOk(self):
+        """ Check for internal consistency """
+        assert self.rdlen is not None
+        assert self.altype is not None
+        assert self.bestSc is not None
+        assert self.scDiff is not None
+        assert self.fraglen is not None
+        assert self.mBestSc is not None
+        return True
+
 class Output(threading.Thread):
     """ Encapsulates the output reader.  Reads SAM output from the aligner,
         updates empirical distributions for e.g. fragment length, and looks for
@@ -628,12 +743,12 @@ class Output(threading.Thread):
         a simulated read, its correctness will be checked and a tuple
         written """
     
-    def __init__(self, samIfh, samOfh, trainFh,
+    def __init__(self, samIfh, samOfh, trainSink,
                  scDistUnp, scDistM1, scDistM2, fragDist, typeDist):
         threading.Thread.__init__(self)
         self.samIfh = samIfh       # SAM records come from here
         self.samOfh = samOfh       # normal (non-simulated) SAM records go here
-        self.trainFh = trainFh     # write training data here
+        self.trainSink = trainSink # write training data here
         self.fragDist = fragDist   # fragment length distribution
         self.scDistUnp = scDistUnp # score distribution for unpaired
         self.scDistM1 = scDistM1   # score distribution for mate #1s
@@ -658,19 +773,8 @@ class Output(threading.Thread):
                     if refid == al.refid and fw == al.orientation():
                         # Check offset
                         correct = abs(refoff - al.pos) < args.wiggle
-                    # Output training tuple:
-                    # 1. Read length
-                    # 2. Alignment type (UU, UP, CP, DP)
-                    # 3. Score of best
-                    # 4. Score of second-best
-                    # 5. Fragment length (if paired-end)
-                    # 6. Mate's score of best
-                    # 7. Mate's score of second-best
-                    # 8. Correct?
-                    self.trainFh.write(
-                        "\t".join([str(len(al)), al.alType, str(al.bestScore),
-                                   str(al.secondBestScore), str(int(correct))]))
-                    self.trainFh.write("\n")
+                    if self.trainSink is not None:
+                        self.trainSink(TrainingRecord.fromAlignment(al), correct)
             else:
                 # Take alignment info into account
                 if lastAl is not None and al.name == lastAl.name and al.alType == "CP":
@@ -732,6 +836,8 @@ def createInput(rddistUnp, rddistM1, rddistM2, qdistUnp, qdistM1, qdistM2):
 def go():
     """ Main driver for tandem simulator """
     
+    import tempfile
+    
     if args.ref is None:
         raise RuntimeError("Must specify --ref")
     
@@ -788,11 +894,16 @@ def go():
     
     scDistUnp, scDistM1, scDistM2, typeDist, fragDist = \
         Dist(), Dist(), Dist(), Dist(), Dist()
-    samOfh = sys.stdout
-    if args.S:
-        samOfh = open(args.S, 'w')
+    
+    samTempOfh = tempfile.TemporaryFile()
+        
+    trainingData, labels = [], []
+    def trainingSink(rec, correct):
+        trainingData.append(rec.toList())
+        labels.append(correct)
+    
     # Create the thread that eavesdrops on output from bowtie2
-    othread = Output(pipe.stdout, samOfh, sys.stderr,
+    othread = Output(pipe.stdout, samTempOfh, trainingSink,
                      scDistUnp, scDistM1, scDistM2, fragDist, typeDist)
     othread.start()
     rddistUnp, rddistM1, rddistM2 = Dist(), Dist(), Dist()
@@ -876,8 +987,33 @@ def go():
             fifoFhs[i].close()
             os.unlink(fifoFns[i])
     othread.join() # join the thread that monitors aligner output
-    if args.S:
-        samOfh.close() # close SAM output file
+    
+    # Now we train our model
+    from sklearn.neighbors import KNeighborsClassifier
+    mapqClassifier = KNeighborsClassifier(n_neighbors=10, warn_on_equidistant=False)
+    mapqClassifier.fit(trainingData, labels)
+    
+    with open(args.S, 'w') as samOfh:
+        samTempOfh.seek(0)
+        for samrec in samTempOfh:
+            if samrec.startswith('@'):
+                continue
+            al = Alignment(samrec)
+            if al.isAligned():
+                rec = TrainingRecord.fromAlignment(al)
+                if True or rec.bestSc == rec.secbestSc:
+                    print "=="
+                    print rec.toList()
+                    print "--"
+                    print mapqClassifier.predict_proba([rec.toList()])
+                    print "--"
+                    dist, nidx = mapqClassifier.kneighbors(rec.toList())
+                    nidx = [ i for sublist in nidx for i in sublist ]
+                    print nidx
+                    print list(trainingData[i] for i in nidx), list(labels[i] for i in nidx)
+    
+    # Close temporary SAM output file; it will be deleted immediately
+    samTempOfh.close()
     
     # Now we want to read the SAM output file back in and re-write it,
     # including our new MAPQs, informed by training data
@@ -913,7 +1049,7 @@ if __name__ == "__main__":
     parser.add_argument(\
         '--U', metavar='path', type=str, nargs='+', help='Unpaired read files')
     parser.add_argument(\
-        '--S', metavar='path', type=str, help='Write SAM output here')
+        '--S', metavar='path', type=str, required=True, help='Write SAM output here')
     parser.add_argument(\
         '--m1', metavar='path', type=str, nargs='+', help='Mate 1 files')
     parser.add_argument(\
