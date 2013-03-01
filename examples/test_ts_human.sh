@@ -13,7 +13,7 @@ python ../bin/ts.py \
 	--S $SAM_OUT \
 	--fastq \
 	--scoring "1,2,6,1,5,3,5,3" \
-	--num-reads 100 \
+	--num-reads 2000 \
 	--bt2-exe $BT2_HOME/bowtie2 \
 	--bt2-args "-x $IDX" \
-	--upto 10000
+	--upto 50000
