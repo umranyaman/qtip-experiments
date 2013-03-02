@@ -33,6 +33,7 @@ import os
 import sys
 import re
 import threading
+import math
 import string
 import random
 import bisect
@@ -1014,6 +1015,8 @@ def go():
     if args.ref is None:
         raise RuntimeError("Must specify --ref")
     
+    random.seed(args.seed)
+    
     # When do we start generating training data?  If we train as we go,
     # we can start refining MAPQ estimates during the first pass, but we have
     # less data to direct the simulator to the most appropriate portions of the
@@ -1174,20 +1177,33 @@ def go():
         samTempOfh.seek(0)
         for samrec in samTempOfh:
             if samrec.startswith('@'):
+                samOfh.write(samrec)
                 continue
             al = Alignment(samrec)
             if al.isAligned():
                 rec = TrainingRecord.fromAlignment(al)
-                if True or rec.bestSc == rec.secbestSc:
-                    print "=="
-                    print rec.toList()
-                    print "--"
-                    print mapqClassifier.predict_proba([rec.toList()])
-                    print "--"
-                    dist, nidx = mapqClassifier.kneighbors(rec.toList())
-                    nidx = [ i for sublist in nidx for i in sublist ]
-                    print nidx
-                    print list(trainingData[i] for i in nidx), list(labels[i] for i in nidx)
+                mapq = mapqClassifier.predict_proba([rec.toList()])[0][-1]
+                mapq = 1.0 - mapq
+                if mapq == 0:
+                    mapq = args.max_mapq
+                else:
+                    mapq = -10.0 * math.log10(mapq)
+                mapq = min(mapq, args.max_mapq)
+                if args.verbose:
+                    if True or rec.bestSc == rec.secbestSc:
+                        print "=="
+                        print rec.toList()
+                        print "--"
+                        print mapq
+                        print "--"
+                        dist, nidx = mapqClassifier.kneighbors(rec.toList())
+                        nidx = [ i for sublist in nidx for i in sublist ]
+                        print nidx
+                        print list(trainingData[i] for i in nidx), list(labels[i] for i in nidx)
+                samrec = samrec.rstrip()
+                samOfh.write("\t".join([samrec, "XQ:f:" + str(mapq)]) + "\n")
+            else:
+                samOfh.write(samrec)
     
     # Close temporary SAM output file; it will be deleted immediately
     samTempOfh.close()
@@ -1241,6 +1257,12 @@ if __name__ == "__main__":
         '--scoring', metavar='str', type=str, required=False,
         default='1,2,6,1,5,3,5,3',
         help='MatchBonus,MismatchMinPen,MismatchMaxPen,NPen,ReadGapConst,ReadGapLinear,RefGapConst,RefGapLinear')
+    parser.add_argument(\
+        '--max-mapq', metavar='float', type=float, default=100.0,
+        required=False, help='Maximum MAPQ possible for an alignment')
+    parser.add_argument(\
+        '--seed', metavar='int', type=int, default=99099,
+        required=False, help='Integer to initialize pseudo-random generator')
     parser.add_argument(\
         '--num-reads', metavar='int', type=int, default=100,
         required=False, help='Number of reads to simulate')
