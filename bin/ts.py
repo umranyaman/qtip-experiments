@@ -24,9 +24,6 @@ Things we learn from alignments
 - Fragment length distribution
 - Number and placement of mismatches and gaps
 
-TODO: The simulated reads have a surprisingly low alignment rate.  Can
-we figure out why?  Could it be reference Ns?
-
 """
 
 __author__ = "Ben Langmead"
@@ -53,7 +50,7 @@ def quit_handler(signum,frame):
 
 signal.signal(signal.SIGQUIT,quit_handler)
 
-_revcomp_trans = string.maketrans("ACGT", "TGCA")
+_revcomp_trans = string.maketrans("ACGTacgt", "TGCAtgca")
 def revcomp(s):
     return s[::-1].translate(_revcomp_trans)
 
@@ -680,6 +677,7 @@ class SequenceSimulator(object):
         while self.__re.match(seq):
             refoff = random.randint(0, self.lens[refi] - ln) # pick new offset
             seq = self.refs[nm][refoff:refoff+ln] # extract substring again
+        seq = seq.upper()
         if random.random() > 0.5: # possibly reverse-complement
             fw = False
             seq = revcomp(seq) # reverse complement
@@ -770,14 +768,18 @@ def mutate(rd, rdfw, scDistDraw):
     i, rdi, rfi = 0, 0, 0
     while i < len(rdAln):
         if rdAln[i] == '-':
+            assert sc != 0 # score can't be perfect
             rfi += 1
         elif rfAln[i] == '-':
+            assert sc != 0 # score can't be perfect
             seq.append(rdAln[i])
             rdi += 1
         elif rdAln[i] != rfAln[i] and rdAln[i] == 'N':
+            assert sc != 0 # score can't be perfect
             seq.append('N')
             rfi += 1; rdi += 1
         elif rdAln[i] != rfAln[i]:
+            assert sc != 0 # score can't be perfect
             assert rfi < len(rd.seq)
             oldc = rd.seq[rfi].upper()
             cs = ['A', 'C', 'G', 'T']
