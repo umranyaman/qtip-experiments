@@ -88,11 +88,6 @@ class Read(object):
             assert len(self.seq) == len(self.qual)
         return True
 
-class ReadPair(object):
-    """ Encapsulates a pair of reads with mate1/mate2 labels """
-    def __init__(self, rd1, rd2):
-        self.rd1, self.rd2 = rd1, rd2
-
 class Alignment(object):
     """ Encapsulates an alignment record for a single aligned read """
 
@@ -192,12 +187,10 @@ class WeightedRandomGenerator(object):
         return bisect.bisect_right(self.totals, rnd)
 
 def cigarToList(cigar):
-    
-    ''' Parse CIGAR string into a list of CIGAR operations '''
-    
+    """ Parse CIGAR string into a list of CIGAR operations. """
     ret = [];
     i = 0
-    # MIDNSHP
+    # CIGAR operations: MIDNSHP
     op_map = {'M':0, '=':0, 'X':0, 'I':1, 'D':2, 'N':3, 'S':4, 'H':5, 'P':6}
     while i < len(cigar):
         run = 0
@@ -213,10 +206,8 @@ def cigarToList(cigar):
     return ret
 
 def mdzToList(md):
-    
-    ''' Parse an MD:Z string into a list of operations, where 0=match,
-        1=read gap, 2=mismatch. '''
-    
+    """ Parse MD:Z string into a list of operations, where 0=match,
+        1=read gap, 2=mismatch. """
     i = 0;
     ret = [] # list of (op, run, str) tuples
     while i < len(md):
@@ -247,13 +238,11 @@ def mdzToList(md):
     return ret
 
 def cigarMdzToStacked(seq, cgp, mdp_orig):
-    
-    ''' Takes parsed cigar and parsed MD:Z and generates a stacked alignment:
+    """ Takes parsed cigar and parsed MD:Z and generates a stacked alignment:
         a pair of strings with gap characters inserted (possibly) and where
         characters at at the same offsets are opposite each other in the
         alignment.  Returns tuple of 2 parallel strings: read string, ref
-        string. '''
-    
+        string. """
     mdp = mdp_orig[:]
     rds, rfs = "", ""
     mdo, rdoff = 0, 0
@@ -1137,6 +1126,7 @@ class TrainingRecord(object):
             self.scDiff = 10000
         self.scDiff *= scaleDiff
         self.mBestSc = self.mBestSc or -10000
+        self.mBestSc *= scaleAs
         assert self.repOk()
     
     @classmethod
@@ -1145,7 +1135,7 @@ class TrainingRecord(object):
             boolean indicating whether it is correct. """
         return cls(len(al), al.alType, al.bestScore, al.secondBestScore,
                    al.fragmentLength(), al.mateBest,
-                   scaleAs=1.0, scaleDiff=1.0)
+                   scaleAs=scaleAs, scaleDiff=scaleDiff)
     
     def toList(self):
         """ Return simple list form """
@@ -1269,7 +1259,7 @@ def go():
     
     import tempfile
     
-    if args.ref is None:
+    if args.ref is None and args.training_input is None:
         raise RuntimeError("Must specify --ref")
     
     random.seed(args.seed)
@@ -1354,113 +1344,136 @@ def go():
                     fifoFhs[i] = None
                 os.unlink(fifoFns[i])
     
-    pipe = openBowtie(bt2_cmd)
-    
-    if args.verbose:
-        print >> sys.stderr, "Real-data Bowtie 2 command: '%s'" % bt2_cmd
-    
-    scDistUnp, scDistM1, scDistM2, typeDist, fragDist = \
-        ScoreDist(), ScoreDist(), ScoreDist(), Dist(), Dist()
-    
-    samTempOfh = tempfile.TemporaryFile()
-    
-    # Create the thread that eavesdrops on output from bowtie2
-    othread = Output(pipe.stdout, samTempOfh, None,
-                     scDistUnp, scDistM1, scDistM2, fragDist, typeDist,
-                     args.as_scale, args.diff_scale)
-    othread.start()
-    rddistUnp, rddistM1, rddistM2 = Dist(), Dist(), Dist()
-    qdistUnp, qdistM1, qdistM2 = Dist(), Dist(), Dist()
-    sctok = map(int, string.split(args.scoring, ','))
-    # Create object that captures the scoring scheme used by the aligner
-    scoring = Scoring(sctok[0], (sctok[1], sctok[2]), sctok[3], (sctok[4], sctok[5]), (sctok[6], sctok[7]))
-    # Construct sequence and quality simulators
-    sim, qsim = SequenceSimulator(args.ref, idx_fn=args.ref_idx), QualitySimulator(qdistUnp, qdistM1, qdistM2)
-    simw = SimulatorWrapper(\
-        sim,       # sequence simulator
-        qsim,      # quality-value simulator
-        typeDist,  # alignment type distribution
-        scDistUnp, # score distribution for unpaired
-        scDistM1,  # score distribution for mate 1
-        scDistM2,  # score distribution for mate 2
-        fragDist)  # fragment-length distribution
-    
-    print >> sys.stderr, "Initializing threads, queues and FIFOs"
-    
-    # Read through all the input read files and direct all reads to the
-    # appropriate queue
-    upto = args.upto or sys.maxint
-    numReads = 0
-    for (rd1, rd2) in iter(createInput(rddistUnp, rddistM1, rddistM2, qdistUnp, qdistM1, qdistM2)):
-        numReads += 1
-        if rd2 is not None:
-            # Write to -1/-2 filehandles
-            assert fifoFhs[1] is not None
-            assert fifoFhs[2] is not None
-            fifoQs[1].put(str(rd1))
-            fifoQs[2].put(str(rd2))
-        else:
-            # Write to -U filehandle
-            assert fifoFhs[0] is not None
-            fifoQs[0].put(str(rd1))
-        if numReads >= upto:
-            break
-    
-    print >> sys.stderr, "Finished reading real reads"
-    
-    # TODO: We're still wrapping Bowtie, and there's the chance of a
-    # race here.  I think instead we should shut down all the pipes and
-    # the Bowtie process and re-open it.
-
-    closeFifos()
-    othread.join() # join the thread that monitors aligner output
-    print >> sys.stderr, "Finished closing data FIFOs and joining output-monitoring thread"
-    
-    #
-    # Now we re-open Bowtie 2 using the same arguments.  This time we only give
-    # it simulated reads.
-    #
-    
-    print >> sys.stderr, "Opening new Bowtie 2"
-    pipe = openBowtie(bt2_cmd)
-    
     trainingData, labels = [], []
-    def trainingSink(rec, correct):
-        trainingData.append(rec.toList())
-        labels.append(correct)
     
-    # Create the thread that eavesdrops on output from bowtie2 with simulated
-    # input
-    othread = Output(\
-        pipe.stdout,     # SAM input filehandle
-        None,            # SAM output filehandle
-        trainingSink,    # Training record sink
-        scDistUnp,       # Score dist for unpaired
-        scDistM1,        # Score dist for mate1
-        scDistM2,        # Score dist for mate2
-        fragDist,        # Fragment dist
-        typeDist,        # Alignment type dist
-        args.as_scale,   # AS:i
-        args.diff_scale) # AS:i - XS:i
-    othread.start()
+    if args.training_input is None:
+        
+        # The training data is not being given as input, so we have to
+        # generate it with two Bowtie 2 runs.  The first run collects
+        # some informations about data distributions.  The second run
+        # draws from those distributions to simulate reads.  Each
+        # simulated read that aligns is used as a training tuple.
+        
+        pipe = openBowtie(bt2_cmd)
+        
+        samIfh = tempfile.TemporaryFile()
+        
+        if args.verbose:
+            print >> sys.stderr, "Real-data Bowtie 2 command: '%s'" % bt2_cmd
+        
+        scDistUnp, scDistM1, scDistM2, typeDist, fragDist = \
+            ScoreDist(), ScoreDist(), ScoreDist(), Dist(), Dist()
+        
+        # Create the thread that eavesdrops on output from bowtie2
+        othread = Output(pipe.stdout, samIfh, None,
+                         scDistUnp, scDistM1, scDistM2, fragDist, typeDist,
+                         args.as_scale, args.diff_scale)
+        othread.start()
+        rddistUnp, rddistM1, rddistM2 = Dist(), Dist(), Dist()
+        qdistUnp, qdistM1, qdistM2 = Dist(), Dist(), Dist()
+        sctok = map(int, string.split(args.scoring, ','))
+        
+        # Create object that captures the scoring scheme used by the aligner
+        scoring = Scoring(sctok[0], (sctok[1], sctok[2]), sctok[3], (sctok[4], sctok[5]), (sctok[6], sctok[7]))
+        
+        # Construct sequence and quality simulators
+        sim, qsim = SequenceSimulator(args.ref, idx_fn=args.ref_idx), QualitySimulator(qdistUnp, qdistM1, qdistM2)
+        simw = SimulatorWrapper(\
+            sim,       # sequence simulator
+            qsim,      # quality-value simulator
+            typeDist,  # alignment type distribution
+            scDistUnp, # score distribution for unpaired
+            scDistM1,  # score distribution for mate 1
+            scDistM2,  # score distribution for mate 2
+            fragDist)  # fragment-length distribution
+        
+        print >> sys.stderr, "Initializing threads, queues and FIFOs"
+        
+        # Read through all the input read files and direct all reads to the
+        # appropriate queue
+        upto = args.upto or sys.maxint
+        numReads = 0
+        for (rd1, rd2) in iter(createInput(rddistUnp, rddistM1, rddistM2, qdistUnp, qdistM1, qdistM2)):
+            numReads += 1
+            if rd2 is not None:
+                # Write to -1/-2 filehandles
+                assert fifoFhs[1] is not None
+                assert fifoFhs[2] is not None
+                fifoQs[1].put(str(rd1))
+                fifoQs[2].put(str(rd2))
+            else:
+                # Write to -U filehandle
+                assert fifoFhs[0] is not None
+                fifoQs[0].put(str(rd1))
+            if numReads >= upto:
+                break
+        
+        print >> sys.stderr, "Finished reading real reads"
+        
+        # TODO: We're still wrapping Bowtie, and there's the chance of a
+        # race here.  I think instead we should shut down all the pipes and
+        # the Bowtie process and re-open it.
     
-    # Simulate
-    for i in xrange(0, args.num_reads):
-        if (i % 100) == 0: print "Generating a read %d" % i
-        rd1, rd2 = simw.next()
-        if rd2 is not None:
-            # Paired-end simulated read
-            fifoQs[1].put(str(rd1))
-            fifoQs[2].put(str(rd2))
-        else:
-            # Unpaired simulated read
-            fifoQs[0].put(str(rd1))
-    
-    print >> sys.stderr, "Finished simulating reads"
-    closeFifos()
-    print >> sys.stderr, "Closed FIFOs"
-    othread.join() # join the thread that monitors aligner output
-    print >> sys.stderr, "Finished closing simulation FIFOs and joining output-monitoring thread"
+        closeFifos()
+        othread.join() # join the thread that monitors aligner output
+        print >> sys.stderr, "Finished closing data FIFOs and joining output-monitoring thread"
+        
+        #
+        # Now we re-open Bowtie 2 using the same arguments.  This time we only give
+        # it simulated reads.
+        #
+        
+        print >> sys.stderr, "Opening new Bowtie 2"
+        pipe = openBowtie(bt2_cmd)
+        
+        def trainingSink(rec, correct):
+            trainingData.append(rec.toList())
+            labels.append(correct)
+        
+        # Create the thread that eavesdrops on output from bowtie2 with simulated
+        # input
+        othread = Output(\
+            pipe.stdout,     # SAM input filehandle
+            None,            # SAM output filehandle
+            trainingSink,    # Training record sink
+            scDistUnp,       # Score dist for unpaired
+            scDistM1,        # Score dist for mate1
+            scDistM2,        # Score dist for mate2
+            fragDist,        # Fragment dist
+            typeDist,        # Alignment type dist
+            args.as_scale,   # AS:i
+            args.diff_scale) # AS:i - XS:i
+        othread.start()
+        
+        # Simulate
+        for i in xrange(0, args.num_reads):
+            if (i+1 % 1000) == 0: print "Generating read %d" % i
+            rd1, rd2 = simw.next()
+            if rd2 is not None:
+                # Paired-end simulated read
+                fifoQs[1].put(str(rd1))
+                fifoQs[2].put(str(rd2))
+            else:
+                # Unpaired simulated read
+                fifoQs[0].put(str(rd1))
+        
+        print >> sys.stderr, "Finished simulating reads"
+        closeFifos()
+        print >> sys.stderr, "Closed FIFOs"
+        othread.join() # join the thread that monitors aligner output
+        print >> sys.stderr, "Finished closing simulation FIFOs and joining output-monitoring thread"
+        
+        if args.save_training is not None:
+            with open(args.save_training, 'wb') as trainOfh:
+                pickle.dump((trainingData, labels), trainOfh)
+    else:
+        # Training data is being given to us
+        if args.sam_input is None:
+            raise RuntimeError("Must specify --sam-input along with --training-input")
+        with open(args.training_input, 'rb') as trainFh:
+            trainingData, labels = pickle.load(trainFh)
+        print >> sys.stderr, "Read %d training tuples from '%s'" % (len(trainingData), args.training_input)
+        samIfh = open(args.sam_input, 'r')
     
     # Now we train our model
     from sklearn.neighbors import KNeighborsClassifier
@@ -1472,13 +1485,15 @@ def go():
     mapqClassifier.fit(trainingData, labels)
     print >> sys.stderr, "Finished fitting KNN classifier"
     
+    nrecs = 0
     with open(args.S, 'w') as samOfh:
-        samTempOfh.seek(0)
-        for samrec in samTempOfh:
+        samIfh.seek(0)
+        for samrec in samIfh:
             if samrec.startswith('@'):
                 samOfh.write(samrec)
                 continue
             al = Alignment(samrec)
+            nrecs += 1
             if al.isAligned():
                 rec = TrainingRecord.fromAlignment(al, args.as_scale, args.diff_scale)
                 mapq = mapqClassifier.predict_proba([rec.toList()])[0][-1]
@@ -1500,14 +1515,17 @@ def go():
                         print nidx
                         print list(trainingData[i] for i in nidx), list(labels[i] for i in nidx)
                 samrec = samrec.rstrip()
+                xqIdx = samrec.find("\tXQ:f:")
+                if xqIdx != -1:
+                    samrec = samrec[:xqIdx]
                 samOfh.write("\t".join([samrec, "XQ:f:" + str(mapq)]) + "\n")
             else:
                 samOfh.write(samrec)
     
-    print >> sys.stderr, "Finished writing final SAM output to '%s'" % args.S
+    print >> sys.stderr, "Finished writing final SAM output (%d records) to '%s'" % (nrecs, args.S)
     
     # Close temporary SAM output file; it will be deleted immediately
-    samTempOfh.close()
+    samIfh.close()
 
 if __name__ == "__main__":
     
@@ -1558,6 +1576,12 @@ if __name__ == "__main__":
     parser.add_argument(\
         '--max-ref-bases', metavar='int', dest='max_bases', type=int, default=None,
         required=False, help='Stop reading in FASTA once we exceed this many reference nucleotides')
+    parser.add_argument(\
+        '--training-input', metavar='path', type=str,
+        help='Training data to use to predict new MAPQs for a SAM file.  Use with --sam-input.')
+    parser.add_argument(\
+        '--sam-input', metavar='path', type=str,
+        help='Input SAM file to apply training data to.  Use with --training-input.')
     parser.add_argument(\
         '--bt2-exe', metavar='path', dest='bt2_exe', type=str,
         help='Path to Bowtie 2 exe')
