@@ -20,9 +20,12 @@ Things we learn from reads
 Things we learn from alignments
 ===============================
 
-- Fragment length distribution
-- Score distribution (or # mismatch / # gap distribution)
 - Alignment type (aligned, unaligned, concordant, discordant)
+- Fragment length distribution
+- Number and placement of mismatches and gaps
+
+TODO: The simulated reads have a surprisingly low alignment rate.  Can
+we figure out why?  Could it be reference Ns?
 
 """
 
@@ -43,6 +46,7 @@ import signal
 import traceback
 import pickle
 from Queue import Queue
+from sklearn.neighbors import KNeighborsClassifier
 
 def quit_handler(signum,frame):
     traceback.print_stack()
@@ -63,9 +67,9 @@ class Read(object):
         assert self.repOk()
     
     @classmethod
-    def fromSimulator(cls, seq, qual, refid, refoff, fw):
+    def fromSimulator(cls, seq, qual, refid, refoff, fw, sc):
         # Construct appropriate name
-        rdname = "!!ts-sep!!".join(["!!ts!!", refid, "+" if fw else "-", str(refoff)])
+        rdname = "!!ts-sep!!".join(["!!ts!!", refid, "+" if fw else "-", str(refoff), str(sc)])
         return cls(rdname, seq, qual)
     
     def __len__(self):
@@ -133,6 +137,10 @@ class Alignment(object):
         se = Alignment.__mdRe.search(self.extra)
         if se is not None:
             self.mdz = se.group(1)
+        self.concordant = self.alType == "CP"
+        self.discordant = self.alType == "DP"
+        self.unpPair = self.alType == "UP"
+        self.unp = self.alType == "UU"
         assert self.repOk()
     
     def isAligned(self):
@@ -159,6 +167,7 @@ class Alignment(object):
         assert self.alType is not None
         assert self.paired or self.fragmentLength() == 0
         assert not self.isAligned() or self.bestScore is not None
+        assert self.alType in ["CP", "DP", "UP", "UU"]
         return True
 
 class AlignmentPair(object):
@@ -613,7 +622,6 @@ class SequenceSimulator(object):
         specified length from the strings contained in them. """
     
     def __init__(self, fafns, idx_fn=None, verbose=False):
-        #fa = FastaSeqIdx(fafns, idx_fn=idx_fn)
         self.refs = dict()
         self.names = []
         self.lens = []
@@ -744,224 +752,46 @@ class MyMutableString(object):
     
     def get(self, i):
         return self.slist[i]
-
-class Mutator2(object):
-    """ """
-
-    def __init__(self, scDistUnp, scDistM1, scDistM2):
-        self.scDistUnp = scDistUnp
-        self.scDistM1 = scDistM1
-        self.scDistM2 = scDistM2
     
-    def mutate(self, rd, rdfw, scDistDraw):
-        """ Given a read that already has the appropriate length (i.e.
-            equal to the number of characters on the reference side of
-            the alignment) 
-            
-            Modifies 'rd' in place. """ 
-        fw, qual, rdAln, rfAln, sc = scDistDraw
-        assert len(rd.seq) == len(rfAln) - rfAln.count('-')
-        if rdfw != fw:
-            qual, rdAln, rfAln = qual[::-1], rdAln[::-1], rfAln[::-1]
-        rd.qual = qual # Install qualities
-        # Walk along stacked alignment, making corresponding changes to
-        # read sequence
-        seq = []
-        i, rdi, rfi = 0, 0, 0
-        while i < len(rdAln):
-            if rdAln[i] == '-':
-                rfi += 1
-            elif rfAln[i] == '-':
-                seq.append(rdAln[i])
-                rdi += 1
-            elif rdAln[i] != rfAln[i] and rdAln[i] == 'N':
-                seq.append('N')
-                rfi += 1; rdi += 1
-            elif rdAln[i] != rfAln[i]:
-                assert rfi < len(rd.seq)
-                oldc = rd.seq[rfi].upper()
-                cs = ['A', 'C', 'G', 'T']
-                cs.remove(oldc)
-                newc = random.choice(cs)
-                seq.append(newc)
-                rfi += 1; rdi += 1
-            else:
-                assert rfi < len(rd.seq)
-                seq.append(rd.seq[rfi])
-                rfi += 1; rdi += 1
-            i += 1
-        rd.seq = ''.join(seq)
-        assert len(rd.seq) == len(rd.qual)
-
-class Mutator(object):
-    """ Class that, given a read sequence, returns a version of the read
-        sequence mutated somehow, along with a distance (score) indicating how
-        much it was mutated.
+def mutate(rd, rdfw, scDistDraw):
+    """ Given a read that already has the appropriate length (i.e.
+        equal to the number of characters on the reference side of
+        the alignment) 
         
-        Doesn't take quality values into account. """
-
-    def __init__(self, scoring, affine=False, verbose=False):
-        self.scoring = scoring
-        self.affine = affine
-        # Make a list of mismatch/gap scores
-        self.summands = range(self.scoring.mmp[0], self.scoring.mmp[1]+1) + \
-                        [ self.scoring.rfgPenalty(),
-                          self.scoring.rdgPenalty() ]
-        self.summandsWithN = self.summands + [ self.scoring.np ]
-        self.addToMemo = {}
-        self.addToMemoWithN = {}
-    
-    def __addEdits(self, orig_rd, sc, nmm, nrdg, nrfg, nn,
-                   maxAttempts=10, checkScore=False, verbose=False):
-        
-        """ Given a substring extracted from the reference genome (s) and given
-            a # of mismatches, # of read gaps, and # of reference gaps, mutate
-            the string with the given number of gaps and mismatches. """ 
-        
-        assert nmm + nrdg + nn < len(orig_rd)
-        
-        # There are several subtleties here.  First, applying a bunch of edits
-        # whose penalties add to the desired score does not necessarily result
-        # in a read that aligns with the desired score.  One reason is that
-        # multiple edits near each other might "cancel each other out", e.g.
-        # adjacent read and reference gaps could be more optimally scored as a
-        # single mismatch (or match!).  Or two adjacent read gaps can be more
-        # optimally scored as a single gap open with several extensions.
-        #
-        # We choose a very simple (naive?) method for resolving this.  We
-        # simply insert the edits in random places, then check whether we ended
-        # up with a proper score by calling a global aligner.
-        #
-        # But another reason is that, once the read is mutated, it might align
-        # elsewhere in the genome with a better score than it does to its true
-        # point of origin.  This is probably impossible to avoid, and it's very
-        # expensive to check.
-        
-        attempts = 0
-        rd, qu = None, None
-        rf = orig_rd.seq[:]
-        while True: # potentially make many attempts
-            rd = MyMutableString(orig_rd.seq)
-            qu = MyMutableString(orig_rd.qual)
-            attempts += 1
-            if attempts > maxAttempts:
-                return orig_rd, False
-            if attempts > 1:
-                print >> sys.stderr, "Warning: attempt #%d" % attempts
-            # Generate mismatches and gaps and place them randomly
-            mmset, rdgset, rfgset, nset = set(), set(), set(), set()
-            iters = 0
-            while len(mmset) < nmm:
-                # Insert a mismatch
-                mmset.add(random.randint(0, len(orig_rd)-1))
-                if iters > 100:
-                    print mmset, nset, nmm, nn
-                    raise RuntimeError("")
-            iters = 0
-            while len(nset) < nn:
-                # Insert an N
-                ri = random.randint(0, len(orig_rd)-1)
-                if ri not in mmset:
-                    nset.add(ri)
-                iters += 1
-                if iters > 100:
-                    print mmset, nset, nmm, nn
-                    raise RuntimeError("")
-            iters = 0
-            while len(rdgset) < nrdg:
-                # Insert a read gap
-                rdgset.add(random.randint(0, len(orig_rd)-1))
-                if iters > 100:
-                    print mmset, nset, nmm, nn
-                    raise RuntimeError("")
-            iters = 0
-            while len(rfgset) < nrfg:
-                # Insert a reference gap (prior to char at given index)
-                rfgset.add(random.randint(1, len(orig_rd)-1))
-                if iters > 100:
-                    print mmset, nset, nmm, nn
-                    raise RuntimeError("")
-            
-            # Apply mismatches to the read string
-            for mm in mmset:
-                origc = rd.get(mm)
-                assert len(origc) == 1
-                c = random.choice(['A', 'C', 'G', 'T'])
-                while c == origc:
-                    c = random.choice(['A', 'C', 'G', 'T'])
-                rd.set(mm, c)
-
-            # Apply Ns to the read string
-            for n in nset: rd.set(n, 'N')
-            
-            # Apply read and reference gaps
-            for gapi in sorted(list(rdgset) + list(rfgset), reverse=True):
-                if gapi in rdgset:
-                    rd.delete(gapi) # delete the character from the read
-                    qu.delete(gapi)
-                if gapi in rfgset:
-                    # Add a character to the read
-                    c = random.choice(['A', 'C', 'G', 'T'])
-                    rd.set(gapi, c + rd.get(gapi))
-                    # TODO: what quality value to put here??  Perhaps we can
-                    # build a model as we go about what sorts of quality values
-                    # are associated with reference gap characters??  Or just
-                    # average over the adjacent quality values?
-                    qu.set(gapi, 'I' + qu.get(gapi))
-            
-            if checkScore:
-                # A check to see if the pattern of gaps and mismatches we
-                # inserted actually achieved the alignment score we were hoping
-                # for
-                rdstr = str(rd)
-                if not self.affine:
-                    scg, _, _ = global_align.globalAlign(
-                        rdstr, rf, lambda x, y: self.scoring.mmp[1] if x != y else 0,
-                        self.scoring.rdg[0] + self.scoring.rdg[1],
-                        self.scoring.rfg[0] + self.scoring.rfg[1], backtrace=False)
-                else:
-                    scg, _, _ = global_align.globalAlignAffine(
-                        rdstr, rf, lambda x, y: self.scoring.mmp[1] if x != y else 0,
-                        self.scoring.rdg[0], self.scoring.rdg[1],
-                        self.scoring.rfg[0], self.scoring.rfg[1], backtrace=False)
-    
-                print "Shooting for %d, got %d (%d mismatches, %d read gaps, %d ref gaps)" \
-                    % (sc, scg, nmm, nrdg, nrfg)
-                if scg == sc: break # Success!
-            else:
-                break # We didn't check it, so we assume it's fine
-        return Read(orig_rd.name, str(rd), str(qu)), True
-    
-    def mutate(self, rd, sc, maxAttempts=10, checkScore=False, verbose=False):
-        """ First we find some combination of gaps and mismatches that reach
-            the given score 'sc' and insert them into read 'rd'.  Return a
-            mutated version of 'rd'. """
-        mutrd = None
-        succ = False
-        # Pick combination of gaps and mismatches that add to desired score
-        nmms, nrdg, nrfg, nn = [], 0, 0, 0
-        if sc != 0:
-            combos = list(addTo(abs(sc), self.summands, self.addToMemo))
-            if len(combos) == 0:
-                assert abs(sc) < 30, "Tot=%d, summands=%s" % (sc, str(self.summands))
-                combos = list(addTo(abs(sc), self.summandsWithN, self.addToMemoWithN))
-                assert len(combos) > 0
-                sol = random.choice(combos)
-                nmms = [ sol[i] for i in xrange(0, len(sol)-3) ]
-                nrdg, nrfg, nn = sol[-3], sol[-2], sol[-1]
-            else:
-                sol = random.choice(combos)
-                nmms = [ sol[i] for i in xrange(0, len(sol)-2) ]
-                nrdg, nrfg = sol[-2], sol[-1]
-        attempts = 0
-        while not succ and attempts < maxAttempts:
-            attempts += 1
-            mutrd, succ = self.__addEdits(
-                rd, sc, sum(nmms), nrdg, nrfg, nn,
-                maxAttempts=maxAttempts, checkScore=checkScore)
-        if attempts == maxAttempts:
-            raise RuntimeError("Exceeded maximum attempts in mutate")
-        return mutrd # Read object
+        Modifies 'rd' in place. """ 
+    fw, qual, rdAln, rfAln, sc = scDistDraw
+    assert len(rd.seq) == len(rfAln) - rfAln.count('-')
+    if rdfw != fw:
+        qual, rdAln, rfAln = qual[::-1], rdAln[::-1], rfAln[::-1]
+    rd.qual = qual # Install qualities
+    # Walk along stacked alignment, making corresponding changes to
+    # read sequence
+    seq = []
+    i, rdi, rfi = 0, 0, 0
+    while i < len(rdAln):
+        if rdAln[i] == '-':
+            rfi += 1
+        elif rfAln[i] == '-':
+            seq.append(rdAln[i])
+            rdi += 1
+        elif rdAln[i] != rfAln[i] and rdAln[i] == 'N':
+            seq.append('N')
+            rfi += 1; rdi += 1
+        elif rdAln[i] != rfAln[i]:
+            assert rfi < len(rd.seq)
+            oldc = rd.seq[rfi].upper()
+            cs = ['A', 'C', 'G', 'T']
+            cs.remove(oldc)
+            newc = random.choice(cs)
+            seq.append(newc)
+            rfi += 1; rdi += 1
+        else:
+            assert rfi < len(rd.seq)
+            seq.append(rd.seq[rfi])
+            rfi += 1; rdi += 1
+        i += 1
+    rd.seq = ''.join(seq)
+    assert len(rd.seq) == len(rd.qual)
 
 class SimulatorWrapper(object):
     
@@ -972,7 +802,6 @@ class SimulatorWrapper(object):
     def __init__(self, sim, qsim, tyd, scd, scd1, scd2, fld):
         self.sim  = sim  # sequence simulator
         self.qsim = qsim # quality simulator
-        self.mut  = Mutator2(scd, scd1, scd2) # mutator 
         self.tyd  = tyd  # type distribution (UU/CP/DP/UP)
         self.scd  = scd  # score distribution for unpaired reads
         self.scd1 = scd1 # score distribution for mate 1
@@ -992,9 +821,9 @@ class SimulatorWrapper(object):
             refid, refoff, fw, seq = self.sim.sim(rl) # simulate it
             assert rl == len(seq)
             qual = self.qsim.sim(rl)
-            read = Read.fromSimulator(seq, qual, refid, refoff, fw)
-            # mutate sequence
-            self.mut.mutate(read, fw, scDraw)
+            _, _, _, _, sc = scDraw
+            read = Read.fromSimulator(seq, qual, refid, refoff, fw, sc)
+            mutate(read, fw, scDraw) # mutate unpaired read
             return read, None
         else:
             # Simulating paired-end read
@@ -1016,11 +845,12 @@ class SimulatorWrapper(object):
             if fw: refoff2 = refoff + fl - rl2
             else:  refoff1 = refoff + fl - rl1
             qual1, qual2 = self.qsim.sim(len(seq1)), self.qsim.sim(len(seq2))
-            rd1 = Read.fromSimulator(seq1, qual1, refid, refoff1, fw)
-            rd2 = Read.fromSimulator(seq2, qual2, refid, refoff2, fw)
-            # mutate them
-            self.mut.mutate(rd1, fw, sc1Draw)
-            self.mut.mutate(rd2, fw, sc2Draw)
+            _, _, _, _, sc1 = sc1Draw
+            _, _, _, _, sc2 = sc2Draw
+            rd1 = Read.fromSimulator(seq1, qual1, refid, refoff1, fw, sc1)
+            rd2 = Read.fromSimulator(seq2, qual2, refid, refoff2, fw, sc2)
+            mutate(rd1, fw, sc1Draw) # mutate mate 1
+            mutate(rd2, fw, sc2Draw) # mutate mate 2
             return rd1, rd2
 
 class Input(object):
@@ -1103,53 +933,196 @@ class InputWrapper(object):
                     for q in map(lambda x: ord(x)-33, rd1.qual): self.qdistUnp.add(q)
             yield (rd1, rd2)
 
+class Training(object):
+    
+    """ Encapsulates all the training data and all the classifiers. """
+    def __init__(self):
+        # These tables are for collecting training data pertaining to
+        # individual reads and mates
+        self.trainUnp,    self.labUnp,    self.classUnp    = [], [], None
+        self.trainM1Disc, self.labM1Disc, self.classM1Disc = [], [], None
+        self.trainM2Disc, self.labM2Disc, self.classM2Disc = [], [], None
+        self.trainM1Conc, self.labM1Conc, self.classM1Conc = [], [], None
+        self.trainM2Conc, self.labM2Conc, self.classM2Conc = [], [], None
+        # Following tables are for a second layer of training for
+        # concordantly-aligned pairs
+        self.trainConc,   self.labConcM1,   self.labConcM2 = [], [], []
+        self.classConcM1, self.classConcM2 = [], []
+        self.trainConcFraglen = []
+        # These scale factors are set for real when we fit
+        self.scaleAs, self.scaleDiff = 1.0, 1.0
+    
+    def __len__(self):
+        """ Return number of pieces of training data added so far """
+        return len(self.trainUnp) + len(self.trainM1Disc) + len(self.trainM2Disc) + \
+            len(self.trainM1Conc) + len(self.trainM2Conc)
+    
+    def add(self, al, correct):
+        """ Add an alignment for a simulated read to our collection of
+            training data. """
+        rec = TrainingRecord.fromAlignment(al)
+        if al.concordant:
+            if al.mate1:
+                self.trainM1Conc.append(rec.toList())
+                self.labM1Conc.append(correct)
+            else:
+                self.trainM2Conc.append(rec.toList())
+                self.labM2Conc.append(correct)
+        elif al.discordant or al.unpPair:
+            if al.mate1:
+                self.trainM1Disc.append(rec.toList())
+                self.labM1Disc.append(correct)
+            else:
+                self.trainM2Disc.append(rec.toList())
+                self.labM2Disc.append(correct)
+        else:
+            self.trainUnp.append(rec.toList())
+            self.labUnp.append(correct)
+    
+    def probCorrect(self, al1, al2=None):
+        """ Return probability that given alignment is """
+        assert al1.isAligned()
+        rec = TrainingRecord.fromAlignment(al1, self.scaleAs, self.scaleDiff)
+        if al2 is not None:
+            assert al2.isAligned()
+            assert al1.concordant
+            assert al2.concordant
+            assert al1.mate1 and not al1.mate2
+            assert al2.mate2 and not al2.mate1
+            rec1, rec2 = rec, TrainingRecord.fromAlignment(al2, self.scaleAs, self.scaleDiff)
+            probCor1 = self.classM1Conc.predict_proba([rec1.toList()])[0][-1]
+            probCor2 = self.classM2Conc.predict_proba([rec2.toList()])[0][-1]
+            concRec = [ probCor1, probCor2, abs(al1.tlen) ]
+            newProbCor1 = self.classConcM1.predict_proba(concRec)[0][-1]
+            newProbCor2 = self.classConcM2.predict_proba(concRec)[0][-1]
+            return newProbCor1, newProbCor2
+        elif al1.discordant or al1.unpPair:
+            classifier = self.classM1Disc if al1.mate1 else self.classM2Disc
+            return classifier.predict_proba([rec.toList()])[0][-1]
+        else:
+            return self.classUnp.predict_proba([rec.toList()])[0][-1]
+    
+    def fit(self, num_neighbors, weights, scaleAs=1.0, scaleDiff=1.0):
+        """ Train our KNN classifiers """
+        self.scaleAs = scaleAs
+        self.scaleDiff = scaleDiff
+        
+        def __adjustScale(t):
+            # Scale fields as requested
+            if scaleAs != 1.0 or scaleDiff != 1.0:
+                for i in xrange(0, len(t)):
+                    t[i][1] *= scaleAs
+                    t[i][2] *= scaleDiff
+        
+        # Create and train each classifier
+        if len(self.trainUnp) > 0:
+            self.classUnp = KNeighborsClassifier(\
+                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            __adjustScale(self.trainUnp)
+            self.classUnp.fit(self.trainUnp, self.labUnp)
+        if len(self.trainM1Disc) > 0:
+            self.classM1Disc = KNeighborsClassifier(\
+                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            __adjustScale(self.trainM1Disc)
+            self.classM1Disc.fit(self.trainM1Disc, self.labM1Disc)
+        if len(self.trainM2Disc) > 0:
+            self.classM2Disc = KNeighborsClassifier(\
+                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            __adjustScale(self.trainM2Disc)
+            self.classM2Disc.fit(self.trainM2Disc, self.labM2Disc)
+        if len(self.trainM1Conc) > 0:
+            self.classM1Conc = KNeighborsClassifier(\
+                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            __adjustScale(self.trainM1Conc)
+            self.classM1Conc.fit(self.trainM1Conc, self.labM1Conc)
+        if len(self.trainM2Conc) > 0:
+            self.classM2Conc = KNeighborsClassifier(\
+                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            __adjustScale(self.trainM2Conc)
+            self.classM2Conc.fit(self.trainM2Conc, self.labM2Conc)
+        
+        assert len(self.trainM1Conc) == len(self.trainM2Conc)
+        assert len(self.trainM1Conc) == len(self.trainConcFraglen)
+        assert len(self.trainM1Disc) == len(self.trainM2Disc)
+        
+        # Create training data for the concordant-alignment classifier.
+        # This depends on M1Conc and M2Conc classifiers already having
+        # been fit.
+        if len(self.trainM1Conc) > 0:
+            for i in xrange(0, len(self.trainM1Conc)):
+                m1c, m2c = self.trainM1Conc[i], self.trainM2Conc[i]
+                p1 = self.classM1Conc.predict_proba([m1c.toList()])[0][-1]
+                p2 = self.classM2Conc.predict_proba([m2c.toList()])[0][-1]
+                self.trainConc.append((p1, p2, self.trainConcFraglen[i]))
+                self.labConcM1.append(self.labM1Conc[i])
+                self.labConcM2.append(self.labM2Conc[i])
+        
+            self.classConcM1 = KNeighborsClassifier(\
+                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            self.classConcM2 = KNeighborsClassifier(\
+                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            
+            self.classConcM1.fit(self.trainConc, self.labM1Conc)
+            self.classConcM2.fit(self.trainConc, self.labM2Conc)
+    
+    def save(self, fn):
+        """ Save all training data to a file """
+        save = (\
+        self.trainUnp,    self.labUnp, \
+        self.trainM1Disc, self.labM1Disc, \
+        self.trainM2Disc, self.labM2Disc, \
+        self.trainM1Conc, self.labM1Conc, \
+        self.trainM2Conc, self.labM2Conc, \
+        self.trainConc,   self.labConcM1,   self.labConcM2, \
+        self.classConcM1, self.classConcM2, \
+        self.trainConcFraglen)
+        with open(fn, 'wb') as trainOfh: pickle.dump(save, trainOfh)
+    
+    def load(self, fn):
+        """ Load all training data from a file """
+        with open(fn, 'rb') as trainIfh:
+            (\
+            self.trainUnp,    self.labUnp, \
+            self.trainM1Disc, self.labM1Disc, \
+            self.trainM2Disc, self.labM2Disc, \
+            self.trainM1Conc, self.labM1Conc, \
+            self.trainM2Conc, self.labM2Conc, \
+            self.trainConc,   self.labConcM1,   self.labConcM2, \
+            self.classConcM1, self.classConcM2, \
+            self.trainConcFraglen) = pickle.load(trainIfh)
+
 class TrainingRecord(object):
     """ A single tuple of per-read training data including:
         1. Read length
-        2. Alignment type (UU, CP, DP, UP)
-        3. Read's best score
-        4. Read's second-best score
-        5. Fragment length (if from a pair)
-        6. Mate's best score (if from a pair)
-        7. Mate's second-best score (if from a pair)
-        8. Correct (outcome) """
-    def __init__(self, rdlen, altype, bestSc, secbestSc, fraglen, mBestSc, scaleAs=1.0, scaleDiff=1.0):
+        . Read's best score
+        34. Read's second-best score """
+    def __init__(self, rdlen, bestSc, secbestSc, scaleAs=1.0, scaleDiff=1.0):
         self.rdlen = rdlen
-        self.altype = altype
-        self.bestSc = bestSc * scaleAs
+        self.bestSc = float(bestSc) * scaleAs
         self.secbestSc = secbestSc
-        self.fraglen = fraglen
-        self.mBestSc = mBestSc
         if secbestSc is not None:
-            self.scDiff = abs(self.bestSc - self.secbestSc)
+            self.scDiff = float(abs(self.bestSc - self.secbestSc))
         else:
-            self.scDiff = 10000
+            self.scDiff = 10000.0
         self.scDiff *= scaleDiff
-        self.mBestSc = self.mBestSc or -10000
-        self.mBestSc *= scaleAs
         assert self.repOk()
     
     @classmethod
     def fromAlignment(cls, al, scaleAs=1.0, scaleDiff=1.0):
         """ Initialize training record with respect to an alignment and a
             boolean indicating whether it is correct. """
-        return cls(len(al), al.alType, al.bestScore, al.secondBestScore,
-                   al.fragmentLength(), al.mateBest,
+        return cls(len(al), al.bestScore, al.secondBestScore,
                    scaleAs=scaleAs, scaleDiff=scaleDiff)
     
     def toList(self):
         """ Return simple list form """
-        return [ self.rdlen, self.bestSc, self.scDiff,
-                 self.fraglen, self.mBestSc ]
+        return [ self.rdlen, self.bestSc, self.scDiff ]
     
     def repOk(self):
         """ Check for internal consistency """
         assert self.rdlen is not None
-        assert self.altype is not None
         assert self.bestSc is not None
         assert self.scDiff is not None
-        assert self.fraglen is not None
-        assert self.mBestSc is not None
         return True
 
 class Output(threading.Thread):
@@ -1159,9 +1132,8 @@ class Output(threading.Thread):
         a simulated read, its correctness will be checked and a tuple
         written """
     
-    def __init__(self, samIfh, samOfh, trainSink,
-                 scDistUnp, scDistM1, scDistM2, fragDist, typeDist,
-                 scaleAs, scaleDiff):
+    def __init__(self, samIfh, samOfh, unalFh, trainSink,
+                 scDistUnp, scDistM1, scDistM2, fragDist, typeDist):
         threading.Thread.__init__(self)
         self.samIfh = samIfh       # SAM records come from here
         self.samOfh = samOfh       # normal (non-simulated) SAM records go here
@@ -1171,8 +1143,8 @@ class Output(threading.Thread):
         self.scDistM1 = scDistM1   # score distribution for mate #1s
         self.scDistM2 = scDistM2   # score distribution for mate #2s
         self.typeDist = typeDist   # alignment type (UU/CP/DP/UP) distribution
-        self.scaleAs = scaleAs     # AS:i
-        self.scaleDiff = scaleDiff # AS:i - XS:i
+        self.unalFh = unalFh       # write unaligned reads here
+        self.scDiffs = {}
     
     def run(self):
         lastAl = None
@@ -1185,16 +1157,22 @@ class Output(threading.Thread):
             nm, flags, refid, pos, _, _, _, _, _, seq, qual, _ = string.split(ln, '\t', 11)
             if al.name.startswith('!!ts!!'):
                 # this is a simulated read
-                _, refid, fw, refoff = string.split(al.name, '!!ts-sep!!')
+                _, refid, fw, refoff, sc = string.split(al.name, '!!ts-sep!!')
+                sc = int(sc)
                 refoff = int(refoff)
                 if al.isAligned():
+                    scDiff = sc - al.bestScore
+                    self.scDiffs[scDiff] = self.scDiffs.get(scDiff, 0) + 1
                     correct = False
                     # Check reference id, orientation
                     if refid == al.refid and fw == al.orientation():
                         # Check offset
                         correct = abs(refoff - al.pos) < args.wiggle
                     if self.trainSink is not None:
-                        self.trainSink(TrainingRecord.fromAlignment(al, self.scaleAs, self.scaleDiff), correct)
+                        self.trainSink(al, correct)
+                elif self.unalFh is not None:
+                    # Perhaps write unaligned simulated read to file
+                    self.unalFh.write("@%s\n%s\n+\n%s\n" % (nm, seq, qual))
             else:
                 # Take alignment info into account
                 if lastAl is not None and al.name == lastAl.name and al.alType == "CP":
@@ -1344,7 +1322,8 @@ def go():
                     fifoFhs[i] = None
                 os.unlink(fifoFns[i])
     
-    trainingData, labels = [], []
+    # Structure encapsulating training data and KNN classifiers
+    training = Training()
     
     if args.training_input is None:
         
@@ -1355,7 +1334,6 @@ def go():
         # simulated read that aligns is used as a training tuple.
         
         pipe = openBowtie(bt2_cmd)
-        
         samIfh = tempfile.TemporaryFile()
         
         if args.verbose:
@@ -1365,9 +1343,16 @@ def go():
             ScoreDist(), ScoreDist(), ScoreDist(), Dist(), Dist()
         
         # Create the thread that eavesdrops on output from bowtie2
-        othread = Output(pipe.stdout, samIfh, None,
-                         scDistUnp, scDistM1, scDistM2, fragDist, typeDist,
-                         args.as_scale, args.diff_scale)
+        othread = Output(
+            pipe.stdout,     # SAM input filehandle
+            samIfh,          # SAM output filehandle
+            None,            # Write unaligned reads here
+            None,            # Training record sink
+            scDistUnp,       # Score dist for unpaired
+            scDistM1,        # Score dist for mate1
+            scDistM2,        # Score dist for mate2
+            fragDist,        # Fragment dist
+            typeDist)        # Alignment type dist
         othread.start()
         rddistUnp, rddistM1, rddistM2 = Dist(), Dist(), Dist()
         qdistUnp, qdistM1, qdistM2 = Dist(), Dist(), Dist()
@@ -1409,10 +1394,6 @@ def go():
                 break
         
         print >> sys.stderr, "Finished reading real reads"
-        
-        # TODO: We're still wrapping Bowtie, and there's the chance of a
-        # race here.  I think instead we should shut down all the pipes and
-        # the Bowtie process and re-open it.
     
         closeFifos()
         othread.join() # join the thread that monitors aligner output
@@ -1426,26 +1407,28 @@ def go():
         print >> sys.stderr, "Opening new Bowtie 2"
         pipe = openBowtie(bt2_cmd)
         
-        def trainingSink(rec, correct):
-            trainingData.append(rec.toList())
-            labels.append(correct)
+        # Function gets called with each new piece of training data
+        def trainingSink(al, correct): training.add(al, correct)
+        
+        unalFh = None
+        if args.un_sim is not None:
+            unalFh = open(args.un_sim, 'w')
         
         # Create the thread that eavesdrops on output from bowtie2 with simulated
         # input
         othread = Output(\
             pipe.stdout,     # SAM input filehandle
             None,            # SAM output filehandle
+            unalFh,          # Write unaligned reads here
             trainingSink,    # Training record sink
-            scDistUnp,       # Score dist for unpaired
-            scDistM1,        # Score dist for mate1
-            scDistM2,        # Score dist for mate2
-            fragDist,        # Fragment dist
-            typeDist,        # Alignment type dist
-            args.as_scale,   # AS:i
-            args.diff_scale) # AS:i - XS:i
+            None,            # Score dist for unpaired
+            None,            # Score dist for mate1
+            None,            # Score dist for mate2
+            None,            # Fragment dist
+            None)            # Alignment type dist
         othread.start()
         
-        # Simulate
+        # Simulate reads from empirical distributions
         for i in xrange(0, args.num_reads):
             if (i+1 % 1000) == 0: print "Generating read %d" % i
             rd1, rd2 = simw.next()
@@ -1461,30 +1444,30 @@ def go():
         closeFifos()
         print >> sys.stderr, "Closed FIFOs"
         othread.join() # join the thread that monitors aligner output
+        if unalFh is not None:
+            unalFh.close()
         print >> sys.stderr, "Finished closing simulation FIFOs and joining output-monitoring thread"
         
-        if args.save_training is not None:
-            with open(args.save_training, 'wb') as trainOfh:
-                pickle.dump((trainingData, labels), trainOfh)
+        print >> sys.stderr, "Score difference (expected - actual) histogram:"
+        for k, v in sorted(othread.scDiffs.iteritems()):
+            print >>sys.stderr, "  %d: %d" % (k, v)
+        
+        if args.save_training is not None: training.save(args.save_training)
     else:
         # Training data is being given to us
         if args.sam_input is None:
             raise RuntimeError("Must specify --sam-input along with --training-input")
-        with open(args.training_input, 'rb') as trainFh:
-            trainingData, labels = pickle.load(trainFh)
-        print >> sys.stderr, "Read %d training tuples from '%s'" % (len(trainingData), args.training_input)
+        training.load(args.training_input)
+        print >> sys.stderr, "Read %d training tuples from '%s'" % (len(training), args.training_input)
         samIfh = open(args.sam_input, 'r')
     
-    # Now we train our model
-    from sklearn.neighbors import KNeighborsClassifier
-    weights = 'uniform'
-    if args.distance_weight:
-        weights = 'distance'
-    mapqClassifier = KNeighborsClassifier(\
-        n_neighbors=args.num_neighbors, warn_on_equidistant=False, weights=weights)
-    mapqClassifier.fit(trainingData, labels)
-    print >> sys.stderr, "Finished fitting KNN classifier"
+    # Build KNN classifiers
+    weights = 'distance' if args.distance_weight else 'uniform'
+    training.fit(args.num_neighbors, weights, scaleAs=args.as_scale, scaleDiff=args.diff_scale)
+    print >> sys.stderr, "Finished fitting KNN classifiers on %d training tuples" % len(training)
     
+    # TODO: Need to pair up alignments so we can potentially use the
+    # concordant-alignment model to calculate their MAPQs
     nrecs = 0
     with open(args.S, 'w') as samOfh:
         samIfh.seek(0)
@@ -1495,25 +1478,17 @@ def go():
             al = Alignment(samrec)
             nrecs += 1
             if al.isAligned():
-                rec = TrainingRecord.fromAlignment(al, args.as_scale, args.diff_scale)
-                mapq = mapqClassifier.predict_proba([rec.toList()])[0][-1]
-                mapq = 1.0 - mapq
-                if mapq == 0:
-                    mapq = args.max_mapq
-                else:
-                    mapq = -10.0 * math.log10(mapq)
-                mapq = min(mapq, args.max_mapq)
+                probCorrect = training.probCorrect(al)
+                probIncorrect = 1.0 - probCorrect # convert to probability incorrect
+                mapq = args.max_mapq
+                if probIncorrect > 0.0:
+                    mapq = min(-10.0 * math.log10(probIncorrect), args.max_mapq)
                 if args.verbose:
                     if True or rec.bestSc == rec.secbestSc:
                         print "=="
                         print rec.toList()
                         print "--"
                         print mapq
-                        print "--"
-                        dist, nidx = mapqClassifier.kneighbors(rec.toList())
-                        nidx = [ i for sublist in nidx for i in sublist ]
-                        print nidx
-                        print list(trainingData[i] for i in nidx), list(labels[i] for i in nidx)
                 samrec = samrec.rstrip()
                 xqIdx = samrec.find("\tXQ:f:")
                 if xqIdx != -1:
@@ -1562,10 +1537,10 @@ if __name__ == "__main__":
         '--seed', metavar='int', type=int, default=99099,
         required=False, help='Integer to initialize pseudo-random generator')
     parser.add_argument(\
-        '--num-reads', metavar='int', type=int, default=100,
+        '--num-reads', metavar='int', type=int, default=100000,
         required=False, help='Number of reads to simulate')
     parser.add_argument(\
-        '--num-neighbors', metavar='int', type=int, default=20,
+        '--num-neighbors', metavar='int', type=int, default=500,
         required=False, help='Number of neighbors to use for k-nearest-neighbors')
     parser.add_argument(\
         '--upto', metavar='int', type=int, default=None,
@@ -1580,8 +1555,14 @@ if __name__ == "__main__":
         '--training-input', metavar='path', type=str,
         help='Training data to use to predict new MAPQs for a SAM file.  Use with --sam-input.')
     parser.add_argument(\
+        '--save-training', metavar='path', type=str,
+        help='Save training data to file.')
+    parser.add_argument(\
         '--sam-input', metavar='path', type=str,
         help='Input SAM file to apply training data to.  Use with --training-input.')
+    parser.add_argument(\
+        '--un-sim', metavar='path', type=str,
+        help='Write unaligned simulated reads to this file.')
     parser.add_argument(\
         '--bt2-exe', metavar='path', dest='bt2_exe', type=str,
         help='Path to Bowtie 2 exe')
@@ -1595,7 +1576,7 @@ if __name__ == "__main__":
         '--as-scale', metavar='float', type=float, default=1.0,
         help='Multiply AS:i scores by this before making them into training records')
     parser.add_argument(\
-        '--diff-scale', metavar='float', type=float, default=1.0,
+        '--diff-scale', metavar='float', type=float, default=3.0,
         help='Multiply AS:i - XS:i scores by this before making them into training records')
     parser.add_argument(\
         '--sanity', dest='sanity', action='store_const', const=True, default=False,
@@ -1627,14 +1608,7 @@ if __name__ == "__main__":
                 dst.add("DP")
                 dr = dst.draw()
                 self.assertTrue(dr == "CP" or dr == "DP")
-            
-            def test_mutate(self):
-                sc = Scoring(1, (2, 6), 1, (5, 3), (5, 3)) 
-                mut = Mutator(sc)
-                rd = Read("r1", "ACGTACGT", "abcdefgh")
-                rdMut = mut.mutate(rd, 6)
-                self.assertTrue(rd.seq != rdMut.seq)
-        
+
         unittest.main(argv=[sys.argv[0]])
     elif args.profile:
         import cProfile
