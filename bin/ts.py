@@ -7,10 +7,6 @@ A "tandem simulator," which wraps an alignment tool as it runs, eavesdrops on
 the input and output, and builds a model that can be used to improve the
 quality values calculated for aligned reads.
 
-Right now we have to load the reference FASTA separately, and we need the user
-to tell us about the scoring params so we can simulate reads with known best
-score.
-
 Things we learn from reads
 ==========================
 
@@ -41,7 +37,8 @@ import subprocess
 import tempfile
 import signal
 import traceback
-import pickle
+import cPickle
+import time
 from Queue import Queue
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -92,11 +89,12 @@ class Read(object):
 class Alignment(object):
     """ Encapsulates an alignment record for a single aligned read """
 
-    __asRe = re.compile('AS:i:([-]?[0-9]+)')
-    __xsRe = re.compile('XS:i:([-]?[0-9]+)')
-    __ytRe = re.compile('YT:Z:([A-Z]+)')
-    __ysRe = re.compile('YS:i:([-]?[0-9]+)')
-    __mdRe = re.compile('MD:Z:([^\s]+)')
+    __asRe  = re.compile('AS:i:([-]?[0-9]+)')
+    __xsRe  = re.compile('XS:i:([-]?[0-9]+)')
+    __ytRe  = re.compile('YT:Z:([A-Z]+)')
+    __ysRe  = re.compile('YS:i:([-]?[0-9]+)')
+    __mdRe  = re.compile('MD:Z:([^\s]+)')
+    __xlsRe = re.compile('Xs:i:([-]?[0-9]+)')
     
     def __init__(self, ln):
         self.name, self.flags, self.refid, self.pos, self.mapq, self.cigar, \
@@ -122,6 +120,10 @@ class Alignment(object):
         self.secondBestScore = None
         if se is not None:
             self.secondBestScore = int(se.group(1))
+        se = Alignment.__xlsRe.search(self.extra)
+        self.thirdBestScore = None
+        if se is not None:
+            self.thirdBestScore = int(se.group(1))
         se = Alignment.__ytRe.search(self.extra)
         self.alType = None
         if se is not None:
@@ -166,14 +168,6 @@ class Alignment(object):
         assert not self.isAligned() or self.bestScore is not None
         assert self.alType in ["CP", "DP", "UP", "UU"]
         return True
-
-class AlignmentPair(object):
-    """ Encapsulates a pair of alignments for two ends of a paired-end read """
-    def __init__(self, al1, al2):
-        self.al1, self.al2 = al1, al2
-    
-    def fraglen(self):
-        return abs(self.al1.tlen)
 
 class WeightedRandomGenerator(object):
     
@@ -360,6 +354,34 @@ class ScoreDist(object):
         rdAln, rfAln = cigarMdzToStacked(al.seq, cigarList, mdzList)
         self.res.add((al.fw, al.qual, rdAln, rfAln, sc))
 
+class ScoreDistPaired(object):
+    """ Capture a map from scores observed to patterns of mismatches
+        and gaps observed.  We do this instead of trying to generate
+        patterns of gaps and mismatches to achieve a desired score,
+        because the latter has many issues.  Chief amongst them:
+        1. Hard to  """
+    
+    def __init__(self, k=10000):
+        self.res = ReservoirSampler(k)
+    
+    def draw(self):
+        assert len(self.res) > 0
+        return self.res.draw()
+    
+    def add(self, al1, al2):
+        # Extract quality string
+        assert al1.cigar is not None and al2.cigar is not None
+        assert al1.mdz is not None and al2.mdz is not None
+        def aln(al):
+            cigarList = cigarToList(al.cigar)
+            mdzList = mdzToList(al.mdz)
+            return cigarMdzToStacked(al.seq, cigarList, mdzList)
+        rdAln1, rfAln1 = aln(al1)
+        rdAln2, rfAln2 = aln(al2)
+        self.res.add((abs(al1.tlen),
+                      (al1.fw, al1.qual, rdAln1, rfAln1, al1.bestScore),
+                      (al2.fw, al2.qual, rdAln2, rfAln2, al2.bestScore)))
+
 class Dist(object):
     """ Capture an empirical distribution.  Basically a histogram. """
     
@@ -389,280 +411,63 @@ class Dist(object):
         self.tot += 1
         self.changed = True
 
-class Scoring(object):
-    """ Parameters governing how to score sequence differences between
-        a read and the reference genome. """ 
-    
-    def __init__(self, ma, mmp, np, rdg, rfg):
-        self.ma = ma             # match bonus: integer
-        self.mmp = mmp           # mismatch penalty: (min, max) integer tuple
-        self.np = np             # N penalty: integer
-        self.rdg = rdg           # affine read gap penalty: (a, b)
-        self.rfg = rfg           # affine reference gap penalty: (a, b)
-    
-    def rfgPenalty(self, length=1):
-        return self.rfg[0] + length * self.rfg[1]
-    
-    def rdgPenalty(self, length=1):
-        return self.rdg[0] + length * self.rdg[1]
-
-class SimpleFunc(object):
-    """ One-argument function with constant term and term that is proportional
-        to some function of the argument.  Function can be f(x) = 0 (constant),
-        f(x) = x (linear), f(x) = ln(x) (log), or f(x) = sqrt(x) (sqrt) """
-    
-    def __init__(self, type="const", I=None, X=None, C=0.0, L=0.0):
-        self.type = type
-        self.I = I
-        self.X = X
-        self.C = C
-        self.L = L
-        if I is None: I = float('-inf')
-        if X is None: X = float('inf')
-    
-    def f(self, x):
-        if self.type == "const":
-            x = 0.0
-        elif self.type == "sqrt":
-            x = math.sqrt(x)
-        elif self.type == "log":
-            x = math.log(x)
-        elif self.type != "linear":
-            raise RuntimeError("Bad simple function type: '%s'" % self.type)
-        return min(X, max(I, self.C + self.L * x))
-
-class QualitySimulator(object):
-    """ Class that, given read lengths and a distribution of observed quality
-        values, returns a string of quality values of the desired length. """
-    
-    def __init__(self, qdistUnp, qdistM1, qdistM2):
-        self.qdistUnp = qdistUnp
-        self.qdistM1 = qdistM1
-        self.qdistM2 = qdistM2
-    
-    def sim(self, ln):
-        return 'I' * ln
-
-class FastaSeqIdx(object):
-    
-    ''' Object encapsulating a FASTA file that has been indexed by sequence.
-        That is, the index makes it easy to seek directly to the beginning of
-        a specific sequence (but not to specific points within it). '''
-    
-    def __init__(self, fa_fns, truncate=True, idx_fn=None):
-        self.fa_fns = fa_fns  # FASTA filenames to open/index
-        self.idx_fn = idx_fn  # filename where index should be stored/retrieved
-        self.idx = {}         # The index!!
-        self.idxIval = 10 * 1024
-        self.truncate = truncate
-        self.fh = None
-        self._lastc = ''
-        if idx_fn is not None and os.path.exists(idx_fn):
-            self.loadIdx(idx_fn)
-        else:
-            self.buildIdx()
-        if idx_fn is not None and not os.path.exists(idx_fn):
-            self.saveIdx(idx_fn)
-    
-    def __del__(self):
-        if self.fh is not None: self.fh.close()
-    
-    def close(self):
-        if self.fh is not None: self.fh.close()
-    
-    def nextc(self, n=1, skip=False):
-        ''' Return a string consisting of the next n non-whitespace characters.
-            The read is with respect to the current file cursor. '''
-        self._lastc = ''
-        if n == 1:
-            c = self.fh.read(1)
-            while c.isspace():
-                c = self.fh.read(1)
-            self._lastc = c
-            return c # Empty string if EOF
-        else:
-            s = []
-            slen = 0
-            lastc = None
-            while slen < n:
-                c = self.fh.read(1)
-                while c.isspace():
-                    c = self.fh.read(1)
-                if not skip:
-                    s.append(c)
-                lastc = c
-                slen += 1
-            if slen > 0 and lastc is not None:
-                self._lastc = lastc
-            return ''.join(s)
-    
-    def get(self, ref, off=0, ln=None):
-        ''' Get the string at 0-based offset off, with length ln '''
-        if off == 0 and ln is None:
-            return self.getWhole(ref)
-        if ln is None: ln = self.idx[ref][1]
-        self.scanTo(ref, off)
-        return self.nextc(n=ln, skip=False)
-    
-    def getpad(self, ref, off=0, ln=None, pad='x'):
-        ''' Get the string at 0-based offset off, with length ln.  If this
-            string falls off either end of the reference, fill those slots with
-            the "pad" string. '''
-        if off == 0 and ln is None:
-            return self.getWhole(ref)
-        if ln is None: ln = self.idx[ref][1]
-        lf, rt = '', ''
-        if off < 0: lf = pad * -off
-        if off+ln > self.idx[ref][1]: rt = pad * (off+ln - self.idx[ref][1])
-        self.scanTo(ref, off)
-        return lf + self.nextc(n=ln, skip=False) + rt
-    
-    def getWhole(self, ref):
-        """ Return an entire sequence from the FASTA file. """ 
-        self.scanTo(ref, 0)
-        lns = []
-        while True:
-            ln = self.fh.readline().rstrip()
-            if len(ln) == 0 or ln[0] == '>': break
-            lns.append(ln)
-        return "".join(lns)
-    
-    def peek(self):
-        ''' Take a peek at the next non-whitespace character and return it. '''
-        off = self.fh.tell()
-        c = self.fh.read(1)
-        while c.isspace():
-            c = self.fh.read(1)
-        self.fh.seek(off)
-        return c
-    
-    def lastc(self):
-        ''' Return last character read '''
-        return self._lastc
-    
-    def scanTo(self, ref, off):
-        ''' Scan to the beginning of the FASTA sequence of the given name '''
-        if self.fh is not None:
-            self.fh.close()
-            self.fh = None
-        if self.truncate:
-            idx = ref.find(' ')
-            # Truncate name at first whitespace
-            if idx >= 0:
-                ref = ref[:idx]
-        # Reference should be in the index
-        assert ref in self.idx
-        fn, seekoff = self.idx[ref]
-        offlist = self.idx[ref][3]
-        i = bisect.bisect_right(offlist, (off, sys.maxint))
-        assert i <= len(offlist)
-        self.fh = open(fn, 'rb')
-        if i == 0:
-            self.fh.seek(self.idx[ref][2], 0)
-            self.nextc(off, skip=True)
-        else:
-            diff = offlist[i][0] - off
-            self.fh.seek(offlist[i][1], 0)
-            self.nextc(diff, skip=True)
-    
-    def loadIdx(self, idx_fn):
-        ''' Load an already-calculated index from a file. '''
-        with open(self.idx_fn, 'rb') as pkl_file:
-            self.idx = pickle.load(pkl_file)
-    
-    def saveIdx(self, idx_fn):
-        ''' Save an index to a file. '''
-        with open(self.idx_fn, 'wb') as pkl_file:
-            pickle.dump(self.idx, pkl_file)
-    
-    def length(self, nm):
-        assert nm in self.idx
-        return self.idx[nm][1]
-    
-    def buildIdx(self):
-        ''' Build an index dictionary over for all the reference sequences in
-            all the FASTA files. '''
-        for fn in self.fa_fns:
-            with open(fn, 'rb') as fh:
-                cur = None
-                while 1:
-                    line = fh.readline()
-                    if not line: break
-                    line = line.rstrip()
-                    off = fh.tell()
-                    if len(line) == 0:
-                        continue
-                    if line[0] == '>': # Header
-                        refid = line[1:]
-                        if self.truncate:
-                            idx = refid.find(' ')
-                            if idx >= 0:
-                                refid = refid[:idx]
-                        assert refid not in self.idx, "Already saw refid '%s' from line '%s'" % (refid, line)
-                        # Index record is:
-                        # 1. Filename
-                        # 2. Length of sequence
-                        # 3. File offset
-                        # 4. List of internal offsets
-                        self.idx[refid] = [fn, 0, off, []]
-                        cur = refid
-                    elif cur is not None:
-                        ln = self.idx[cur][1]
-                        ln_old, ln_new = ln, ln + len(line)
-                        if (ln_old % self.idxIval) != (ln_new % self.idxIval):
-                            self.idx[cur][3].append((ln_new, off))
-                        # See if we want to add an offset to the index
-                        self.idx[cur][1] += len(line)
-
 class SequenceSimulator(object):
     """ Class that, given a collection of FASTA files, samples intervals of
         specified length from the strings contained in them. """
     
-    def __init__(self, fafns, idx_fn=None, verbose=False):
+    def __init__(self, fafns, pickleFn, idx_fn=None, verbose=False):
+        self.__re = re.compile('[^ACGTacgt]')
         self.refs = dict()
         self.names = []
         self.lens = []
-        totlen = 0
-        pt_sz = 50000000
-        last_pt = 0
-        max_bases = sys.maxint
-        if args.max_bases is not None:
-            max_bases = args.max_bases
-        abort = False
-        for fafn in fafns:
-            fafh = open(fafn, 'r')
-            name = None
-            for line in fafh:
-                line = line.rstrip()
-                ln = len(line)
-                if line.startswith('>'):
-                    ind = line.find(" ")
-                    if ind == -1: ind = len(line)
-                    line = line[1:ind]
-                    name = line
-                    self.refs[name] = []
-                    self.names.append(name)
-                    self.lens.append(0)
-                else:
-                    assert name is not None
-                    self.refs[name].append(line)
-                    self.lens[-1] += ln
-                    totlen += ln
-                    if verbose:
-                        pt = totlen / pt_sz
-                        if pt > last_pt:
-                            print >> sys.stderr, "Read %d FASTA bytes..." % totlen
-                        last_pt = pt
-                    if totlen > max_bases:
-                        abort = True
-                        break
-            fafh.close()
-            if abort:
-                break
-        for k in self.refs.iterkeys():
-            self.refs[k] = ''.join(self.refs[k])
+        pickleExists = False
+        if pickleFn is not None:
+            pickleExists = os.path.exists(pickleFn)
+        if pickleFn is not None and pickleExists:
+            self.refs, self.names, self.lens = cPickle.load(open(pickleFn, 'rb'))
+        else:
+            totlen = 0
+            pt_sz = 50000000
+            last_pt = 0
+            max_bases = sys.maxint
+            if args.max_bases is not None:
+                max_bases = args.max_bases
+            abort = False
+            for fafn in fafns:
+                fafh = open(fafn, 'r')
+                name = None
+                for line in fafh:
+                    line = line.rstrip()
+                    ln = len(line)
+                    if ln > 0 and line[0] == '>':
+                        ind = line.find(" ")
+                        if ind == -1: ind = len(line)
+                        line = line[1:ind]
+                        name = line
+                        self.refs[name] = []
+                        self.names.append(name)
+                        self.lens.append(0)
+                    else:
+                        assert name is not None
+                        self.refs[name].append(line)
+                        self.lens[-1] += ln
+                        totlen += ln
+                        if verbose:
+                            pt = totlen / pt_sz
+                            if pt > last_pt:
+                                print >> sys.stderr, "Read %d FASTA bytes..." % totlen
+                            last_pt = pt
+                        if totlen > max_bases:
+                            abort = True
+                            break
+                fafh.close()
+                if abort:
+                    break
+            for k in self.refs.iterkeys():
+                self.refs[k] = ''.join(self.refs[k])
+        if pickleFn is not None and not pickleExists:
+            cPickle.dump((self.refs, self.names, self.lens), open(pickleFn, 'wb'), cPickle.HIGHEST_PROTOCOL)
         self.rnd = WeightedRandomGenerator(self.lens)
-        self.__re = re.compile('[^ACGTacgt]')
     
     def sim(self, ln, verbose=False):
         if verbose: print >>sys.stderr, "sim called..."
@@ -674,83 +479,18 @@ class SequenceSimulator(object):
         refoff = random.randint(0, self.lens[refi] - ln) # pick offset
         seq = self.refs[nm][refoff:refoff+ln] # extract substring
         # Simulated read can't overlap non-A-C-G-T character in reference
-        while self.__re.match(seq):
+        while self.__re.search(seq):
             refoff = random.randint(0, self.lens[refi] - ln) # pick new offset
             seq = self.refs[nm][refoff:refoff+ln] # extract substring again
         seq = seq.upper()
         if random.random() > 0.5: # possibly reverse-complement
             fw = False
             seq = revcomp(seq) # reverse complement
+        assert not "N" in seq
         if verbose:
             print >>sys.stderr, "...done"
         return (nm, refoff, fw, seq) # return ref id, ref offset, orientation, sequence
 
-def addTo(total, summands=[1], memo = {}):
-    """ Given a list of integers, perhaps with some integers repeated,
-        calculate all ways to add those numbers to get the given total.
-        Uses top-down dynamic programming.
-        
-        Problems with this idea:
-        1. It doesn't necessarily generate 'realistic' combinations of gaps
-           and mismatches
-        2. The lower penalties are going to tend to be overrepresented.  For
-           instance, what about N getting a penalty of -1?  It will show up in
-           most combinations produced.
-        3. Could take far longer if summands are mix of positive and negative
-        
-        What we might do instead is capture patterns of gaps and mismatches
-        that occur in alignments.  We can't trust these 100% because they've
-        been through the filter of the aligner.  So we might "smooth" them or
-        otherwise try to include a bunch of "nearby" score combinations as
-        well. """ 
-    def addToHelper(total, totalSofar):
-        solns = set()
-        left = total - totalSofar
-        if left in memo:
-            return memo[left]
-        for i in xrange(0, len(summands)):
-            if totalSofar + summands[i] < total:
-                newSolns = addToHelper(total, totalSofar + summands[i])
-                for soln in newSolns:
-                    solnList = list(soln)
-                    solnList[i] += 1
-                    solns.add(tuple(solnList))
-            elif totalSofar + summands[i] == total:
-                soln = [0] * len(summands)
-                soln[i] = 1
-                solns.add(tuple(soln))
-        memo[left] = solns
-        return solns
-    return addToHelper(total, 0)
-
-class MyMutableString(object):
-    """ A string supporting efficient insertions and deletions """
-    
-    def __init__(self, s=None):
-        self.slist = []
-        if s is not None:
-            self.append(s)
-
-    def __str__(self):
-        return ''.join(self.slist)
-    
-    def append(self, s):
-        self.slist.extend(list(s))
-    
-    def delete(self, i, j=None):
-        if j is None:
-            j = i + 1
-        # Set the appropriate elements to the empty string
-        for k in xrange(i, j):
-            self.slist[k] = ""
-    
-    def set(self, i, s):
-        assert i < len(self.slist)
-        self.slist[i] = s
-    
-    def get(self, i):
-        return self.slist[i]
-    
 def mutate(rd, rdfw, scDistDraw):
     """ Given a read that already has the appropriate length (i.e.
         equal to the number of characters on the reference side of
@@ -758,6 +498,7 @@ def mutate(rd, rdfw, scDistDraw):
         
         Modifies 'rd' in place. """ 
     fw, qual, rdAln, rfAln, sc = scDistDraw
+    assert "N" not in rd.seq
     assert len(rd.seq) == len(rfAln) - rfAln.count('-')
     if rdfw != fw:
         qual, rdAln, rfAln = qual[::-1], rdAln[::-1], rfAln[::-1]
@@ -768,21 +509,18 @@ def mutate(rd, rdfw, scDistDraw):
     i, rdi, rfi = 0, 0, 0
     while i < len(rdAln):
         if rdAln[i] == '-':
-            assert sc != 0 # score can't be perfect
             rfi += 1
         elif rfAln[i] == '-':
-            assert sc != 0 # score can't be perfect
             seq.append(rdAln[i])
             rdi += 1
         elif rdAln[i] != rfAln[i] and rdAln[i] == 'N':
-            assert sc != 0 # score can't be perfect
             seq.append('N')
             rfi += 1; rdi += 1
         elif rdAln[i] != rfAln[i]:
-            assert sc != 0 # score can't be perfect
             assert rfi < len(rd.seq)
             oldc = rd.seq[rfi].upper()
             cs = ['A', 'C', 'G', 'T']
+            assert oldc in cs, "oldc was %s" % oldc
             cs.remove(oldc)
             newc = random.choice(cs)
             seq.append(newc)
@@ -801,13 +539,15 @@ class SimulatorWrapper(object):
         gathered during alignment so far to select such parameters as read
         length, concordant/discordant fragment length, etc. """
     
-    def __init__(self, sim, qsim, tyd, scd, scd1, scd2, fld):
+    def __init__(self, sim, m1fw, m2fw, tyd, scd, scd1, scd2, scdp, fld):
         self.sim  = sim  # sequence simulator
-        self.qsim = qsim # quality simulator
+        self.m1fw = m1fw # whether mate 1 is revcomped w/r/t fragment
+        self.m2fw = m2fw # whether mate 2 is revcomped w/r/t fragment
         self.tyd  = tyd  # type distribution (UU/CP/DP/UP)
-        self.scd  = scd  # score distribution for unpaired reads
-        self.scd1 = scd1 # score distribution for mate 1
-        self.scd2 = scd2 # score distribution for mate 2
+        self.scd  = scd  # qualities/edits for unpaired reads
+        self.scd1 = scd1 # qualities/edits for discordant mate 1
+        self.scd2 = scd2 # qualities/edits for discordant mate 2
+        self.scdp = scdp # qualities/edits for concordant pairs
         self.fld  = fld  # fragment length distribution
     
     def next(self):
@@ -822,37 +562,39 @@ class SimulatorWrapper(object):
             rl = len(rfAln) - rfAln.count('-')
             refid, refoff, fw, seq = self.sim.sim(rl) # simulate it
             assert rl == len(seq)
-            qual = self.qsim.sim(rl)
             _, _, _, _, sc = scDraw
-            read = Read.fromSimulator(seq, qual, refid, refoff, fw, sc)
+            read = Read.fromSimulator(seq, None, refid, refoff, fw, sc)
             mutate(read, fw, scDraw) # mutate unpaired read
+            assert read.qual is not None
             return read, None
         else:
             # Simulating paired-end read
-            fl = self.fld.draw() # draw a fragment length
-            sc1Draw, sc2Draw = self.scd1.draw(), self.scd2.draw()
+            fl, sc1Draw, sc2Draw = self.scdp.draw()
             _, _, _, rfAln1, _ = sc1Draw
             _, _, _, rfAln2, _ = sc2Draw
             rl1 = len(rfAln1) - rfAln1.count('-')
             rl2 = len(rfAln2) - rfAln2.count('-')
             refid, refoff, fw, seq = self.sim.sim(fl) # simulate fragment
             assert len(seq) == fl
+            assert fl >= rl1
+            assert fl >= rl2
             # get mates from fragment
-            seq1 = seq[:rl1]
-            seq2 = seq[-rl2:]
-            # TODO: possibly reverse-comp according to paired-end parameters
-            if not m1fw: seq1 = revcomp(seq1)
-            if not m2fw: seq2 = revcomp(seq2)
+            seq1, seq2 = seq[:rl1], seq[-rl2:]
+            if not self.m1fw: seq1 = revcomp(seq1)
+            if not self.m2fw: seq2 = revcomp(seq2)
+            # Now we have the Watson offset for one mate or the other,
+            # depending on which mate is to the left w/r/t Watson.
             refoff1, refoff2 = refoff, refoff
             if fw: refoff2 = refoff + fl - rl2
             else:  refoff1 = refoff + fl - rl1
-            qual1, qual2 = self.qsim.sim(len(seq1)), self.qsim.sim(len(seq2))
             _, _, _, _, sc1 = sc1Draw
             _, _, _, _, sc2 = sc2Draw
-            rd1 = Read.fromSimulator(seq1, qual1, refid, refoff1, fw, sc1)
-            rd2 = Read.fromSimulator(seq2, qual2, refid, refoff2, fw, sc2)
-            mutate(rd1, fw, sc1Draw) # mutate mate 1
-            mutate(rd2, fw, sc2Draw) # mutate mate 2
+            rd1 = Read.fromSimulator(seq1, None, refid, refoff1, fw, sc1)
+            rd2 = Read.fromSimulator(seq2, None, refid, refoff2, fw, sc2)
+            mutate(rd1, fw == self.m1fw, sc1Draw) # mutate mate 1
+            mutate(rd2, fw == self.m2fw, sc2Draw) # mutate mate 2
+            assert rd1.qual is not None
+            assert rd2.qual is not None
             return rd1, rd2
 
 class Input(object):
@@ -922,11 +664,11 @@ class InputWrapper(object):
                 if rd2 is not None:
                     # Paired-end case
                     # add read lengths to empirical distributions
-                    self.rddist1.add(len(rd1))
-                    self.rddist2.add(len(rd2))
+                    self.rddistM1.add(len(rd1))
+                    self.rddistM2.add(len(rd2))
                     # add quality values to empirical distributions
-                    for q in map(lambda x: ord(x)-33, rd1.qual): self.qdist1.add(q)
-                    for q in map(lambda x: ord(x)-33, rd2.qual): self.qdist2.add(q)
+                    for q in map(lambda x: ord(x)-33, rd1.qual): self.qdistM1.add(q)
+                    for q in map(lambda x: ord(x)-33, rd2.qual): self.qdistM2.add(q)
                 else:
                     # Unpaired case
                     # add read length to empirical distribution
@@ -934,6 +676,82 @@ class InputWrapper(object):
                     # add quality values to empirical distribution
                     for q in map(lambda x: ord(x)-33, rd1.qual): self.qdistUnp.add(q)
             yield (rd1, rd2)
+
+class KNN(object):
+    """ Encapsulates a K-nearest-neighbor classifier for estimating
+        probability that an alignment tuple corresponds to a correct
+        alignment.  Maintains an LRU cache mapping tuples to responses
+        so we don't necessarily have to do the nearest-neighbor query
+        each time.
+        
+        Caching code borrowed from:
+        http://code.activestate.com/recipes/577970-simplified-lru-cache/
+    """ 
+    
+    def __init__(self, n_neighbors, weights, maxsize=2048, sanity=False):
+        self.classifier = KNeighborsClassifier(\
+            n_neighbors=n_neighbors, warn_on_equidistant=False, weights=weights)
+        
+        self.didFit = False
+        self.hits = 0
+        self.misses = 0
+        self.prev, self.prevProb = None, None
+        self.sanity = sanity # do sanity-checking on cache results
+        
+        # Cache is a double-linked list
+        # Link layout:     [PREV, NEXT, KEY, RESULT]
+        self.root = root = [None, None, None, None]
+        self.cache = cache = {}
+        last = root
+        for i in range(maxsize):
+            key = object()
+            cache[key] = last[1] = last = [last, root, key, None]
+        root[0] = last
+    
+    def probCorrect(self, recl):
+        """ Return the probability that the test tuple 'rec'
+            corresponds to a correct alignment """
+        assert self.didFit
+        if self.prev is not None and recl == self.prev:
+            return self.prevProb
+        self.prev = recl
+        rect = tuple(recl)
+        
+        cache = self.cache
+        root = self.root
+        link = cache.get(rect)
+        if link is not None:
+            # Cache hit
+            link_prev, link_next, _, result = link
+            link_prev[1] = link_next
+            link_next[0] = link_prev
+            last = root[0]
+            last[1] = root[0] = link
+            link[0] = last
+            link[1] = root
+            self.hits += 1
+            self.prevProb = result
+            if self.sanity:
+                assert result == self.classifier.predict_proba([recl])[0][-1]
+            return result
+        # Cache miss
+        result = self.classifier.predict_proba([recl])[0][-1]
+        root[2] = rect
+        root[3] = result
+        oldroot = root
+        root = self.root = root[1]
+        root[2], oldkey = None, root[2]
+        root[3], oldvalue = None, root[3]
+        del cache[oldkey]
+        cache[rect] = oldroot
+        self.misses += 1
+        self.prevProb = result
+        return result
+    
+    def fit(self, train, lab):
+        """ Fit the model (build the KDTree) """
+        self.didFit = True
+        self.classifier.fit(train, lab)
 
 class Training(object):
     
@@ -949,7 +767,7 @@ class Training(object):
         # Following tables are for a second layer of training for
         # concordantly-aligned pairs
         self.trainConc,   self.labConcM1,   self.labConcM2 = [], [], []
-        self.classConcM1, self.classConcM2 = [], []
+        self.classConcM1, self.classConcM2 = None, None
         self.trainConcFraglen = []
         # These scale factors are set for real when we fit
         self.scaleAs, self.scaleDiff = 1.0, 1.0
@@ -967,6 +785,7 @@ class Training(object):
             if al.mate1:
                 self.trainM1Conc.append(rec.toList())
                 self.labM1Conc.append(correct)
+                self.trainConcFraglen.append(abs(al.tlen))
             else:
                 self.trainM2Conc.append(rec.toList())
                 self.labM2Conc.append(correct)
@@ -992,17 +811,17 @@ class Training(object):
             assert al1.mate1 and not al1.mate2
             assert al2.mate2 and not al2.mate1
             rec1, rec2 = rec, TrainingRecord.fromAlignment(al2, self.scaleAs, self.scaleDiff)
-            probCor1 = self.classM1Conc.predict_proba([rec1.toList()])[0][-1]
-            probCor2 = self.classM2Conc.predict_proba([rec2.toList()])[0][-1]
+            probCor1 = self.classM1Conc.probCorrect(rec1.toList())
+            probCor2 = self.classM2Conc.probCorrect(rec2.toList())
             concRec = [ probCor1, probCor2, abs(al1.tlen) ]
-            newProbCor1 = self.classConcM1.predict_proba(concRec)[0][-1]
-            newProbCor2 = self.classConcM2.predict_proba(concRec)[0][-1]
+            newProbCor1 = self.classConcM1.probCorrect(concRec)
+            newProbCor2 = self.classConcM2.probCorrect(concRec)
             return newProbCor1, newProbCor2
         elif al1.discordant or al1.unpPair:
             classifier = self.classM1Disc if al1.mate1 else self.classM2Disc
-            return classifier.predict_proba([rec.toList()])[0][-1]
+            return classifier.probCorrect(rec.toList())
         else:
-            return self.classUnp.predict_proba([rec.toList()])[0][-1]
+            return self.classUnp.probCorrect(rec.toList())
     
     def fit(self, num_neighbors, weights, scaleAs=1.0, scaleDiff=1.0):
         """ Train our KNN classifiers """
@@ -1018,28 +837,23 @@ class Training(object):
         
         # Create and train each classifier
         if len(self.trainUnp) > 0:
-            self.classUnp = KNeighborsClassifier(\
-                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            self.classUnp = KNN(n_neighbors=num_neighbors, weights=weights)
             __adjustScale(self.trainUnp)
             self.classUnp.fit(self.trainUnp, self.labUnp)
         if len(self.trainM1Disc) > 0:
-            self.classM1Disc = KNeighborsClassifier(\
-                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            self.classM1Disc = KNN(n_neighbors=num_neighbors, weights=weights)
             __adjustScale(self.trainM1Disc)
             self.classM1Disc.fit(self.trainM1Disc, self.labM1Disc)
         if len(self.trainM2Disc) > 0:
-            self.classM2Disc = KNeighborsClassifier(\
-                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            self.classM2Disc = KNN(n_neighbors=num_neighbors, weights=weights)
             __adjustScale(self.trainM2Disc)
             self.classM2Disc.fit(self.trainM2Disc, self.labM2Disc)
         if len(self.trainM1Conc) > 0:
-            self.classM1Conc = KNeighborsClassifier(\
-                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            self.classM1Conc = KNN(n_neighbors=num_neighbors, weights=weights)
             __adjustScale(self.trainM1Conc)
             self.classM1Conc.fit(self.trainM1Conc, self.labM1Conc)
         if len(self.trainM2Conc) > 0:
-            self.classM2Conc = KNeighborsClassifier(\
-                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            self.classM2Conc = KNN(n_neighbors=num_neighbors, weights=weights)
             __adjustScale(self.trainM2Conc)
             self.classM2Conc.fit(self.trainM2Conc, self.labM2Conc)
         
@@ -1053,16 +867,14 @@ class Training(object):
         if len(self.trainM1Conc) > 0:
             for i in xrange(0, len(self.trainM1Conc)):
                 m1c, m2c = self.trainM1Conc[i], self.trainM2Conc[i]
-                p1 = self.classM1Conc.predict_proba([m1c.toList()])[0][-1]
-                p2 = self.classM2Conc.predict_proba([m2c.toList()])[0][-1]
+                p1 = self.classM1Conc.probCorrect(m1c)
+                p2 = self.classM2Conc.probCorrect(m2c)
                 self.trainConc.append((p1, p2, self.trainConcFraglen[i]))
                 self.labConcM1.append(self.labM1Conc[i])
                 self.labConcM2.append(self.labM2Conc[i])
         
-            self.classConcM1 = KNeighborsClassifier(\
-                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
-            self.classConcM2 = KNeighborsClassifier(\
-                n_neighbors=num_neighbors, warn_on_equidistant=False, weights=weights)
+            self.classConcM1 = KNN(n_neighbors=num_neighbors, weights=weights)
+            self.classConcM2 = KNN(n_neighbors=num_neighbors, weights=weights)
             
             self.classConcM1.fit(self.trainConc, self.labM1Conc)
             self.classConcM2.fit(self.trainConc, self.labM2Conc)
@@ -1078,7 +890,7 @@ class Training(object):
         self.trainConc,   self.labConcM1,   self.labConcM2, \
         self.classConcM1, self.classConcM2, \
         self.trainConcFraglen)
-        with open(fn, 'wb') as trainOfh: pickle.dump(save, trainOfh)
+        with open(fn, 'wb') as trainOfh: cPickle.dump(save, trainOfh, cPickle.HIGHEST_PROTOCOL)
     
     def load(self, fn):
         """ Load all training data from a file """
@@ -1091,7 +903,25 @@ class Training(object):
             self.trainM2Conc, self.labM2Conc, \
             self.trainConc,   self.labConcM1,   self.labConcM2, \
             self.classConcM1, self.classConcM2, \
-            self.trainConcFraglen) = pickle.load(trainIfh)
+            self.trainConcFraglen) = cPickle.load(trainIfh)
+    
+    def hits(self):
+        return self.classConcM1.hits if self.classConcM1 is not None else 0 + \
+               self.classConcM2.hits if self.classConcM2 is not None else 0 + \
+               self.classUnp.hits    if self.classUnp    is not None else 0 + \
+               self.classM1Disc.hits if self.classM1Disc is not None else 0 + \
+               self.classM2Disc.hits if self.classM2Disc is not None else 0 + \
+               self.classM1Conc.hits if self.classM1Conc is not None else 0 + \
+               self.classM2Conc.hits if self.classM2Disc is not None else 0
+    
+    def misses(self):
+        return self.classConcM1.misses if self.classConcM1 is not None else 0 + \
+               self.classConcM2.misses if self.classConcM2 is not None else 0 + \
+               self.classUnp.misses    if self.classUnp    is not None else 0 + \
+               self.classM1Disc.misses if self.classM1Disc is not None else 0 + \
+               self.classM2Disc.misses if self.classM2Disc is not None else 0 + \
+               self.classM1Conc.misses if self.classM1Conc is not None else 0 + \
+               self.classM2Conc.misses if self.classM2Disc is not None else 0
 
 class TrainingRecord(object):
     """ A single tuple of per-read training data including:
@@ -1113,7 +943,10 @@ class TrainingRecord(object):
     def fromAlignment(cls, al, scaleAs=1.0, scaleDiff=1.0):
         """ Initialize training record with respect to an alignment and a
             boolean indicating whether it is correct. """
-        return cls(len(al), al.bestScore, al.secondBestScore,
+        secbest = al.secondBestScore
+        if secbest is None or al.thirdBestScore > secbest:
+            secbest = al.thirdBestScore
+        return cls(len(al), al.bestScore, secbest,
                    scaleAs=scaleAs, scaleDiff=scaleDiff)
     
     def toList(self):
@@ -1135,29 +968,30 @@ class Output(threading.Thread):
         written """
     
     def __init__(self, samIfh, samOfh, unalFh, trainSink,
-                 scDistUnp, scDistM1, scDistM2, fragDist, typeDist):
+                 scDistUnp, scDistM1, scDistM2, scDistPair, fragDist, typeDist):
         threading.Thread.__init__(self)
-        self.samIfh = samIfh       # SAM records come from here
-        self.samOfh = samOfh       # normal (non-simulated) SAM records go here
-        self.trainSink = trainSink # write training data here
-        self.fragDist = fragDist   # fragment length distribution
-        self.scDistUnp = scDistUnp # score distribution for unpaired
-        self.scDistM1 = scDistM1   # score distribution for mate #1s
-        self.scDistM2 = scDistM2   # score distribution for mate #2s
-        self.typeDist = typeDist   # alignment type (UU/CP/DP/UP) distribution
-        self.unalFh = unalFh       # write unaligned reads here
+        self.samIfh = samIfh         # SAM records come from here
+        self.samOfh = samOfh         # normal (non-simulated) SAM recs go here
+        self.trainSink = trainSink   # write training data here
+        self.fragDist = fragDist     # fragment length distribution
+        self.scDistUnp = scDistUnp   # qualities/edits for unpaired
+        self.scDistM1 = scDistM1     # qualities/edits for mate #1s
+        self.scDistM2 = scDistM2     # qualities/edits for mate #2s
+        self.scDistPair = scDistPair # qualities/edits for concordant pairs
+        self.typeDist = typeDist     # alignment type (UU/CP/DP/UP)
+        self.unalFh = unalFh         # write unaligned reads here
         self.scDiffs = {}
     
     def run(self):
         lastAl = None
         for ln in self.samIfh:
-            if ln.startswith('@'):
+            if ln[0] == '@':
                 if self.samOfh is not None:
                     self.samOfh.write(ln) # header line
                 continue
             al = Alignment(ln)
             nm, flags, refid, pos, _, _, _, _, _, seq, qual, _ = string.split(ln, '\t', 11)
-            if al.name.startswith('!!ts!!'):
+            if al.name[0] == '!' and al.name.startswith('!!ts!!'):
                 # this is a simulated read
                 _, refid, fw, refoff, sc = string.split(al.name, '!!ts-sep!!')
                 sc = int(sc)
@@ -1177,15 +1011,15 @@ class Output(threading.Thread):
                     self.unalFh.write("@%s\n%s\n+\n%s\n" % (nm, seq, qual))
             else:
                 # Take alignment info into account
-                if lastAl is not None and al.name == lastAl.name and al.alType == "CP":
-                    assert lastAl.alType == "CP"
-                    mate1, mate2 = al, lastAl
-                    if (lastAl.flags & 64) != 0:
-                        mate1, mate2 = mate2, mate1
-                    alPair = AlignmentPair(mate1, mate2)
-                    self.fragDist.add(alPair.fraglen()) # alignment pair
                 if al.isAligned():
-                    if (al.flags & 64) != 0:
+                    if lastAl is not None and al.name == lastAl.name and al.alType == "CP":
+                        assert lastAl.alType == "CP"
+                        mate1, mate2 = al, lastAl
+                        if (lastAl.flags & 64) != 0:
+                            mate1, mate2 = mate2, mate1
+                        self.fragDist.add(abs(mate1.tlen)) # alignment pair
+                        self.scDistPair.add(mate1, mate2)
+                    elif (al.flags & 64) != 0:
                         self.scDistM1.add(al)
                     elif (al.flags & 128) != 0:
                         self.scDistM2.add(al)
@@ -1217,11 +1051,6 @@ class AsyncWriter(threading.Thread):
             self.fh.flush()
             self.q.task_done()
             i += 1
-
-class Aligner(object):
-    """ Encapsulates the aligner """
-    def __init__(self):
-        pass
 
 def createInput(rddistUnp, rddistM1, rddistM2, qdistUnp, qdistM1, qdistM2):
     """ Return an Input object that reads all user-provided input reads """
@@ -1327,6 +1156,9 @@ def go():
     # Structure encapsulating training data and KNN classifiers
     training = Training()
     
+    # Timing measurements
+    setupIval, al1Ival, al2Ival, fitIval, samIval = None, None, None, None, None
+    
     if args.training_input is None:
         
         # The training data is not being given as input, so we have to
@@ -1335,14 +1167,20 @@ def go():
         # draws from those distributions to simulate reads.  Each
         # simulated read that aligns is used as a training tuple.
         
+        st = time.clock()
+        
+        # ##################################################
+        # ALIGN REAL DATA
+        # ##################################################
+        
         pipe = openBowtie(bt2_cmd)
         samIfh = tempfile.TemporaryFile()
         
         if args.verbose:
             print >> sys.stderr, "Real-data Bowtie 2 command: '%s'" % bt2_cmd
         
-        scDistUnp, scDistM1, scDistM2, typeDist, fragDist = \
-            ScoreDist(), ScoreDist(), ScoreDist(), Dist(), Dist()
+        scDistUnp, scDistM1, scDistM2, scDistPair, typeDist, fragDist = \
+            ScoreDist(), ScoreDist(), ScoreDist(), ScoreDistPaired(), Dist(), Dist()
         
         # Create the thread that eavesdrops on output from bowtie2
         othread = Output(
@@ -1350,29 +1188,32 @@ def go():
             samIfh,          # SAM output filehandle
             None,            # Write unaligned reads here
             None,            # Training record sink
-            scDistUnp,       # Score dist for unpaired
-            scDistM1,        # Score dist for mate1
-            scDistM2,        # Score dist for mate2
+            scDistUnp,       # qualities/edits for unpaired
+            scDistM1,        # qualities/edits for mate1
+            scDistM2,        # qualities/edits for mate2
+            scDistPair,      # qualities/edits for concordant pairs
             fragDist,        # Fragment dist
             typeDist)        # Alignment type dist
         othread.start()
         rddistUnp, rddistM1, rddistM2 = Dist(), Dist(), Dist()
         qdistUnp, qdistM1, qdistM2 = Dist(), Dist(), Dist()
-        sctok = map(int, string.split(args.scoring, ','))
-        
-        # Create object that captures the scoring scheme used by the aligner
-        scoring = Scoring(sctok[0], (sctok[1], sctok[2]), sctok[3], (sctok[4], sctok[5]), (sctok[6], sctok[7]))
         
         # Construct sequence and quality simulators
-        sim, qsim = SequenceSimulator(args.ref, idx_fn=args.ref_idx), QualitySimulator(qdistUnp, qdistM1, qdistM2)
+        sim = SequenceSimulator(args.ref, args.pickle_ref, idx_fn=args.ref_idx)
         simw = SimulatorWrapper(\
-            sim,       # sequence simulator
-            qsim,      # quality-value simulator
-            typeDist,  # alignment type distribution
-            scDistUnp, # score distribution for unpaired
-            scDistM1,  # score distribution for mate 1
-            scDistM2,  # score distribution for mate 2
-            fragDist)  # fragment-length distribution
+            sim,        # sequence simulator
+            not args.m1rc, # whether m1 is revcomped w/r/t fragment
+            args.m2fw,  # whether m2 is revcomped w/r/t fragment
+            typeDist,   # alignment type distribution
+            scDistUnp,  # qualities/edits for unpaired
+            scDistM1,   # qualities/edits for mate 1
+            scDistM2,   # qualities/edits for mate 2
+            scDistPair, # qualities/edits for concordant pairs
+            fragDist)   # fragment-length distribution
+        
+        # Stop timing setup
+        setupIval = time.clock() - st
+        st = time.clock()
         
         print >> sys.stderr, "Initializing threads, queues and FIFOs"
         
@@ -1401,13 +1242,20 @@ def go():
         othread.join() # join the thread that monitors aligner output
         print >> sys.stderr, "Finished closing data FIFOs and joining output-monitoring thread"
         
+        # Stop timing interval for alignment phase 1
+        al1Ival = time.clock() - st
+        st = time.clock()
+        
+        # ##################################################
+        # ALIGN SIMULATED DATA
+        # ##################################################
         #
         # Now we re-open Bowtie 2 using the same arguments.  This time we only give
         # it simulated reads.
         #
         
         print >> sys.stderr, "Opening new Bowtie 2"
-        pipe = openBowtie(bt2_cmd)
+        pipe = openBowtie(bt2_cmd + " --mapq-extra")
         
         # Function gets called with each new piece of training data
         def trainingSink(al, correct): training.add(al, correct)
@@ -1423,9 +1271,10 @@ def go():
             None,            # SAM output filehandle
             unalFh,          # Write unaligned reads here
             trainingSink,    # Training record sink
-            None,            # Score dist for unpaired
-            None,            # Score dist for mate1
-            None,            # Score dist for mate2
+            None,            # qualities/edits for unpaired
+            None,            # qualities/edits for mate 1
+            None,            # qualities/edits for mate 2
+            None,            # qualities/edits for concordant pairs
             None,            # Fragment dist
             None)            # Alignment type dist
         othread.start()
@@ -1450,56 +1299,102 @@ def go():
             unalFh.close()
         print >> sys.stderr, "Finished closing simulation FIFOs and joining output-monitoring thread"
         
+        # Stop timing interval for alignment phase 2
+        al2Ival = time.clock() - st
+        
         print >> sys.stderr, "Score difference (expected - actual) histogram:"
         for k, v in sorted(othread.scDiffs.iteritems()):
             print >>sys.stderr, "  %d: %d" % (k, v)
         
         if args.save_training is not None: training.save(args.save_training)
     else:
+        st = time.clock()
+        
         # Training data is being given to us
         if args.sam_input is None:
             raise RuntimeError("Must specify --sam-input along with --training-input")
         training.load(args.training_input)
         print >> sys.stderr, "Read %d training tuples from '%s'" % (len(training), args.training_input)
         samIfh = open(args.sam_input, 'r')
+        
+        # Stop timing interval for setup phase
+        setupIval = time.clock() - st
     
     # Build KNN classifiers
+    st = time.clock()
     weights = 'distance' if args.distance_weight else 'uniform'
     training.fit(args.num_neighbors, weights, scaleAs=args.as_scale, scaleDiff=args.diff_scale)
     print >> sys.stderr, "Finished fitting KNN classifiers on %d training tuples" % len(training)
+    fitIval = time.clock() - st
+    st = time.clock()
     
     # TODO: Need to pair up alignments so we can potentially use the
     # concordant-alignment model to calculate their MAPQs
     nrecs = 0
-    with open(args.S, 'w') as samOfh:
-        samIfh.seek(0)
-        for samrec in samIfh:
-            if samrec.startswith('@'):
+    mapqDiff = 0.0
+    
+    with open(args.S, 'w') as samOfh: # open output file
+        
+        def emitNewSam(samrec, al, probCorrect):
+            probIncorrect = 1.0 - probCorrect # convert to probability incorrect
+            mapq = args.max_mapq
+            if probIncorrect > 0.0:
+                mapq = min(-10.0 * math.log10(probIncorrect), args.max_mapq)
+            samrec = samrec.rstrip()
+            xqIdx = samrec.find("\tXQ:f:")
+            if xqIdx != -1:
+                samrec = samrec[:xqIdx]
+            samOfh.write("\t".join([samrec, "XQ:f:" + str(mapq)]) + "\n")
+            return mapq - float(al.mapq)
+        
+        samIfh.seek(0)                # rewind temporary SAM file
+        concMap = {}
+        for samrec in samIfh:         # read each record
+            if samrec[0] == '@':      # pass headers straight through
                 samOfh.write(samrec)
                 continue
-            al = Alignment(samrec)
+            al = Alignment(samrec)    # parse alignment
             nrecs += 1
             if al.isAligned():
-                probCorrect = training.probCorrect(al)
-                probIncorrect = 1.0 - probCorrect # convert to probability incorrect
-                mapq = args.max_mapq
-                if probIncorrect > 0.0:
-                    mapq = min(-10.0 * math.log10(probIncorrect), args.max_mapq)
-                if args.verbose:
-                    if True or rec.bestSc == rec.secbestSc:
-                        print "=="
-                        print rec.toList()
-                        print "--"
-                        print mapq
-                samrec = samrec.rstrip()
-                xqIdx = samrec.find("\tXQ:f:")
-                if xqIdx != -1:
-                    samrec = samrec[:xqIdx]
-                samOfh.write("\t".join([samrec, "XQ:f:" + str(mapq)]) + "\n")
+                # Is this alignment part of a concordantly-aligned paired-end read?
+                probCorrect = None
+                if al.concordant:
+                    if al.name in concMap:
+                        al1, samrec1 = al, samrec
+                        al2, samrec2 = concMap[al.name]
+                        if al2.mate1:
+                            al1, al2 = al2, al1
+                            samrec1, samrec2 = samrec2, samrec1
+                        probCorrect1, probCorrect2 = training.probCorrect(al1, al2)
+                        mapqDiff += emitNewSam(samrec1.rstrip(), al1, probCorrect1)
+                        mapqDiff += emitNewSam(samrec2.rstrip(), al2, probCorrect2)
+                    else:
+                        concMap[al.name] = (al, samrec)
+                else:
+                    probCorrect = training.probCorrect(al)
+                    mapqDiff += emitNewSam(samrec.rstrip(), al, probCorrect)
             else:
                 samOfh.write(samrec)
+        assert len(concMap) == 0
+    
+    samIval = time.clock() - st
     
     print >> sys.stderr, "Finished writing final SAM output (%d records) to '%s'" % (nrecs, args.S)
+    print >> sys.stderr, "  total mapping quality difference (new - old): %0.3f" % mapqDiff
+    print >> sys.stderr, "  total KNN hits=%d, misses=%d" % (training.hits(), training.misses()) 
+    
+    if setupIval is not None:
+        print >> sys.stderr, "Setup running time: %0.3f secs" % setupIval 
+    if al1Ival is not None:
+        print >> sys.stderr, "Alignment (real reads): %0.3f secs" % al1Ival 
+    if al2Ival is not None:
+        print >> sys.stderr, "Alignment (simulated reads): %0.3f secs" % al2Ival 
+    if fitIval is not None:
+        print >> sys.stderr, "Fitting: %0.3f secs" % fitIval
+    if samIval is not None:
+        print >> sys.stderr, "MAPQ calculation / SAM rewriting: %0.3f secs" % samIval
+    
+    # Print timing results
     
     # Close temporary SAM output file; it will be deleted immediately
     samIfh.close()
@@ -1515,6 +1410,10 @@ if __name__ == "__main__":
     parser.add_argument(\
         '--ref', metavar='path', type=str, nargs='+', help='FASTA file(s) containing reference genome sequences')
     parser.add_argument(\
+        '--pickle-ref', metavar='path', type=str,
+        help='Pickle FASTA input for speed, or use pickled version if it '
+             'exists already.  Pickled version is stored at given path')
+    parser.add_argument(\
         '--ref-idx', metavar='path', type=str, help='File containing index for FASTA file(s)')
     parser.add_argument(\
         '--U', metavar='path', type=str, nargs='+', help='Unpaired read files')
@@ -1525,13 +1424,15 @@ if __name__ == "__main__":
     parser.add_argument(\
         '--m2', metavar='path', type=str, nargs='+', help='Mate 2 files')
     parser.add_argument(\
+        '--m1rc', action='store_const', const=True, default=False,
+        help='Set if mate 1 is reverse-complemented w/r/t the fragment')
+    parser.add_argument(\
+        '--m2fw', action='store_const', const=True, default=False,
+        help='Set if mate 2 is oriented forward w/r/t the fragment')
+    parser.add_argument(\
         '--fasta', action='store_const', const=True, default=False, help='Reads are FASTA')
     parser.add_argument(\
         '--fastq', action='store_const', const=True, default=True, help='Reads are FASTQ')
-    parser.add_argument(\
-        '--scoring', metavar='str', type=str, required=False,
-        default='1,2,6,1,5,3,5,3',
-        help='MatchBonus,MismatchMinPen,MismatchMaxPen,NPen,ReadGapConst,ReadGapLinear,RefGapConst,RefGapLinear')
     parser.add_argument(\
         '--max-mapq', metavar='float', type=float, default=100.0,
         required=False, help='Maximum MAPQ possible for an alignment')
