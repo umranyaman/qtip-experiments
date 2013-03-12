@@ -1087,7 +1087,7 @@ def go():
         bt2_cmd = args.bt2_exe + " "
     if args.bt2_args is not None:
         bt2_cmd += args.bt2_args
-    bt2_cmd += " --reorder --sam-no-qname-trunc -q "
+    bt2_cmd += " --reorder --sam-no-qname-trunc -q --mapq-extra"
     
     fifoArgs = ""
     fifoFns = [None, None, None] # FIFO filenames
@@ -1255,7 +1255,7 @@ def go():
         #
         
         print >> sys.stderr, "Opening new Bowtie 2"
-        pipe = openBowtie(bt2_cmd + " --mapq-extra")
+        pipe = openBowtie(bt2_cmd)
         
         # Function gets called with each new piece of training data
         def trainingSink(al, correct): training.add(al, correct)
