@@ -1281,7 +1281,7 @@ def go():
         
         # Simulate reads from empirical distributions
         for i in xrange(0, args.num_reads):
-            if (i+1 % 1000) == 0: print "Generating read %d" % i
+            if (i+1 % 1000) == 0: print >> sys.stderr, "Generating read %d" % i
             rd1, rd2 = simw.next()
             if rd2 is not None:
                 # Paired-end simulated read
@@ -1332,6 +1332,7 @@ def go():
     # concordant-alignment model to calculate their MAPQs
     nrecs = 0
     mapqDiff = 0.0
+    npair, nunp = 0, 0
     
     with open(args.S, 'w') as samOfh: # open output file
         
@@ -1362,6 +1363,8 @@ def go():
                     if al.name in concMap:
                         al1, samrec1 = al, samrec
                         al2, samrec2 = concMap[al.name]
+                        npair += 2
+                        del concMap[al.name]
                         if al2.mate1:
                             al1, al2 = al2, al1
                             samrec1, samrec2 = samrec2, samrec1
@@ -1371,6 +1374,7 @@ def go():
                     else:
                         concMap[al.name] = (al, samrec)
                 else:
+                    nunp += 1
                     probCorrect = training.probCorrect(al)
                     mapqDiff += emitNewSam(samrec.rstrip(), al, probCorrect)
             else:
@@ -1380,6 +1384,8 @@ def go():
     samIval = time.clock() - st
     
     print >> sys.stderr, "Finished writing final SAM output (%d records) to '%s'" % (nrecs, args.S)
+    print >> sys.stderr, "  concordant-pair SAM records: %d" % npair
+    print >> sys.stderr, "  non-concordant-pair SAM records: %d" % nunp
     print >> sys.stderr, "  total mapping quality difference (new - old): %0.3f" % mapqDiff
     print >> sys.stderr, "  total KNN hits=%d, misses=%d" % (training.hits(), training.misses()) 
     
