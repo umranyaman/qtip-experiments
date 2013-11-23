@@ -1,0 +1,23 @@
+#!gmake
+
+# Illumina version: 1.5.1
+# 454 version: 2.1.8
+# SOLiD version: 1.0.1
+
+AR=artalllinux64bin_bptargz.gz
+URL=http://www.niehs.nih.gov/research/resources/assets/docs/$(AR)
+
+.PHONY: all
+all: art_illumina art_454
+
+art_illumina: MacOS64/art_illumina
+	ln -s -f $< $@
+
+art_454: MacOS64/art_454
+	ln -s -f $< $@
+
+MacOS64/art_illumina MacOS64/art_454: $(AR)
+	gzip -c $< | tar xvf -
+
+$(AR):
+	wget $(URL)
