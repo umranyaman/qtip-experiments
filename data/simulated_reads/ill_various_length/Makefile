@@ -7,8 +7,8 @@
 
 # Prerequisites:
 # 1. TS_HOME (root of repo) must be set
-# 2. TS_REFS (contains hg19/hg19.fa) must be set
-# 3. $(TS_REFS)/hg19/hg19.fa must exist
+# 2. TS_REFS (contains hg19.fa) must be set
+# 3. $(TS_REFS)/hg19.fa must exist
 # 4. $TS_HOME/software/mason/mason must have been built
 
 REF_FASTA=hg19.fa
