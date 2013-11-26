@@ -1,0 +1,12 @@
+http://www.niehs.nih.gov/research/resources/software/biostatistics/art/
+
+I have tried a few times to compile Art from source but have always
+failed.  Luckily, binaries are available.
+
+Art uses "profiles" to generate realistic quality strings and
+sequencing errors.  The Illumina version of Art comes with a GAII
+profile.  You can download a MiSeq profile here:
+
+http://www.niehs.nih.gov/research/resources/assets/docs/illumina_miseq_250bp_pairedread_quality_profile.tgz
+
+But it looks like it's already included!
