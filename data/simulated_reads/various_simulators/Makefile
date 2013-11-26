@@ -7,9 +7,11 @@
 
 # Prerequisites:
 # 1. TS_HOME (root of repo) must be set
-# 2. TS_REFS (contains hg19/hg19.fa) must be set
-# 3. $(TS_REFS)/hg19/hg19.fa must exist
+# 2. TS_REFS (containing hg19.fa) must be set
+# 3. TS_INDEXES (containing hg19.fa.*.bt2) must be set
 # 4. $TS_HOME/software/mason/mason must have been built
+# 5. $TS_HOME/software/wgsim/wgsim must have been built
+# 6. $TS_HOME/software/art/art_illumina must have been built
 
 HG_FASTA_NAME=hg19.fa
 HG_INDEX_BASE=$(HG_FASTA_NAME)

@@ -15,4 +15,5 @@ Subdirectories contain sets of reads needed for various experiments:
   Mason.  Read lengths are drawn uniformly from [50, 500].  Unpaired.
   hg19 is the reference simulated from.
 * `various_genomes`: like `simple` but where the genome is being varied.
-* `various_simulators`
+* `various_simulators`: like `simple` but where the read simulated is
+  being varied.  `mason`, `wgsim` and `art` are used.
