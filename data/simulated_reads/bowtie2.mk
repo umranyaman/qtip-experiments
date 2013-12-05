@@ -1,6 +1,3 @@
-BOWTIE2=$(TS_HOME)/software/bowtie2/bowtie2
-BT2_ARGS=--mapq-extra --sam-no-qname-trunc --reorder
-
 define bt2
 
 r0_$1_%.sam.gz: r0_%.fq.gz
@@ -13,6 +10,3 @@ r12_$1_%.sam.gz: r1_%.fq.gz
 	$$(BOWTIE2) $2 -x $3 -1 $$< -2 $$(<:r1_%=r2_%) $$(BT2_ARGS) $$(BT2_EXTRA_ARGS) | gzip -c > $$@
 
 endef
-
-$(BOWTIE2):
-	$(MAKE) -C $(TS_HOME)/software/bowtie2
