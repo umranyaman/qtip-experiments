@@ -1,0 +1,15 @@
+diff -uNr wgsim-git/wgsim.c wgsim-git-patched/wgsim.c
+--- wgsim-git/wgsim.c	2013-11-22 21:07:18.000000000 -0500
++++ wgsim-git-patched/wgsim.c	2013-12-06 10:07:04.000000000 -0500
+@@ -356,9 +356,9 @@
+ 			for (j = 0; j < 2; ++j) {
+ 				for (i = 0; i < s[j]; ++i) qstr[i] = Q;
+ 				qstr[i] = 0;
+-				fprintf(fpo[j], "@%s_%u_%u_%d:%d:%d_%d:%d:%d_%llx/%d\n", ks->name.s, ext_coor[0]+1, ext_coor[1]+1,
++				fprintf(fpo[j], "@%s_%u_%u_%d:%d:%d_%d:%d:%d_%d_%llx/%d\n", ks->name.s, ext_coor[0]+1, ext_coor[1]+1,
+ 						n_err[0], n_sub[0], n_indel[0], n_err[1], n_sub[1], n_indel[1],
+-						(long long)ii, j==0? is_flip+1 : 2-is_flip);
++						(long long)ii, is_flip, j==0? is_flip+1 : 2-is_flip);
+ 				for (i = 0; i < s[j]; ++i)
+ 					fputc("ACGTN"[(int)tmp_seq[j][i]], fpo[j]);
+ 				fprintf(fpo[j], "\n+\n%s\n", qstr);
