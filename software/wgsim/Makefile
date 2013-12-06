@@ -17,5 +17,4 @@ wgsim-git/wgsim: wgsim-git
 wgsim-git: $(GIT)
 	$(GIT) clone git@github.com:lh3/wgsim.git
 	mv wgsim $@
-	cd $@
-	patch -p1 < ../wgsim.patch
+	cd $@ && patch -p1 < ../wgsim.patch
