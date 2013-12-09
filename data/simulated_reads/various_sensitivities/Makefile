@@ -35,33 +35,54 @@ $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
 
 .PHONY: all
-all: reads
+all: tss
+
+BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
+BOWTIE2=$(BOWTIE2_HOME)/bowtie2
+BT2_ARGS=
 
 include ../mason.mk
-include ../bowtie2.mk
+include ../bowtie2ts.mk
 
 .PHONY: clean
 clean:
-	rm -f *.fq
+	rm -f *.fq.gz
+	rm -rf *.ts
 
-.PHONY: alignments
-alignments: \
-    r0_bt2vf_mason_ill_100_100k.sam.gz \
-    r0_bt2vf_mason_ill_250_100k.sam.gz \
-    r0_bt2f_mason_ill_100_100k.sam.gz \
-    r0_bt2f_mason_ill_250_100k.sam.gz \
-    r0_bt2s_mason_ill_100_100k.sam.gz \
-    r0_bt2s_mason_ill_250_100k.sam.gz \
-    r0_bt2vs_mason_ill_100_100k.sam.gz \
-    r0_bt2vs_mason_ill_250_100k.sam.gz \
-    r1_bt2vf_mason_ill_100_100k.sam.gz \
-    r1_bt2vf_mason_ill_250_100k.sam.gz \
-    r1_bt2f_mason_ill_100_100k.sam.gz \
-    r1_bt2f_mason_ill_250_100k.sam.gz \
-    r1_bt2s_mason_ill_100_100k.sam.gz \
-    r1_bt2s_mason_ill_250_100k.sam.gz \
-    r1_bt2vs_mason_ill_100_100k.sam.gz \
-    r1_bt2vs_mason_ill_250_100k.sam.gz
+.PHONY: tss
+tss: \
+    r0_bt2vf_mason_ill_100_100k.ts \
+    r0_bt2vf_mason_ill_250_100k.ts \
+    r0_bt2f_mason_ill_100_100k.ts \
+    r0_bt2f_mason_ill_250_100k.ts \
+    r0_bt2s_mason_ill_100_100k.ts \
+    r0_bt2s_mason_ill_250_100k.ts \
+    r0_bt2vs_mason_ill_100_100k.ts \
+    r0_bt2vs_mason_ill_250_100k.ts \
+    r0_bt2vfl_mason_ill_100_100k.ts \
+    r0_bt2vfl_mason_ill_250_100k.ts \
+    r0_bt2fl_mason_ill_100_100k.ts \
+    r0_bt2fl_mason_ill_250_100k.ts \
+    r0_bt2sl_mason_ill_100_100k.ts \
+    r0_bt2sl_mason_ill_250_100k.ts \
+    r0_bt2vsl_mason_ill_100_100k.ts \
+    r0_bt2vsl_mason_ill_250_100k.ts \
+    r12_bt2vf_mason_ill_100_100k.ts \
+    r12_bt2vf_mason_ill_250_100k.ts \
+    r12_bt2f_mason_ill_100_100k.ts \
+    r12_bt2f_mason_ill_250_100k.ts \
+    r12_bt2s_mason_ill_100_100k.ts \
+    r12_bt2s_mason_ill_250_100k.ts \
+    r12_bt2vs_mason_ill_100_100k.ts \
+    r12_bt2vs_mason_ill_250_100k.ts \
+    r12_bt2vfl_mason_ill_100_100k.ts \
+    r12_bt2vfl_mason_ill_250_100k.ts \
+    r12_bt2fl_mason_ill_100_100k.ts \
+    r12_bt2fl_mason_ill_250_100k.ts \
+    r12_bt2sl_mason_ill_100_100k.ts \
+    r12_bt2sl_mason_ill_250_100k.ts \
+    r12_bt2vsl_mason_ill_100_100k.ts \
+    r12_bt2vsl_mason_ill_250_100k.ts
 
 .PHONY: reads
 reads: \
@@ -73,15 +94,15 @@ reads: \
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2,bt2vf,--very-fast,$(HG_INDEX)))
-$(eval $(call bt2,bt2f,--fast,$(HG_INDEX)))
-$(eval $(call bt2,bt2s,--sensitive,$(HG_INDEX)))
-$(eval $(call bt2,bt2vs,--very-sensitive,$(HG_INDEX)))
+$(eval $(call bt2ts,bt2vf,100000,,--very-fast,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2f,100000,,--fast,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2vs,100000,,--very-sensitive,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call bt2,bt2vf_l,--very-fast,$(HG_INDEX)))
-$(eval $(call bt2,bt2f_l,--fast,$(HG_INDEX)))
-$(eval $(call bt2,bt2s_l,--sensitive,$(HG_INDEX)))
-$(eval $(call bt2,bt2vs_l,--very-sensitive,$(HG_INDEX)))
+$(eval $(call bt2ts,bt2vfl,100000,,--very-fast-local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2fl,100000,,--fast-local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,100000,,--sensitive-local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2vsl,100000,,--very-sensitive-local,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_100k,$(HG_FASTA),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_100k,$(HG_FASTA),250,100000,7724))

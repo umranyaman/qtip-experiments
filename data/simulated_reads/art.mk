@@ -18,8 +18,11 @@ define art_ill_unp_reads
 
 # Generate unpaired reads
 r0_art_$1.fq.gz: $$(FA) $$(TS_HOME)/software/art/art_illumina
-	$$(TS_HOME)/software/art/art_illumina -rs $5 -l $3 -f $4 -na -i $2 -o $$(@:%.fq.gz=%)
-	gzip $$(@:%.fq.gz=%.fq)
+	$$(TS_HOME)/software/art/art_illumina -sam -na -rs $5 -l $3 -f $4 -i $2 -o .$$@
+	python $(TS_HOME)/bin/art_convert.py --in1 .$$(@).fq --sam .$$(@).sam --out1 .$$(@).final.fq
+	rm -f .$$(@).fq .$$(@).sam
+	gzip -c .$$(@).final.fq > $$@
+	rm -f .$$(@).final.fq
 
 endef
 
@@ -31,11 +34,12 @@ define art_ill_pair_reads
 
 # Generate paired-end reads
 r1_art_$1.fq.gz: $(FA) $$(FA) $$(TS_HOME)/software/art/art_illumina
-	$$(TS_HOME)/software/art/art_illumina -rs $7 -m $5 -s $6 -l $3 -f $4 -na -i $2 -o .tmp
-	gzip -c .tmp1.fq > $$@
-	rm -f .tmp1.fq
-	gzip -c .tmp2.fq > $$(@:r1_%=r2_%)
-	rm -f .tmp2.fq
+	$$(TS_HOME)/software/art/art_illumina -sam -na -p -rs $7 -m $5 -s $6 -l $3 -f $4 -i $2 -o .$$@
+	python $(TS_HOME)/bin/art_convert.py --in1 .$$(@)1.fq --in2 .$$(@)2.fq --sam .$$(@).sam --out1 .$$(@).final1.fq --out2 .$$(@).final2.fq
+	rm -f .$$(@)1.fq .$$(@)2.fq .$$(@).sam
+	gzip -c .$$(@).final1.fq > $$@
+	gzip -c .$$(@).final2.fq > $$(@:r1_%=r2_%)
+	rm -f .$$(@).final1.fq .$$(@).final2.fq
 
 endef
 

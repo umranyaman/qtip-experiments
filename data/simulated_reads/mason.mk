@@ -21,8 +21,10 @@ define mason_ill_unp_reads
 
 # Generate unpaired reads
 r0_mason_$1.fq.gz: $$(FA) $$(TS_HOME)/software/mason/mason
-	$$(TS_HOME)/software/mason/mason illumina -hn 2 -i -s $5 -sq -n $3 -N $4 -o $$(@:%.fq.gz=%.fq) $2
-	rm -f $$(@:%.gz=%.sam)
+	$$(TS_HOME)/software/mason/mason illumina -hn 2 -i -s $5 -sq -n $3 -N $4 -o .$$@.fq $2
+	rm -f .$$@.fq.sam
+	python $$(TS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$(@:%.fq.gz=%.fq)
+	rm -f .$$@.fq
 	gzip $$(@:%.fq.gz=%.fq)
 
 endef
@@ -35,12 +37,14 @@ define mason_ill_pair_reads
 
 # Generate paired-end reads
 r1_mason_$1.fq.gz: $(FA) $$(TS_HOME)/software/mason/mason
-	$$(TS_HOME)/software/mason/mason illumina -hn 2 -i -s $7 -sq -mp -rn 2 -ll $5 -le $6 -n $3 -N $4 -o .tmppair.fq $2
-	rm -f .tmppair.fq.sam
-	gzip -c .tmppair_1.fq > $$@
-	rm -f .tmppair_1.fq
-	gzip -c .tmppair_2.fq > $$(@:r1_%=r2_%)
-	rm -f .tmppair_2.fq
+	$$(TS_HOME)/software/mason/mason illumina -hn 2 -i -s $7 -sq -mp -rn 2 -ll $5 -le $6 -n $3 -N $4 -o .$$@.fq $2
+	rm -f .$$@.fq.sam
+	python $$(TS_HOME)/bin/mason_convert.py --in1 .$$(@)_1.fq --in2 .$$(@)_2.fq --out1 .$$(@)_final_1.fq --out2 .$$(@)_final_2.fq
+	rm -f .$$(@)_1.fq .$$(@)_2.fq
+	gzip -c .$$(@)_final_1.fq > $$@
+	rm -f .$$(@)_final_1.fq
+	gzip -c .$$(@)_final_2.fq > $$(@:r1_%=r2_%)
+	rm -f .$$(@)_final_2.fq
 
 endef
 

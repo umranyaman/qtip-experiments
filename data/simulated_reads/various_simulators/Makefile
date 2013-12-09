@@ -37,30 +37,38 @@ $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
 
 .PHONY: all
-all: reads
+all: tss
+
+BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
+BOWTIE2=$(BOWTIE2_HOME)/bowtie2
+BT2_ARGS=
+
+$(BOWTIE2):
+	$(MAKE) -C $(BOWTIE2_HOME)
 
 include ../mason.mk
 include ../wgsim.mk
 include ../art.mk
-include ../bowtie2.mk
+include ../bowtie2ts.mk
 
 .PHONY: clean
 clean:
-	rm -f *.fq
+	rm -f *.fq.gz
+	rm -rf *.ts
 
-.PHONY: alignments
-alignments: r0_bt2s_mason_ill_hg_100_100k.sam.gz \
-            r0_bt2s_mason_ill_hg_250_100k.sam.gz \
-            r0_bt2s_wgsim_ill_hg_100_100k.sam.gz \
-            r0_bt2s_wgsim_ill_hg_250_100k.sam.gz \
-            r0_bt2s_art_ill_hg_100_100k.sam.gz \
-            r0_bt2s_art_ill_hg_250_100k.sam.gz \
-            r12_bt2s_mason_ill_hg_100_100k.sam.gz \
-            r12_bt2s_mason_ill_hg_250_100k.sam.gz \
-            r12_bt2s_wgsim_ill_hg_100_100k.sam.gz \
-            r12_bt2s_wgsim_ill_hg_250_100k.sam.gz \
-            r12_bt2s_art_ill_hg_100_100k.sam.gz \
-            r12_bt2s_art_ill_hg_250_100k.sam.gz
+.PHONY: tss
+tss: r0_bt2s_mason_ill_hg_100_100k.ts \
+     r0_bt2s_mason_ill_hg_250_100k.ts \
+     r0_bt2s_wgsim_ill_hg_100_100k.ts \
+     r0_bt2s_wgsim_ill_hg_250_100k.ts \
+     r0_bt2s_art_ill_hg_100_100k.ts \
+     r0_bt2s_art_ill_hg_250_100k.ts \
+     r12_bt2s_mason_ill_hg_100_100k.ts \
+     r12_bt2s_mason_ill_hg_250_100k.ts \
+     r12_bt2s_wgsim_ill_hg_100_100k.ts \
+     r12_bt2s_wgsim_ill_hg_250_100k.ts \
+     r12_bt2s_art_ill_hg_100_100k.ts \
+     r12_bt2s_art_ill_hg_250_100k.ts
 
 .PHONY: reads
 reads: r0_mason_ill_hg_100_100k.fq.gz \
@@ -79,7 +87,7 @@ reads: r0_mason_ill_hg_100_100k.fq.gz \
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2,bt2s,--sensitive,$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
 
 #
 # Make the read rules

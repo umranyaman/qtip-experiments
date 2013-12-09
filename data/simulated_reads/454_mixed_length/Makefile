@@ -65,7 +65,7 @@ reads: r0_mason_fff_50to500_100k.fq.gz
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,100000,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl,100000,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,100000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_fff_unp_reads,fff_50to500_100k,$(HG_FASTA),275,225,100000,7724))
