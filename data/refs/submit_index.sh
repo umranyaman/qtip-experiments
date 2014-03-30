@@ -4,7 +4,9 @@ cat > .hg19.sh <<EOF
 #PBS -q batch
 #PBS -l walltime=10:00:00
 #PBS -j n
-#PBS -l pmem=8gb
+#PBS -l pmem=12gb
+#PBS -l vmem=12gb
+#PBS -l mem=12gb
 cd $PWD
 bowtie2-build $TS_REFS/hg19.fa hg19.fa
 EOF
@@ -14,7 +16,9 @@ cat > .mm10.sh <<EOF
 #PBS -q batch
 #PBS -l walltime=10:00:00
 #PBS -j n
-#PBS -l pmem=8gb
+#PBS -l pmem=12gb
+#PBS -l vmem=12gb
+#PBS -l mem=12gb
 cd $PWD
 bowtie2-build $TS_REFS/mm10.fa mm10.fa
 EOF
@@ -24,7 +28,9 @@ cat > .zm_AGPv3.sh <<EOF
 #PBS -q batch
 #PBS -l walltime=10:00:00
 #PBS -j n
-#PBS -l pmem=8gb
+#PBS -l pmem=12gb
+#PBS -l vmem=12gb
+#PBS -l mem=12gb
 cd $PWD
 bowtie2-build $TS_REFS/zm_AGPv3.fa zm_AGPv3.fa
 EOF
