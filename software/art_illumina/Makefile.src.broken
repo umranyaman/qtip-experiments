@@ -23,7 +23,7 @@ $(NM)/???: $(NM)
 	cd $(NM) && autoreconf -f -i -Wall,no-obsolete
 
 art_illumina_dir: $(AR)
-	gzip -c art_illumina_src151targz.gz | tar xvf -
+	gzip -dc art_illumina_src151targz.gz | tar xvf -
 
 $(AR):
 	wget $(URL)
