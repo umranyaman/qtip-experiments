@@ -6,17 +6,18 @@
 
 AR=artalllinux64bin_bptargz.gz
 URL=http://www.niehs.nih.gov/research/resources/assets/docs/$(AR)
+ARCH=Linux64
 
 .PHONY: all
 all: art_illumina art_454
 
-art_illumina: MacOS64/art_illumina
+art_illumina: $(ARCH)/art_illumina
 	ln -s -f $< $@
 
-art_454: MacOS64/art_454
+art_454: $(ARCH)/art_454
 	ln -s -f $< $@
 
-MacOS64/art_illumina MacOS64/art_454: $(AR)
+$(ARCH)/art_illumina $(ARCH)/art_454: $(AR)
 	gzip -dc $< | tar xvf -
 
 $(AR):
