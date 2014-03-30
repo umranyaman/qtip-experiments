@@ -24,7 +24,7 @@ define wgsim_ill_unp_reads
 
 # Generate unpaired reads
 r0_wgsim_$1.fq.gz: $$(FA) $$(TS_HOME)/software/wgsim/wgsim
-	$$(TS_HOME)/software/wgsim/wgsim -S $5 -1 $3 -2 1 -N $4 $2 $$(@:%.fq.gz=%.fq) .tmp
+	$$(TS_HOME)/software/wgsim/wgsim -S $5 -1 $3 -2 $3 -N $4 $2 $$(@:%.fq.gz=%.fq) .tmp
 	rm -f .tmp
 	gzip $$(@:%.fq.gz=%.fq)
 

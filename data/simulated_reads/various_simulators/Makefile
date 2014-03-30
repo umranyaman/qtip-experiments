@@ -57,18 +57,25 @@ clean:
 	rm -rf *.ts
 
 .PHONY: tss
-tss: r0_bt2s_mason_ill_hg_100_100k.ts \
-     r0_bt2s_mason_ill_hg_250_100k.ts \
-     r0_bt2s_wgsim_ill_hg_100_100k.ts \
-     r0_bt2s_wgsim_ill_hg_250_100k.ts \
-     r0_bt2s_art_ill_hg_100_100k.ts \
-     r0_bt2s_art_ill_hg_250_100k.ts \
-     r12_bt2s_mason_ill_hg_100_100k.ts \
-     r12_bt2s_mason_ill_hg_250_100k.ts \
-     r12_bt2s_wgsim_ill_hg_100_100k.ts \
-     r12_bt2s_wgsim_ill_hg_250_100k.ts \
-     r12_bt2s_art_ill_hg_100_100k.ts \
-     r12_bt2s_art_ill_hg_250_100k.ts
+tss: tss_unpaired tss_paired
+
+.PHONY: tss_unpaired
+tss_unpaired: \
+    r0_bt2s_mason_ill_hg_100_100k.ts \
+    r0_bt2s_mason_ill_hg_250_100k.ts \
+    r0_bt2s_wgsim_ill_hg_100_100k.ts \
+    r0_bt2s_wgsim_ill_hg_250_100k.ts \
+    r0_bt2s_art_ill_hg_100_100k.ts \
+    r0_bt2s_art_ill_hg_250_100k.ts
+
+.PHONY: tss_paired
+tss_paired: \
+    r12_bt2s100_mason_ill_hg_100_100k.ts \
+    r12_bt2s250_mason_ill_hg_250_100k.ts \
+    r12_bt2s100_wgsim_ill_hg_100_100k.ts \
+    r12_bt2s250_wgsim_ill_hg_250_100k.ts \
+    r12_bt2s100_art_ill_hg_100_100k.ts \
+    r12_bt2s250_art_ill_hg_250_100k.ts
 
 .PHONY: reads
 reads: r0_mason_ill_hg_100_100k.fq.gz \
@@ -87,7 +94,9 @@ reads: r0_mason_ill_hg_100_100k.fq.gz \
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100,100000,100000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s250,100000,100000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
 
 #
 # Make the read rules

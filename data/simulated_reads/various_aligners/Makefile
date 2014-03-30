@@ -33,23 +33,56 @@ endif
 ifeq ($(wildcard $(HG_INDEX).1.bt2),) 
 $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
+ifeq ($(wildcard $(HG_INDEX).amb),) 
+$(error "$(HG_INDEX).amb doesn't exist")
+endif
 
 .PHONY: all
-all: reads
+all: tss
+
+BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
+BOWTIE2=$(BOWTIE2_HOME)/bowtie2
+BT2_ARGS=
+BWA_HOME=$(TS_HOME)/software/bwa
+BWA=$(BWA_HOME)/bwa
+BWA_ARGS=
+
+$(BOWTIE2):
+	$(MAKE) -C $(BOWTIE2_HOME)
+
+$(BWA):
+	$(MAKE) -C $(BWA_HOME)
+
 
 include ../mason.mk
-include ../bowtie2.mk
+include ../bowtie2ts.mk
+include ../bwamemts.mk
 
 .PHONY: clean
 clean:
-	rm -f *.fq
+	rm -f *.fq.gz
+	rm -rf *.ts
 
-.PHONY: alignments
-alignments: \
-    r0_bt2s_mason_ill_100_100k.sam.gz \
-    r0_bt2s_mason_ill_250_100k.sam.gz \
-    r1_bt2s_mason_ill_100_100k.sam.gz \
-    r1_bt2s_mason_ill_250_100k.sam.gz
+.PHONY: tss
+tss: tss_bt2 tss_bwamem
+
+.PHONY: tss_bt2
+tss_bt2: \
+    r0_bt2s_mason_ill_100_100k.ts \
+    r0_bt2s_mason_ill_250_100k.ts \
+    r12_bt2s100_mason_ill_100_100k.ts \
+    r12_bt2s250_mason_ill_250_100k.ts \
+    r0_bt2sl_mason_ill_100_100k.ts \
+    r0_bt2sl_mason_ill_250_100k.ts \
+    r12_bt2sl100_mason_ill_100_100k.ts \
+    r12_bt2sl250_mason_ill_250_100k.ts
+
+.PHONY: tss_bwamem
+tss_bwamem: \
+    r0_bwamem_mason_ill_100_100k.ts \
+    r0_bwamem_mason_ill_250_100k.ts \
+    r12_bwamem_mason_ill_100_100k.ts \
+    r12_bwamem_mason_ill_250_100k.ts
 
 .PHONY: reads
 reads: \
@@ -61,9 +94,14 @@ reads: \
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2,bt2s,--sensitive,$(HG_INDEX)))
-$(eval $(call bwa_mem,bwa_mem,,$(HG_BWA_INDEX)))
-$(eval $(call gem,bwa_mem,,$(HG_BWA_INDEX)))
+#$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
+#$(eval $(call bt2ts,bt2sl,100000,100000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+#$(eval $(call bt2ts,bt2s100,100000,100000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+#$(eval $(call bt2ts,bt2sl100,100000,100000,,-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+#$(eval $(call bt2ts,bt2s250,100000,100000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+#$(eval $(call bt2ts,bt2sl250,100000,100000,,-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+
+$(eval $(call bwamemts,bwamem,100000,100000,,,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_100k,$(HG_FASTA),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_100k,$(HG_FASTA),250,100000,7724))

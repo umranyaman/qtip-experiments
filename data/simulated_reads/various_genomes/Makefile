@@ -56,29 +56,38 @@ $(error "$(ZM_INDEX).1.bt2 doesn't exist")
 endif
 
 .PHONY: all
-all: reads
+all: tss
+
+BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
+BOWTIE2=$(BOWTIE2_HOME)/bowtie2
+BT2_ARGS=
+
+$(BOWTIE2):
+	$(MAKE) -C $(BOWTIE2_HOME)
 
 include ../mason.mk
-include ../bowtie2.mk
+include ../bowtie2ts.mk
 
 .PHONY: clean
 clean:
-	rm -f *.fq
+	rm -f *.fq.gz
+	rm -rf *.ts
 
-.PHONY: alignments
-alignments: \
-    r0_bt2s_hg_mason_ill_hg_100_100k.sam.gz \
-    r0_bt2s_hg_mason_ill_hg_250_100k.sam.gz \
-    r0_bt2s_mm_mason_ill_mm_100_100k.sam.gz \
-    r0_bt2s_mm_mason_ill_mm_250_100k.sam.gz \
-    r0_bt2s_zm_mason_ill_zm_100_100k.sam.gz \
-    r0_bt2s_zm_mason_ill_zm_250_100k.sam.gz \
-    r12_bt2s_hg_mason_ill_hg_100_100k.sam.gz \
-    r12_bt2s_hg_mason_ill_hg_250_100k.sam.gz \
-    r12_bt2s_mm_mason_ill_mm_100_100k.sam.gz \
-    r12_bt2s_mm_mason_ill_mm_250_100k.sam.gz \
-    r12_bt2s_zm_mason_ill_zm_100_100k.sam.gz \
-    r12_bt2s_zm_mason_ill_zm_250_100k.sam.gz
+# ts.py output directories
+.PHONY: tss
+tss: \
+    r0_bt2s_mason_ill_hg_100_100k.ts \
+    r0_bt2s_mason_ill_hg_250_100k.ts \
+    r0_bt2s_mason_ill_mm_100_100k.ts \
+    r0_bt2s_mason_ill_mm_250_100k.ts \
+    r0_bt2s_mason_ill_zm_100_100k.ts \
+    r0_bt2s_mason_ill_zm_250_100k.ts \
+    r1_bt2s_mason_ill_hg_100_100k.ts \
+    r1_bt2s_mason_ill_hg_250_100k.ts \
+    r1_bt2s_mason_ill_mm_100_100k.ts \
+    r1_bt2s_mason_ill_mm_250_100k.ts \
+    r1_bt2s_mason_ill_zm_100_100k.ts \
+    r1_bt2s_mason_ill_zm_250_100k.ts
 
 .PHONY: reads
 reads: \
@@ -98,9 +107,9 @@ reads: \
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2,bt2s_hg,--sensitive,$(HG_INDEX)))
-$(eval $(call bt2,bt2s_mm,--sensitive,$(MM_INDEX)))
-$(eval $(call bt2,bt2s_zm,--sensitive,$(ZM_INDEX)))
+$(eval $(call bt2ts,bt2s_hg,100000,,--sensitive,$(FA_HG),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s_mm,100000,,--sensitive,$(FA_MM),$(MM_INDEX)))
+$(eval $(call bt2ts,bt2s_zm,100000,,--sensitive,$(FA_ZM),$(ZM_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_hg_100_100k,$(FA_HG),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_hg_250_100k,$(FA_HG),250,100000,7724))
