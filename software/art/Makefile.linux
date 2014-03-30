@@ -4,7 +4,7 @@
 # 454 version: 2.1.8
 # SOLiD version: 1.0.1
 
-AR=artalllinux64bin_bptargz.gz
+AR=artbinvanillaicecream031114linux64tgz.tgz
 URL=http://www.niehs.nih.gov/research/resources/assets/docs/$(AR)
 ARCH=Linux64
 
