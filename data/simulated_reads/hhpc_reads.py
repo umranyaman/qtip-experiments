@@ -24,7 +24,7 @@ def handle_dir(dirname):
                 pbs_lns.append('#PBS -l walltime=15:00')
                 pbs_lns.append('#PBS -j n')
                 pbs_lns.append('#PBS -l pmem=12gb')
-                pbs_lns.append('cd %s' % dirname)
+                pbs_lns.append('cd %s' % os.path.abspath(dirname))
                 pbs_lns.append('make %s' % target)
                 qsub_fn = '.%s.%d.sh' % (target, idx)
                 with open(qsub_fn, 'w') as ofh:
