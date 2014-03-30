@@ -5,7 +5,6 @@ import sys
 
 
 idx = 0
-ts_home = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
 def handle_dir(dirname):
@@ -25,7 +24,9 @@ def handle_dir(dirname):
                 pbs_lns.append('#PBS -l walltime=15:00')
                 pbs_lns.append('#PBS -j n')
                 pbs_lns.append('#PBS -l pmem=12gb')
-                pbs_lns.append('export TS_HOME=%s' % ts_home)
+                pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
+                pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
+                pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                 pbs_lns.append('cd %s' % os.path.abspath(dirname))
                 pbs_lns.append('make %s' % target)
                 qsub_fn = '.%s.%d.sh' % (target, idx)
@@ -36,6 +37,12 @@ def handle_dir(dirname):
 
 
 def go():
+    if 'TS_HOME' not in os.environ:
+        raise RuntimeError('Must have TS_HOME set')
+    if 'TS_REFS' not in os.environ:
+        raise RuntimeError('Must have TS_REFS set')
+    if 'TS_INDEXES' not in os.environ:
+        raise RuntimeError('Must have TS_INDEXES set')
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
             print >> sys.stderr, 'Found a Makefile: %s' % (os.path.join(dirname, 'Makefile'))
