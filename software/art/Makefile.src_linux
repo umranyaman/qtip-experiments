@@ -1,0 +1,35 @@
+#!gmake
+
+# Illumina version: 2.1.8
+# 454 version: 2.5.8
+
+AR=artsrcvanillaicecream031114linuxtgz.tgz
+URL=http://www.niehs.nih.gov/research/resources/assets/docs/$(AR)
+SILLY_NAME=art_src_VanillaIceCream_Linux
+
+.PHONY: all
+all: art_illumina art_454
+
+art_illumina: $(SILLY_NAME)/art_illumina
+	ln -s -f $< $@
+
+art_454: $(SILLY_NAME)/art_454
+	ln -s -f $< $@
+
+$(SILLY_NAME)/art_illumina $(SILLY_NAME)/art_454: $(SILLY_NAME)/Makefile
+    make -C $(SILLY_NAME)
+
+$(SILLY_NAME)/Makefile: $(SILLY_NAME)/configure
+	cd $(SILLY_NAME) && ./configure --prefix=`pwd`/install-root
+
+$(SILLY_NAME)/configure: $(AR)
+	gzip -dc $< | tar xvf -
+
+$(AR):
+	wget $(URL)
+
+.PHONY: clean
+clean:
+	rm -f $(SILLY_NAME) art_454
+	rm -r $(AR)
+	rm -f *.tgz
