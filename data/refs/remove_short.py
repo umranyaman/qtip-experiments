@@ -14,7 +14,7 @@ for ln in sys.stdin:
             print 'Ref %s has length %d' % (name, length)
         first = False
         length = 0
-        name = ln[1:].strip()[0]
+        name = ln[1:].split()[0]
     else:
         length += len(ln.rstrip())
 if not first and length < max_len:
