@@ -15,12 +15,12 @@ for ln in sys.stdin:
             if length < max_len:
                 print >> sys.stderr, 'Ref %s has length %d' % (name, length)
             else:
-                print '>%s' % name
+                print '>' + name
                 print '\n'.join(buf)
-                buf = []
+            buf = []
         first = False
         length = 0
-        name = ln[1:]
+        name = ln[1:].rstrip()
     else:
         ln = ln.rstrip()
         length += len(ln)
@@ -32,4 +32,3 @@ if not first:
     else:
         print '>%s' % name
         print '\n'.join(buf)
-        buf = []
