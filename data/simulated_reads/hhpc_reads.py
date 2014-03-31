@@ -2,12 +2,13 @@
 
 import os
 import sys
+import time
 
 
 idx = 0
 
 
-def handle_dir(dirname):
+def handle_dir(dirname, dry_run=True):
     global idx
     with open(os.path.join(dirname, 'Makefile')) as fh:
         in_reads = False
@@ -37,6 +38,9 @@ def handle_dir(dirname):
                     ofh.write('\n'.join(pbs_lns) + '\n')
                 idx += 1
                 print 'qsub %s' % qsub_fn
+                if not dry_run:
+                    os.system('qsub %s' % qsub_fn)
+                    time.sleep(0.2)
 
 
 def go():
@@ -49,6 +53,6 @@ def go():
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
             print >> sys.stderr, 'Found a Makefile: %s' % (os.path.join(dirname, 'Makefile'))
-            handle_dir(dirname)
+            handle_dir(dirname, dry_run=len(sys.argv > 1))
 
 go()
