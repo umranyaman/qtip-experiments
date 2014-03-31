@@ -26,6 +26,7 @@ cat > .hg19.bwa.sh <<EOF
 #PBS -l mem=8gb
 cd $PWD
 bwa index $TS_REFS/hg19.fa
+mv $TS_REFS/hg19.fa.* .
 EOF
 echo qsub .hg19.bwa.sh
 
@@ -53,6 +54,7 @@ cat > .mm10.bwa.sh <<EOF
 #PBS -l mem=8gb
 cd $PWD
 bwa index $TS_REFS/mm10.fa
+mv $TS_REFS/mm10.fa.* .
 EOF
 echo qsub .mm10.bwa.sh
 
@@ -80,5 +82,6 @@ cat > .zm_AGPv3.bwa.sh <<EOF
 #PBS -l mem=8gb
 cd $PWD
 bwa index $TS_REFS/zm_AGPv3.fa
+mv $TS_REFS/zm_AGPv3.fa.* .
 EOF
 echo qsub .zm_AGPv3.bwa.sh
