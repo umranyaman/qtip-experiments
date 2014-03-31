@@ -16,6 +16,7 @@ if [ ! -f $GRCh37_FA ] ; then
     samtools faidx $GRCh37_FA
 fi
 ln -s -f $GRCh37_FA hg19.fa
+ln -s -f $GRCh37_FA.fai hg19.fa.fai
 
 if [ ! -f $GRCm38_FA ] ; then
     rm -f $GRCm38_FA.gz
@@ -24,6 +25,7 @@ if [ ! -f $GRCm38_FA ] ; then
     samtools faidx $GRCm38_FA
 fi
 ln -s -f $GRCm38_FA mm10.fa
+ln -s -f $GRCm38_FA.fai mm10.fa.fai
 
 if [ ! -f $ZM_FA ] ; then
     rm -f $ZM_FA.gz
@@ -32,3 +34,4 @@ if [ ! -f $ZM_FA ] ; then
     samtools faidx $ZM_FA
 fi
 ln -s -f $ZM_FA zm_AGPv3.fa
+ln -s -f $ZM_FA.fai zm_AGPv3.fa.fai
