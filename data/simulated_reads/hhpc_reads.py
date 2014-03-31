@@ -53,6 +53,6 @@ def go():
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
             print >> sys.stderr, 'Found a Makefile: %s' % (os.path.join(dirname, 'Makefile'))
-            handle_dir(dirname, dry_run=len(sys.argv > 1))
+            handle_dir(dirname, dry_run=len(sys.argv) > 1)
 
 go()
