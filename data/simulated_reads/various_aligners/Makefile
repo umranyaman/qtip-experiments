@@ -94,12 +94,12 @@ reads: \
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-#$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call bt2ts,bt2sl,100000,100000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call bt2ts,bt2s100,100000,100000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call bt2ts,bt2sl100,100000,100000,,-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call bt2ts,bt2s250,100000,100000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call bt2ts,bt2sl250,100000,100000,,-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,100000,100000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100,100000,100000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl100,100000,100000,,-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s250,100000,100000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl250,100000,100000,,-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call bwamemts,bwamem,100000,100000,,,$(HG_FASTA),$(HG_INDEX)))
 
