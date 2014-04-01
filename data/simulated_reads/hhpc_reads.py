@@ -3,11 +3,9 @@
 import os
 import sys
 import time
-import re
 
 
 idx = 0
-tss_re = re.compile('tss[_a-zA-Z01-9]*:.*')
 
 
 def handle_dir(dirname, dry_run=True):
@@ -15,7 +13,7 @@ def handle_dir(dirname, dry_run=True):
     with open(os.path.join(dirname, 'Makefile')) as fh:
         in_reads = False
         for ln in fh:
-            if tss_re.match(ln):
+            if ln.startswith('reads:'):
                 in_reads = True
             elif in_reads:
                 if len(ln.rstrip()) == 0:
@@ -25,12 +23,12 @@ def handle_dir(dirname, dry_run=True):
                     print >> sys.stderr, '  Found a read file: %s' % target
                     pbs_lns = list()
                     pbs_lns.append('#PBS -q batch')
-                    pbs_lns.append('#PBS -l walltime=1:30:00')
+                    pbs_lns.append('#PBS -l walltime=30:00')
                     pbs_lns.append('#PBS -j n')
-                    pbs_lns.append('#PBS -l pmem=8gb')
-                    pbs_lns.append('#PBS -l vmem=8gb')
-                    pbs_lns.append('#PBS -l pvmem=8gb')
-                    pbs_lns.append('#PBS -l mem=8gb')
+                    pbs_lns.append('#PBS -l pmem=32gb')
+                    pbs_lns.append('#PBS -l vmem=32gb')
+                    pbs_lns.append('#PBS -l pvmem=32gb')
+                    pbs_lns.append('#PBS -l mem=32gb')
                     pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
                     pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
@@ -56,6 +54,6 @@ def go():
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
             print >> sys.stderr, 'Found a Makefile: %s' % (os.path.join(dirname, 'Makefile'))
-            handle_dir(dirname, dry_run=(len(sys.argv) > 1))
+            handle_dir(dirname, dry_run=len(sys.argv) > 1)
 
 go()
