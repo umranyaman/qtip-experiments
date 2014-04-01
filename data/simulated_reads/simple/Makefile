@@ -52,7 +52,6 @@ clean:
 	rm -f *.fq.gz
 	rm -rf *.ts
 
-# ts.py output directories
 .PHONY: tss
 tss: \
     r0_bt2s_mason_ill_100_100k.ts \
@@ -64,7 +63,6 @@ tss: \
     r12_bt2s250_mason_ill_250_100k.ts \
     r12_bt2sl250_mason_ill_250_100k.ts
 
-# Reads
 .PHONY: reads
 reads: \
     r0_mason_ill_100_100k.fq.gz \
@@ -72,9 +70,6 @@ reads: \
     r1_mason_ill_100_100k.fq.gz \
     r1_mason_ill_250_100k.fq.gz
 
-#
-# Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
-#
 $(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2sl,100000,100000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2s100,100000,100000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))

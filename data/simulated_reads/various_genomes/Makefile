@@ -73,21 +73,20 @@ clean:
 	rm -f *.fq.gz
 	rm -rf *.ts
 
-# ts.py output directories
 .PHONY: tss
 tss: \
-    r0_bt2s_mason_ill_hg_100_100k.ts \
-    r0_bt2s_mason_ill_hg_250_100k.ts \
-    r0_bt2s_mason_ill_mm_100_100k.ts \
-    r0_bt2s_mason_ill_mm_250_100k.ts \
-    r0_bt2s_mason_ill_zm_100_100k.ts \
-    r0_bt2s_mason_ill_zm_250_100k.ts \
-    r1_bt2s_mason_ill_hg_100_100k.ts \
-    r1_bt2s_mason_ill_hg_250_100k.ts \
-    r1_bt2s_mason_ill_mm_100_100k.ts \
-    r1_bt2s_mason_ill_mm_250_100k.ts \
-    r1_bt2s_mason_ill_zm_100_100k.ts \
-    r1_bt2s_mason_ill_zm_250_100k.ts
+    r0_bt2s_hg_mason_ill_hg_100_100k.ts \
+    r0_bt2s_hg_mason_ill_hg_250_100k.ts \
+    r0_bt2s_mm_mason_ill_mm_100_100k.ts \
+    r0_bt2s_mm_mason_ill_mm_250_100k.ts \
+    r0_bt2s_zm_mason_ill_zm_100_100k.ts \
+    r0_bt2s_zm_mason_ill_zm_250_100k.ts \
+    r12_bt2s100_hg_mason_ill_hg_100_100k.ts \
+    r12_bt2s250_hg_mason_ill_hg_250_100k.ts \
+    r12_bt2s100_mm_mason_ill_mm_100_100k.ts \
+    r12_bt2s250_mm_mason_ill_mm_250_100k.ts \
+    r12_bt2s100_zm_mason_ill_zm_100_100k.ts \
+    r12_bt2s250_zm_mason_ill_zm_250_100k.ts
 
 .PHONY: reads
 reads: \
@@ -104,12 +103,17 @@ reads: \
     r1_mason_ill_zm_100_100k.fq.gz \
     r1_mason_ill_zm_250_100k.fq.gz
 
-#
-# Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
-#
-$(eval $(call bt2ts,bt2s_hg,100000,,--sensitive,$(FA_HG),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s_mm,100000,,--sensitive,$(FA_MM),$(MM_INDEX)))
-$(eval $(call bt2ts,bt2s_zm,100000,,--sensitive,$(FA_ZM),$(ZM_INDEX)))
+$(eval $(call bt2ts,bt2s_hg,100000,100000,,--sensitive,$(FA_HG),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s_mm,100000,100000,,--sensitive,$(FA_MM),$(MM_INDEX)))
+$(eval $(call bt2ts,bt2s_zm,100000,100000,,--sensitive,$(FA_ZM),$(ZM_INDEX)))
+
+$(eval $(call bt2ts,bt2s100_hg,100000,100000,,-I 200 -X 400 --sensitive,$(FA_HG),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100_mm,100000,100000,,-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX)))
+$(eval $(call bt2ts,bt2s100_zm,100000,100000,,-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX)))
+
+$(eval $(call bt2ts,bt2s250_hg,100000,100000,,-I 500 -X 1000 --sensitive,$(FA_HG),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s250_mm,100000,100000,,-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX)))
+$(eval $(call bt2ts,bt2s250_zm,100000,100000,,-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_hg_100_100k,$(FA_HG),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_hg_250_100k,$(FA_HG),250,100000,7724))

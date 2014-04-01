@@ -30,10 +30,7 @@ HG_INDEX=$(TS_INDEXES)/$(HG_INDEX_BASE)
 ifeq ($(wildcard $(HG_FASTA)),) 
 $(error "$(HG_FASTA) doesn't exist")
 endif
-ifeq ($(wildcard $(HG_FASTA).fai),) 
-$(error "$(HG_FASTA).fai doesn't exist")
-endif
-ifeq ($(wildcard $(HG_INDEX).1.bt2),) 
+ifeq ($(wildcard $(HG_INDEX).1.bt2),)
 $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
 
@@ -55,7 +52,6 @@ clean:
 	rm -f *.fq.gz
 	rm -rf *.ts
 
-# ts.py output directories
 .PHONY: tss
 tss: \
     r0_bt2s_mason_ill_50_100k.ts  \
@@ -79,7 +75,6 @@ tss: \
     r12_bt2sl250_mason_ill_250_100k.ts \
     r12_bt2sl500_mason_ill_500_100k.ts
 
-# Reads
 .PHONY: reads
 reads: \
     r0_mason_ill_50_100k.fq.gz  \
