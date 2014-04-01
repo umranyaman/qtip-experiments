@@ -78,18 +78,19 @@ tss_paired: \
     r12_bt2s250_art_ill_hg_250_100k.ts
 
 .PHONY: reads
-reads: r0_mason_ill_hg_100_100k.fq.gz \
-       r0_mason_ill_hg_250_100k.fq.gz \
-       r0_wgsim_ill_hg_100_100k.fq.gz \
-       r0_wgsim_ill_hg_250_100k.fq.gz \
-       r0_art_ill_hg_100_100k.fq.gz \
-       r0_art_ill_hg_250_100k.fq.gz \
-       r1_mason_ill_hg_100_100k.fq.gz \
-       r1_mason_ill_hg_250_100k.fq.gz \
-       r1_wgsim_ill_hg_100_100k.fq.gz \
-       r1_wgsim_ill_hg_250_100k.fq.gz \
-       r1_art_ill_hg_100_100k.fq.gz \
-       r1_art_ill_hg_250_100k.fq.gz
+reads: \
+    r0_mason_ill_hg_100_100k.fq.gz \
+    r0_mason_ill_hg_250_100k.fq.gz \
+    r0_wgsim_ill_hg_100_100k.fq.gz \
+    r0_wgsim_ill_hg_250_100k.fq.gz \
+    r0_art_ill_hg_100_100k.fq.gz \
+    r0_art_ill_hg_250_100k.fq.gz \
+    r1_mason_ill_hg_100_100k.fq.gz \
+    r1_mason_ill_hg_250_100k.fq.gz \
+    r1_wgsim_ill_hg_100_100k.fq.gz \
+    r1_wgsim_ill_hg_250_100k.fq.gz \
+    r1_art_ill_hg_100_100k.fq.gz \
+    r1_art_ill_hg_250_100k.fq.gz
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"

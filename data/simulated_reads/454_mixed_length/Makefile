@@ -56,11 +56,13 @@ clean:
 	rm -rf *.ts
 
 .PHONY: tss
-tss: r0_bt2s_mason_fff_50to500_100k.ts \
-     r0_bt2sl_mason_fff_50to500_100k.ts
+tss: \
+    r0_bt2s_mason_fff_50to500_100k.ts \
+    r0_bt2sl_mason_fff_50to500_100k.ts
 
 .PHONY: reads
-reads: r0_mason_fff_50to500_100k.fq.gz
+reads: \
+    r0_mason_fff_50to500_100k.fq.gz
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
