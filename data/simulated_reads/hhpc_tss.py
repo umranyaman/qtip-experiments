@@ -25,7 +25,7 @@ def handle_dir(dirname, dry_run=True):
                     print >> sys.stderr, '  Found a read file: %s' % target
                     pbs_lns = list()
                     pbs_lns.append('#PBS -q batch')
-                    pbs_lns.append('#PBS -l walltime=1:30:00')
+                    pbs_lns.append('#PBS -l walltime=2:30:00')
                     pbs_lns.append('#PBS -j n')
                     pbs_lns.append('#PBS -l pmem=16gb')
                     pbs_lns.append('#PBS -l vmem=16gb')
