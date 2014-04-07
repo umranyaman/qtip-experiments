@@ -50,11 +50,33 @@ include ../mason.mk
 include ../wgsim.mk
 include ../art.mk
 include ../bowtie2ts.mk
+include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
-	rm -rf *.ts
+	rm -rf *.ts *.pred
+
+.PHONY: preds
+preds: preds_unpaired preds_paired
+
+.PHONY: preds_unpaired
+preds_unpaired: \
+    r0_bt2s_mason_ill_hg_100_100k.pred \
+    r0_bt2s_mason_ill_hg_250_100k.pred \
+    r0_bt2s_wgsim_ill_hg_100_100k.pred \
+    r0_bt2s_wgsim_ill_hg_250_100k.pred \
+    r0_bt2s_art_ill_hg_100_100k.pred \
+    r0_bt2s_art_ill_hg_250_100k.pred
+
+.PHONY: preds_paired
+preds_paired: \
+    r12_bt2s100_mason_ill_hg_100_100k.pred \
+    r12_bt2s250_mason_ill_hg_250_100k.pred \
+    r12_bt2s100_wgsim_ill_hg_100_100k.pred \
+    r12_bt2s250_wgsim_ill_hg_250_100k.pred \
+    r12_bt2s100_art_ill_hg_100_100k.pred \
+    r12_bt2s250_art_ill_hg_250_100k.pred
 
 .PHONY: tss
 tss: tss_unpaired tss_paired

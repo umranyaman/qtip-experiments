@@ -57,11 +57,33 @@ $(BWA):
 include ../mason.mk
 include ../bowtie2ts.mk
 include ../bwamemts.mk
+include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
 	rm -rf *.ts
+
+.PHONY: preds
+preds: preds_bt2 preds_bwamem
+
+.PHONY: preds_bt2
+preds_bt2: \
+    r0_bt2s_mason_ill_100_100k.pred \
+    r0_bt2s_mason_ill_250_100k.pred \
+    r12_bt2s100_mason_ill_100_100k.pred \
+    r12_bt2s250_mason_ill_250_100k.pred \
+    r0_bt2sl_mason_ill_100_100k.pred \
+    r0_bt2sl_mason_ill_250_100k.pred \
+    r12_bt2sl100_mason_ill_100_100k.pred \
+    r12_bt2sl250_mason_ill_250_100k.pred
+
+.PHONY: preds_bwamem
+preds_bwamem: \
+    r0_bwamem_mason_ill_100_100k.pred \
+    r0_bwamem_mason_ill_250_100k.pred \
+    r12_bwamem_mason_ill_100_100k.pred \
+    r12_bwamem_mason_ill_250_100k.pred
 
 .PHONY: tss
 tss: tss_bt2 tss_bwamem

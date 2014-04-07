@@ -41,13 +41,58 @@ BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
 BT2_ARGS=
 
+$(BOWTIE2):
+	$(MAKE) -C $(BOWTIE2_HOME)
+
 include ../mason.mk
 include ../bowtie2ts.mk
+include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
-	rm -rf *.ts
+	rm -rf *.ts *.pred
+
+.PHONY: preds
+preds: preds_unpaired preds_paired
+
+.PHONY: preds_unpaired
+preds_unpaired: \
+    r0_bt2vf_mason_ill_100_100k.pred \
+    r0_bt2vf_mason_ill_250_100k.pred \
+    r0_bt2f_mason_ill_100_100k.pred \
+    r0_bt2f_mason_ill_250_100k.pred \
+    r0_bt2s_mason_ill_100_100k.pred \
+    r0_bt2s_mason_ill_250_100k.pred \
+    r0_bt2vs_mason_ill_100_100k.pred \
+    r0_bt2vs_mason_ill_250_100k.pred \
+    r0_bt2vfl_mason_ill_100_100k.pred \
+    r0_bt2vfl_mason_ill_250_100k.pred \
+    r0_bt2fl_mason_ill_100_100k.pred \
+    r0_bt2fl_mason_ill_250_100k.pred \
+    r0_bt2sl_mason_ill_100_100k.pred \
+    r0_bt2sl_mason_ill_250_100k.pred \
+    r0_bt2vsl_mason_ill_100_100k.pred \
+    r0_bt2vsl_mason_ill_250_100k.pred
+
+.PHONY: preds_paired
+preds_paired: \
+    r12_bt2vf100_mason_ill_100_100k.pred \
+    r12_bt2vf250_mason_ill_250_100k.pred \
+    r12_bt2f100_mason_ill_100_100k.pred \
+    r12_bt2f250_mason_ill_250_100k.pred \
+    r12_bt2s100_mason_ill_100_100k.pred \
+    r12_bt2s250_mason_ill_250_100k.pred \
+    r12_bt2vs100_mason_ill_100_100k.pred \
+    r12_bt2vs250_mason_ill_250_100k.pred \
+    r12_bt2vfl100_mason_ill_100_100k.pred \
+    r12_bt2vfl250_mason_ill_250_100k.pred \
+    r12_bt2fl100_mason_ill_100_100k.pred \
+    r12_bt2fl250_mason_ill_250_100k.pred \
+    r12_bt2sl100_mason_ill_100_100k.pred \
+    r12_bt2sl250_mason_ill_250_100k.pred \
+    r12_bt2vsl100_mason_ill_100_100k.pred \
+    r12_bt2vsl250_mason_ill_250_100k.pred
 
 .PHONY: tss
 tss: tss_unpaired tss_paired

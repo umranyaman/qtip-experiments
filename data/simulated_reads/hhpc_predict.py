@@ -7,7 +7,8 @@ import re
 
 
 idx = 0
-tss_re = re.compile('tss[_a-zA-Z01-9]*:.*')
+pred_re = re.compile('preds[_a-zA-Z01-9]*:.*')
+mem_gb = 4
 
 
 def mkdir_quiet(dr):
@@ -26,7 +27,7 @@ def handle_dir(dirname, dry_run=True):
     with open(os.path.join(dirname, 'Makefile')) as fh:
         in_reads = False
         for ln in fh:
-            if tss_re.match(ln):
+            if pred_re.match(ln):
                 in_reads = True
             elif in_reads:
                 if len(ln.rstrip()) == 0:
@@ -36,12 +37,10 @@ def handle_dir(dirname, dry_run=True):
                     print >> sys.stderr, '  Found a read file: %s' % target
                     pbs_lns = list()
                     pbs_lns.append('#PBS -q batch')
-                    pbs_lns.append('#PBS -l walltime=2:30:00')
+                    pbs_lns.append('#PBS -l walltime=1:30:00')
                     pbs_lns.append('#PBS -j n')
-                    pbs_lns.append('#PBS -l pmem=16gb')
-                    pbs_lns.append('#PBS -l vmem=16gb')
-                    pbs_lns.append('#PBS -l pvmem=16gb')
-                    pbs_lns.append('#PBS -l mem=16gb')
+                    for mem_arg in ['pmem', 'vmem', 'pvmem', 'mem']:
+                        pbs_lns.append('#PBS -l %s=%dgb' % (mem_arg, mem_gb))
                     pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
                     pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])

@@ -8,6 +8,17 @@ import time
 idx = 0
 
 
+def mkdir_quiet(dr):
+    # Create output directory if needed
+    import errno
+    if not os.path.isdir(dr):
+        try:
+            os.makedirs(dr)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+
+
 def handle_dir(dirname, dry_run=True):
     global idx
     with open(os.path.join(dirname, 'Makefile')) as fh:
@@ -34,7 +45,9 @@ def handle_dir(dirname, dry_run=True):
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
                     pbs_lns.append('make %s' % target)
-                    qsub_fn = '.%s.%d.sh' % (target, idx)
+                    qsub_dir = '.read_qsubs'
+                    mkdir_quiet(qsub_dir)
+                    qsub_fn = os.path.join(qsub_dir, '.%s.%d.sh' % (target, idx))
                     with open(qsub_fn, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1

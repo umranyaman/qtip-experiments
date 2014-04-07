@@ -67,11 +67,27 @@ $(BOWTIE2):
 
 include ../mason.mk
 include ../bowtie2ts.mk
+include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
 	rm -rf *.ts
+
+.PHONY: preds
+preds: \
+    r0_bt2s_hg_mason_ill_hg_100_100k.pred \
+    r0_bt2s_hg_mason_ill_hg_250_100k.pred \
+    r0_bt2s_mm_mason_ill_mm_100_100k.pred \
+    r0_bt2s_mm_mason_ill_mm_250_100k.pred \
+    r0_bt2s_zm_mason_ill_zm_100_100k.pred \
+    r0_bt2s_zm_mason_ill_zm_250_100k.pred \
+    r12_bt2s100_hg_mason_ill_hg_100_100k.pred \
+    r12_bt2s250_hg_mason_ill_hg_250_100k.pred \
+    r12_bt2s100_mm_mason_ill_mm_100_100k.pred \
+    r12_bt2s250_mm_mason_ill_mm_250_100k.pred \
+    r12_bt2s100_zm_mason_ill_zm_100_100k.pred \
+    r12_bt2s250_zm_mason_ill_zm_250_100k.pred
 
 .PHONY: tss
 tss: \

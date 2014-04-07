@@ -30,10 +30,7 @@ HG_INDEX=$(TS_INDEXES)/$(HG_INDEX_BASE)
 ifeq ($(wildcard $(HG_FASTA)),) 
 $(error "$(HG_FASTA) doesn't exist")
 endif
-ifeq ($(wildcard $(HG_FASTA).fai),) 
-$(error "$(HG_FASTA).fai doesn't exist")
-endif
-ifeq ($(wildcard $(HG_INDEX).1.bt2),) 
+ifeq ($(wildcard $(HG_INDEX).1.bt2),)
 $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
 
@@ -49,11 +46,17 @@ $(BOWTIE2):
 
 include ../mason.mk
 include ../bowtie2ts.mk
+include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
 	rm -rf *.ts
+
+.PHONY: preds
+preds: \
+    r0_bt2s_mason_fff_50to500_100k.pred \
+    r0_bt2sl_mason_fff_50to500_100k.pred
 
 .PHONY: tss
 tss: \
