@@ -8,6 +8,7 @@ import re
 
 idx = 0
 tss_re = re.compile('tss[_a-zA-Z01-9]*:.*')
+mem_gb = 16
 
 
 def mkdir_quiet(dr):
@@ -34,22 +35,29 @@ def handle_dir(dirname, dry_run=True):
                 else:
                     target = ln.split()[0]
                     print >> sys.stderr, '  Found a read file: %s' % target
+                    target_full = os.path.join(dirname, target)
+                    if os.path.exists(os.path.join(target_full, 'DONE')):
+                        print >> sys.stderr, '  Skipping target %s because of DONE' % target
+                        continue
+                    elif os.path.exists(target_full):
+                        # delete it???
+                        pass
                     pbs_lns = list()
                     pbs_lns.append('#PBS -q batch')
                     pbs_lns.append('#PBS -l walltime=4:00:00')
                     pbs_lns.append('#PBS -j n')
-                    pbs_lns.append('#PBS -l pmem=16gb')
-                    pbs_lns.append('#PBS -l vmem=16gb')
-                    pbs_lns.append('#PBS -l pvmem=16gb')
-                    pbs_lns.append('#PBS -l mem=16gb')
+                    for mem_arg in ['pmem', 'vmem', 'pvmem', 'mem']:
+                        pbs_lns.append('#PBS -l %s=%dgb' % (mem_arg, mem_gb))
                     pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
                     pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
-                    pbs_lns.append('make %s' % target)
+                    pbs_lns.append('if make %s ; then touch %s/DONE ; fi' % (target, target))
                     qsub_dir = '.tss_qsubs'
                     mkdir_quiet(qsub_dir)
-                    qsub_fn = os.path.join(qsub_dir, '.%s.%d.sh' % (target, idx))
+                    cur_dir = os.getcwd()
+                    os.chdir(qsub_dir)
+                    qsub_fn = '.%s.%d.sh' % (target, idx)
                     with open(qsub_fn, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1
@@ -57,6 +65,7 @@ def handle_dir(dirname, dry_run=True):
                     if not dry_run:
                         os.system('qsub %s' % qsub_fn)
                         time.sleep(0.2)
+                    os.chdir(cur_dir)
 
 
 def go():
