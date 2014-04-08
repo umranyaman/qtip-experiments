@@ -53,7 +53,7 @@ def handle_dir(dirname, dry_run=True):
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
                     pbs_lns.append('if make %s ; then touch %s/DONE ; fi' % (target, target))
-                    qsub_dir = '.tss_qsubs'
+                    qsub_dir = '.pred_qsubs'
                     mkdir_quiet(qsub_dir)
                     cur_dir = os.getcwd()
                     os.chdir(qsub_dir)
