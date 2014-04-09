@@ -8,7 +8,7 @@ import re
 
 idx = 0
 pred_re = re.compile('preds[_a-zA-Z01-9]*:.*')
-mem_gb = 4
+mem_gb = 8
 
 
 def mkdir_quiet(dr):
