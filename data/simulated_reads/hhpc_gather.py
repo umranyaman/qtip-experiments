@@ -35,7 +35,7 @@ def handle_dir(dirname):
                     target_full = os.path.join(dirname, target)
 
                     # subsampling png
-                    subsampling_png_src_fn = 'subsampling_series.png' % (name, target)
+                    subsampling_png_src_fn = 'subsampling_series.png'
                     subsampling_png_dst_fn = '%s_%s_subsampling_series.png' % (name, target)
                     subsampling_png_full = os.path.join(target_full, subsampling_png_src_fn)
                     subsampling_png_out = os.path.join('summary', 'subsampling_plots', subsampling_png_dst_fn)
