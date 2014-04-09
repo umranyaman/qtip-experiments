@@ -38,8 +38,9 @@ def handle_dir(dirname):
                     subsampling_png_src_fn = 'subsampling_series.png'
                     subsampling_png_dst_fn = '%s_%s_subsampling_series.png' % (name, target)
                     subsampling_png_full = os.path.join(target_full, subsampling_png_src_fn)
-                    subsampling_png_out = os.path.join('summary', 'subsampling_plots', subsampling_png_dst_fn)
-                    mkdir_quiet(subsampling_png_out)
+                    subsampling_png_out_dir = os.path.join('summary', 'subsampling_plots')
+                    mkdir_quiet(subsampling_png_out_dir)
+                    subsampling_png_out = os.path.join(subsampling_png_out_dir, subsampling_png_dst_fn)
                     shutil.copyfile(subsampling_png_full, subsampling_png_out)
 
 
