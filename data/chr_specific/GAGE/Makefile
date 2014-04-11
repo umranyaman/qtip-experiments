@@ -55,6 +55,13 @@ clean:
 	rm -f *.fq.gz
 	rm -rf *.ts *.pred
 
+.PHONY: preds
+preds: \
+    r0_bt2s_chr14_ill_101.pred \
+    r0_bt2sl_chr14_ill_101.pred \
+    r12_bt2s_chr14_ill_101.pred \
+    r12_bt2sl_chr14_ill_101.pred
+
 .PHONY: tss
 tss: \
     r0_bt2s_chr14_ill_101.ts \
