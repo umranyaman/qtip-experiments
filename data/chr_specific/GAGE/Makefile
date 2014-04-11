@@ -89,5 +89,5 @@ frag_1.fastq.gz:
 frag_2.fastq.gz:
 	wget http://gage.cbcb.umd.edu/data/Hg_chr14/Data.original/frag_2.fastq.gz
 
-$(eval $(call bt2ts,bt2s,100000,100000,--correct-chromosomes=chr14,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl,100000,100000,--correct-chromosomes=chr14,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,100000,--correct-chromosomes=14,--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,100000,100000,--correct-chromosomes=14,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
