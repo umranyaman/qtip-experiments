@@ -23,6 +23,7 @@ r0_art_$1.fq.gz: $$(FA) $$(TS_HOME)/software/art/art_illumina
 	rm -f .$$(@).fq .$$(@).sam
 	gzip -c .$$(@).final.fq > $$@
 	rm -f .$$(@).final.fq
+    $$(TS_HOME)/software/art/art_illumina 2>&1 > $$@.version
 
 endef
 
@@ -40,6 +41,7 @@ r1_art_$1.fq.gz: $(FA) $$(FA) $$(TS_HOME)/software/art/art_illumina
 	gzip -c .$$(@).final1.fq > $$@
 	gzip -c .$$(@).final2.fq > $$(@:r1_%=r2_%)
 	rm -f .$$(@).final1.fq .$$(@).final2.fq
+    $$(TS_HOME)/software/art/art_illumina 2>&1 > $$@.version
 
 endef
 

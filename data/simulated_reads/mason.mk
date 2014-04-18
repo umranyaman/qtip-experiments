@@ -26,6 +26,7 @@ r0_mason_$1.fq.gz: $$(FA) $$(TS_HOME)/software/mason/mason
 	python $$(TS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$(@:%.fq.gz=%.fq)
 	rm -f .$$@.fq
 	gzip $$(@:%.fq.gz=%.fq)
+	$$(TS_HOME)/software/mason/mason illumina --version > $$@.version
 
 endef
 
@@ -45,6 +46,7 @@ r1_mason_$1.fq.gz: $(FA) $$(TS_HOME)/software/mason/mason
 	rm -f .$$(@)_final_1.fq
 	gzip -c .$$(@)_final_2.fq > $$(@:r1_%=r2_%)
 	rm -f .$$(@)_final_2.fq
+	$$(TS_HOME)/software/mason/mason illumina --version > $$@.version
 
 endef
 
@@ -59,6 +61,7 @@ r0_mason_$1.fq.gz: $$(FA) $$(TS_HOME)/software/mason/mason
 	$$(TS_HOME)/software/mason/mason 454 -hn 2 -i -s $6 -sq -N $5 -nm $3 -ne $4 -nu -o $$(@:%.fq.gz=%.fq) $2
 	rm -f $$(@:%.gz=%.sam)
 	gzip $$(@:%.fq.gz=%.fq)
+	$$(TS_HOME)/software/mason/mason 454 --version > $$@.version
 
 endef
 
