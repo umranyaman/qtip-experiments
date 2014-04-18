@@ -82,12 +82,12 @@ reads: \
     r1_mason_ill_100_10M.fq.gz \
     r1_mason_ill_250_10M.fq.gz
 
-$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl,100000,100000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s100,100000,100000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl100,100000,100000,,-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s250,100000,100000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl250,100000,100000,,-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,50000,50000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,50000,50000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100,50000,50000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl100,50000,50000,,-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s250,50000,50000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl250,50000,50000,,-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_10M,$(HG_FASTA),100,10000000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_10M,$(HG_FASTA),250,10000000,7724))
