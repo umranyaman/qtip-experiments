@@ -1,5 +1,5 @@
 TS=python $(TS_HOME)/bin/ts.py
-TS_ARGS=--write-test-data --write-training-data --write-test-distances --write-input-sam --compress-output --verbose
+TS_ARGS=--write-test-data --write-training-data --write-test-distances --write-input-sam --compress-output --verbose --write-timing
 
 define bwamemts
 
