@@ -27,7 +27,7 @@ r0_wgsim_$1.fq.gz: $$(FA) $$(TS_HOME)/software/wgsim/wgsim
 	$$(TS_HOME)/software/wgsim/wgsim -S $5 -1 $3 -2 $3 -N $4 $2 $$(@:%.fq.gz=%.fq) .tmp.$$@
 	rm -f .tmp.$$@
 	gzip $$(@:%.fq.gz=%.fq)
-    $$(TS_HOME)/software/wgsim/wgsim 2>&1 > $$@.version
+	$$(TS_HOME)/software/wgsim/wgsim > $$@.version 2>&1
 
 endef
 
@@ -44,7 +44,7 @@ r1_wgsim_$1.fq.gz: $(FA) $$(TS_HOME)/software/wgsim/wgsim
 	rm -f .tmp_1.$$@.fq
 	gzip -c .tmp_2.$$@.fq > $$(@:r1_%=r2_%)
 	rm -f .tmp_2.$$@.fq
-    $$(TS_HOME)/software/wgsim/wgsim 2>&1 > $$@.version
+	$$(TS_HOME)/software/wgsim/wgsim 2>&1 > $$@.version
 
 endef
 
