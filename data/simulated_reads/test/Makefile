@@ -72,22 +72,6 @@ preds_paired: \
     r12_bt2s100_mason_ill_100_4_100k.pred \
     r12_bt2s100_mason_ill_100_5_100k.pred
 
-.PHONY: tss_unpaired
-tss_unpaired: \
-    r0_bt2s_mason_ill_250_1_100k.ts \
-    r0_bt2s_mason_ill_250_2_100k.ts \
-    r0_bt2s_mason_ill_250_3_100k.ts \
-    r0_bt2s_mason_ill_250_4_100k.ts \
-    r0_bt2s_mason_ill_250_5_100k.ts
-
-.PHONY: tss_paired
-tss_paired: \
-    r12_bt2s100_mason_ill_100_1_100k.ts \
-    r12_bt2s100_mason_ill_100_2_100k.ts \
-    r12_bt2s100_mason_ill_100_3_100k.ts \
-    r12_bt2s100_mason_ill_100_4_100k.ts \
-    r12_bt2s100_mason_ill_100_5_100k.ts
-
 .PHONY: tss
 tss: tss_unpaired tss_paired
 
