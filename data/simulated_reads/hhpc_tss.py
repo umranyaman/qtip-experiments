@@ -8,7 +8,7 @@ import re
 
 idx = 0
 tss_re = re.compile('tss[_a-zA-Z01-9]*:.*')
-mem_gb = 6
+mem_gb = 8
 
 
 def mkdir_quiet(dr):
