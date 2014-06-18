@@ -8,7 +8,7 @@ import re
 
 idx = 0
 pred_re = re.compile('preds[_a-zA-Z01-9]*:.*')
-mem_gb = 8
+mem_gb = 12
 
 
 def mkdir_quiet(dr):
@@ -44,7 +44,7 @@ def handle_dir(dirname, dry_run=True):
                         pass
                     pbs_lns = list()
                     pbs_lns.append('#PBS -q batch')
-                    pbs_lns.append('#PBS -l walltime=1:30:00')
+                    pbs_lns.append('#PBS -l walltime=3:00:00')
                     pbs_lns.append('#PBS -j n')
                     for mem_arg in ['pmem', 'vmem', 'pvmem', 'mem']:
                         pbs_lns.append('#PBS -l %s=%dgb' % (mem_arg, mem_gb))
