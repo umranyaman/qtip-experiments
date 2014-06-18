@@ -44,7 +44,7 @@ def handle_dir(dirname, dry_run=True):
                         pass
                     pbs_lns = list()
                     pbs_lns.append('#PBS -q batch')
-                    pbs_lns.append('#PBS -l walltime=24:00:00')
+                    pbs_lns.append('#PBS -l walltime=48:00:00')
                     pbs_lns.append('#PBS -j n')
                     for mem_arg in ['pmem', 'vmem', 'pvmem', 'mem']:
                         pbs_lns.append('#PBS -l %s=%dgb' % (mem_arg, mem_gb))
