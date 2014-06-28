@@ -58,8 +58,10 @@ define mason_fff_unp_reads
 
 # Generate unpaired reads
 r0_mason_$1.fq.gz: $$(FA) $$(TS_HOME)/software/mason/mason
-	$$(TS_HOME)/software/mason/mason 454 -hn 2 -i -s $6 -sq -N $5 -nm $3 -ne $4 -nu -o $$(@:%.fq.gz=%.fq) $2
-	rm -f $$(@:%.gz=%.sam)
+	$$(TS_HOME)/software/mason/mason 454 -hn 2 -i -s $6 -sq -N $5 -nm $3 -ne $4 -nu -o .$$@.fq $2
+	rm -f .$$@.fq.sam
+	python $$(TS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$(@:%.fq.gz=%.fq)
+	rm -f .$$@.fq
 	gzip $$(@:%.fq.gz=%.fq)
 	$$(TS_HOME)/software/mason/mason 454 --version > $$@.version
 
