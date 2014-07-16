@@ -39,7 +39,7 @@ cat > .hg19.mosaik.sh <<EOF
 #PBS -l pvmem=8gb
 #PBS -l mem=8gb
 cd $PWD
-$TS_HOME/software/mosaik/MosaikBuild -fr $TS_REFS/hg19.fa -oa hg19.dat
+$TS_HOME/software/mosaik/MosaikBuild -fr $TS_REFS/hg19.fa -oa hg19.mosaik
 EOF
 echo qsub .hg19.mosaik.sh
 
@@ -80,7 +80,7 @@ cat > .mm10.mosaik.sh <<EOF
 #PBS -l pvmem=8gb
 #PBS -l mem=8gb
 cd $PWD
-$TS_HOME/software/mosaik/MosaikBuild -fr $TS_REFS/mm10.fa -oa mm10.dat
+$TS_HOME/software/mosaik/MosaikBuild -fr $TS_REFS/mm10.fa -oa mm10.mosaik
 EOF
 echo qsub .mm10.mosaik.sh
 
@@ -121,6 +121,6 @@ cat > .zm_AGPv3.mosaik.sh <<EOF
 #PBS -l pvmem=8gb
 #PBS -l mem=8gb
 cd $PWD
-$TS_HOME/software/mosaik/MosaikBuild -fr $TS_REFS/zm_AGPv3.fa -oa zm_AGPv3.dat
+$TS_HOME/software/mosaik/MosaikBuild -fr $TS_REFS/zm_AGPv3.fa -oa zm_AGPv3.mosaik
 EOF
 echo qsub .zm_AGPv3.mosaik.sh
