@@ -1,7 +1,7 @@
 # Must already have a BWA index of the FASTA reference somewhere
 
 TS=python $(TS_HOME)/bin/ts.py
-TS_ARGS=--write-test-data --write-test-distances --compress-output --verbose --write-timing
+TS_ARGS=--compress-output --verbose --write-all
 
 define bwamemts
 
