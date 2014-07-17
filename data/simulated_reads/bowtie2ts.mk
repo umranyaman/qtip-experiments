@@ -1,3 +1,5 @@
+# Must already have a Bowtie 2 index of the FASTA reference somewhere
+
 TS=python $(TS_HOME)/bin/ts.py
 TS_ARGS=--write-test-data --write-test-distances --compress-output --verbose --write-timing
 BT2_EXTRA_ARGS=--mm
