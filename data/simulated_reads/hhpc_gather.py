@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import re
 import shutil
+import logging
 
 
 pred_re = re.compile('preds[_a-zA-Z01-9]*:.*')
@@ -38,26 +38,40 @@ def handle_dir(dirname):
                     subsampling_png_src_fn = 'subsampling_series.png'
                     subsampling_png_dst_fn = '%s_%s_subsampling_series.png' % (name, target)
                     subsampling_png_full = os.path.join(target_full, subsampling_png_src_fn)
-                    subsampling_png_out_dir = os.path.join('summary', 'subsampling_plots')
-                    mkdir_quiet(subsampling_png_out_dir)
-                    subsampling_png_out = os.path.join(subsampling_png_out_dir, subsampling_png_dst_fn)
-                    shutil.copyfile(subsampling_png_full, subsampling_png_out)
+                    subsampling_tsv_out_dir = os.path.join('summary', 'subsampling_plots')
+                    mkdir_quiet(subsampling_tsv_out_dir)
+                    subsampling_png_out = os.path.join(subsampling_tsv_out_dir, subsampling_png_dst_fn)
+                    if os.path.exists(subsampling_png_full):
+                        shutil.copyfile(subsampling_png_full, subsampling_png_out)
+                    else:
+                        logging.warning('Could not find source file "%s"' % subsampling_tsv_full)
 
-                    # subsampling png
-                    subsampling_png_src_fn = 'subsampling_series.png'
-                    subsampling_png_dst_fn = '%s_%s_subsampling_series.png' % (name, target)
-                    subsampling_png_full = os.path.join(target_full, subsampling_png_src_fn)
-                    subsampling_png_out_dir = os.path.join('summary', 'subsampling_plots')
-                    mkdir_quiet(subsampling_png_out_dir)
-                    subsampling_png_out = os.path.join(subsampling_png_out_dir, subsampling_png_dst_fn)
-                    shutil.copyfile(subsampling_png_full, subsampling_png_out)
+                    # subsampling tsvs
+                    subsampling_tsv_out_dir = os.path.join('summary', 'subsampling_tables')
+                    mkdir_quiet(subsampling_tsv_out_dir)
+                    for i in xrange(1, 6):
+                        subsampling_tsv_src_fn = 'subsampling_series_%d.tsv' % i
+                        subsampling_tsv_dst_fn = '%s_%s_subsampling_series_%d.tsv' % (name, target, i)
+                        subsampling_tsv_full = os.path.join(target_full, subsampling_tsv_src_fn)
+                        subsampling_tsv_out = os.path.join(subsampling_tsv_out_dir, subsampling_tsv_dst_fn)
+                        if os.path.exists(subsampling_tsv_full):
+                            shutil.copyfile(subsampling_tsv_full, subsampling_tsv_out)
+                        else:
+                            logging.warning('Could not find source file "%s"' % subsampling_tsv_full)
+
+                    # ROC tables
 
 
 def go():
+    # Set up logger
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',
+                        datefmt='%m/%d/%y-%H:%M:%S', level=logging.DEBUG)
+
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
-            print >> sys.stderr, 'Found a Makefile: %s' % (os.path.join(dirname, 'Makefile'))
+            logging.info('Found a Makefile: %s' % os.path.join(dirname, 'Makefile'))
             handle_dir(dirname)
+
     os.system('tar -cvzf summary.tar.gz summary')
 
 go()
