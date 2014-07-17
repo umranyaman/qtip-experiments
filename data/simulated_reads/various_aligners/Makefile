@@ -27,6 +27,8 @@ endif
 HG_FASTA=$(TS_REFS)/$(HG_FASTA_NAME)
 HG_INDEX=$(TS_INDEXES)/$(HG_INDEX_BASE)
 
+# TODO: deal with MosaikBuild index
+
 ifeq ($(wildcard $(HG_FASTA)),) 
 $(error "$(HG_FASTA) doesn't exist")
 endif
@@ -36,6 +38,9 @@ endif
 ifeq ($(wildcard $(HG_INDEX).amb),) 
 $(error "$(HG_INDEX).amb doesn't exist")
 endif
+ifeq ($(wildcard $(HG_INDEX).mosaik),)
+$(error "$(HG_INDEX).mosaik doesn't exist")
+endif
 
 .PHONY: all
 all: tss
@@ -43,9 +48,16 @@ all: tss
 BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
 BT2_ARGS=
+
 BWA_HOME=$(TS_HOME)/software/bwa
 BWA=$(BWA_HOME)/bwa
 BWA_ARGS=
+
+MOSAIK_HOME=$(TS_HOME)/software/mosaik
+MOSAIK_ALIGN=$(MOSAIK_HOME)/MosaikAlign
+MOSAIK_BUILD=$(MOSAIK_HOME)/MosaikBuild
+MOSAIK_ALIGN_ARGS=
+MOSAIK_BUILD_ARGS=
 
 $(BOWTIE2):
 	$(MAKE) -C $(BOWTIE2_HOME)
@@ -53,19 +65,24 @@ $(BOWTIE2):
 $(BWA):
 	$(MAKE) -C $(BWA_HOME)
 
+$(MOSAIK_ALIGN) $(MOSAIK_BUILD):
+	$(MAKE) -C $(MOSAIK_HOME)
+
 
 include ../mason.mk
 include ../bowtie2ts.mk
 include ../bwamemts.mk
+include ../mosaikts.mk
 include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
+	rm -f *.mkb
 	rm -rf *.ts
 
 .PHONY: preds
-preds: preds_bt2 preds_bwamem
+preds: preds_bt2 preds_bwamem preds_mosaik
 
 .PHONY: preds_bt2
 preds_bt2: \
@@ -85,8 +102,15 @@ preds_bwamem: \
     r12_bwamem100_mason_ill_100_100k.pred \
     r12_bwamem250_mason_ill_250_100k.pred
 
+.PHONY: preds_mosaik
+preds_mosaik: \
+    r0_mosaik_mason_ill_100_100k.pred \
+    r0_mosaik_mason_ill_250_100k.pred \
+    r12_mosaik100_mason_ill_100_100k.pred \
+    r12_mosaik250_mason_ill_250_100k.pred
+
 .PHONY: tss
-tss: tss_bt2 tss_bwamem
+tss: tss_bt2 tss_bwamem tss_mosaik
 
 .PHONY: tss_bt2
 tss_bt2: \
@@ -105,6 +129,13 @@ tss_bwamem: \
     r0_bwamem_mason_ill_250_100k.ts \
     r12_bwamem100_mason_ill_100_100k.ts \
     r12_bwamem250_mason_ill_250_100k.ts
+
+.PHONY: tss_mosaik
+tss_mosaik: \
+    r0_mosaik_mason_ill_100_100k.ts \
+    r0_mosaik_mason_ill_250_100k.ts \
+    r12_mosaik100_mason_ill_100_100k.ts \
+    r12_mosaik250_mason_ill_250_100k.ts
 
 .PHONY: reads
 reads: \
@@ -125,9 +156,13 @@ $(eval $(call bt2ts,bt2sl250,100000,100000,,-I 500 -X 1000 --sensitive --local,$
 
 , := ,
 
-$(eval $(call bwamemts,bwamem,100000,100000,--write-training-sam,,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bwamemts,bwamem100,100000,100000,--write-training-sam,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bwamemts,bwamem250,100000,100000,--write-training-sam,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem,100000,100000,,,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem100,100000,100000,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem250,100000,100000,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
+
+$(eval $(call mosaikts,mosaik,100000,100000,,,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call mosaikts,mosaik100,100000,100000,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call mosaikts,mosaik250,100000,100000,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_100k,$(HG_FASTA),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_100k,$(HG_FASTA),250,100000,7724))
