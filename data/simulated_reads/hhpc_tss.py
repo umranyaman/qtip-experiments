@@ -51,6 +51,7 @@ def handle_dir(dirname, dry_run=True):
                     pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
                     pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
+                    pbs_lns.append('export TMPDIR=/scratch1/langmead-fs1/temp/langmead')
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
                     pbs_lns.append('if make %s ; then touch %s/DONE ; fi' % (target, target))
                     qsub_dir = '.tss_qsubs'
