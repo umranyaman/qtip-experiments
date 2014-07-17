@@ -4,10 +4,10 @@ TS=python $(TS_HOME)/bin/ts.py
 TS_ARGS=--compress-output --verbose --write-all
 
 r0_%.fq.mkb: r0_%.fq.gz
-    $(MOSAIK_BUILD) -q $< -out $@
+	$(MOSAIK_BUILD) -q $< -out $@
 
 r12_%.fq.mkb: r1_%.fq.gz r2_%.fq.gz
-    $(MOSAIK_BUILD) -q $< -q2 $(<:r1_%=r2_%) -out $@
+	$(MOSAIK_BUILD) -q $< -q2 $(<:r1_%=r2_%) -out $@
 
 define mosaikts
 
