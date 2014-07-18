@@ -27,8 +27,6 @@ endif
 HG_FASTA=$(TS_REFS)/$(HG_FASTA_NAME)
 HG_INDEX=$(TS_INDEXES)/$(HG_INDEX_BASE)
 
-# TODO: deal with MosaikBuild index
-
 ifeq ($(wildcard $(HG_FASTA)),) 
 $(error "$(HG_FASTA) doesn't exist")
 endif
@@ -54,7 +52,7 @@ BWA=$(BWA_HOME)/bwa
 BWA_ARGS=
 
 MOSAIK_HOME=$(TS_HOME)/software/mosaik
-MOSAIK_ALIGN=$(MOSAIK_HOME)/MosaikAlign
+MOSAIK_ALIGN=$(MOSAIK_HOME)/MosaikAligner
 MOSAIK_BUILD=$(MOSAIK_HOME)/MosaikBuild
 MOSAIK_ALIGN_ARGS=
 MOSAIK_BUILD_ARGS=
