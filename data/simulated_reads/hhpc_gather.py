@@ -44,7 +44,7 @@ def handle_dir(dirname):
                     if os.path.exists(subsampling_png_full):
                         shutil.copyfile(subsampling_png_full, subsampling_png_out)
                     else:
-                        logging.warning('Could not find source file "%s"' % subsampling_tsv_full)
+                        logging.warning('Could not find source file "%s"' % subsampling_png_full)
 
                     # subsampling tsvs
                     subsampling_tsv_out_dir = os.path.join('summary', 'subsampling_tables')
