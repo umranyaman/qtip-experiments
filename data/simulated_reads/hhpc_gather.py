@@ -64,15 +64,18 @@ def handle_dir(dirname):
                     # ROC tables
                     roc_src_fn = 'roc_table.tsv'
                     roc_src_orig_fn = 'roc_table_orig.tsv'
-                    roc_dst_fn = '%s_%s_roc_table.tsv' % (name, target)
                     roc_tsv_full = os.path.join(target_full, 'subsampled', fraction, replicate, roc_src_fn)
                     roc_orig_tsv_full = os.path.join(target_full, 'subsampled', fraction, replicate, roc_src_orig_fn)
                     roc_tsv_out_dir = os.path.join('summary', 'roc_table')
                     mkdir_quiet(roc_tsv_out_dir)
+                    roc_dst_fn = '%s_%s_roc_table.tsv' % (name, target)
                     roc_tsv_out = os.path.join(roc_tsv_out_dir, roc_dst_fn)
-                    for fn in [roc_tsv_full, roc_orig_tsv_full]:
+                    roc_dst_orig_fn = '%s_%s_roc_table_orig.tsv' % (name, target)
+                    roc_tsv_orig_out = os.path.join(roc_tsv_out_dir, roc_dst_orig_fn)
+                    for fn, ofn in zip([roc_tsv_full, roc_orig_tsv_full],
+                                       [roc_tsv_out, roc_tsv_orig_out]):
                         if os.path.exists(fn):
-                            shutil.copyfile(fn, roc_tsv_out)
+                            shutil.copyfile(fn, ofn)
                         else:
                             logging.warning('Could not find source file "%s"' % fn)
 
