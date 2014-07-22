@@ -63,15 +63,18 @@ def handle_dir(dirname):
 
                     # ROC tables
                     roc_src_fn = 'roc_table.tsv'
+                    roc_src_orig_fn = 'roc_table_orig.tsv'
                     roc_dst_fn = '%s_%s_roc_table.tsv' % (name, target)
                     roc_tsv_full = os.path.join(target_full, 'subsampled', fraction, replicate, roc_src_fn)
+                    roc_orig_tsv_full = os.path.join(target_full, 'subsampled', fraction, replicate, roc_src_orig_fn)
                     roc_tsv_out_dir = os.path.join('summary', 'roc_table')
                     mkdir_quiet(roc_tsv_out_dir)
                     roc_tsv_out = os.path.join(roc_tsv_out_dir, roc_dst_fn)
-                    if os.path.exists(roc_tsv_full):
-                        shutil.copyfile(roc_tsv_full, roc_tsv_out)
-                    else:
-                        logging.warning('Could not find source file "%s"' % roc_tsv_full)
+                    for fn in [roc_tsv_full, roc_orig_tsv_full]:
+                        if os.path.exists(fn):
+                            shutil.copyfile(fn, roc_tsv_out)
+                        else:
+                            logging.warning('Could not find source file "%s"' % fn)
 
 
 def go():
