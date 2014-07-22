@@ -64,8 +64,8 @@ def handle_dir(dirname):
                     # ROC tables
                     roc_src_fn = 'roc_table.tsv'
                     roc_dst_fn = '%s_%s_roc_table.tsv' % (name, target)
-                    roc_tsv_full = os.path.join(target_full, roc_src_fn)
-                    roc_tsv_out_dir = os.path.join('summary', 'subsampled', fraction, replicate)
+                    roc_tsv_full = os.path.join(target_full, 'subsampled', fraction, replicate, roc_src_fn)
+                    roc_tsv_out_dir = os.path.join('summary', 'roc_table')
                     mkdir_quiet(roc_tsv_out_dir)
                     roc_tsv_out = os.path.join(roc_tsv_out_dir, roc_dst_fn)
                     if os.path.exists(roc_tsv_full):
