@@ -145,10 +145,10 @@ reads: \
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2vf,100000,100000,--low-score-bias=7,--very-fast,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2f,100000,100000,--low-score-bias=7,--fast,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s,100000,100000,--low-score-bias=7,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2vs,100000,100000,--low-score-bias=7,--very-sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2vf,100000,100000,,--very-fast,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2f,100000,100000,,--fast,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2vs,100000,100000,,--very-sensitive,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call bt2ts,bt2vfl,100000,100000,,--very-fast-local,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2fl,100000,100000,,--fast-local,$(HG_FASTA),$(HG_INDEX)))
