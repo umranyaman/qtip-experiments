@@ -36,9 +36,9 @@ endif
 ifeq ($(wildcard $(HG_INDEX).amb),) 
 $(error "$(HG_INDEX).amb doesn't exist")
 endif
-ifeq ($(wildcard $(HG_INDEX).mosaik),)
-$(error "$(HG_INDEX).mosaik doesn't exist")
-endif
+#ifeq ($(wildcard $(HG_INDEX).mosaik),)
+#$(error "$(HG_INDEX).mosaik doesn't exist")
+#endif
 
 .PHONY: all
 all: tss
