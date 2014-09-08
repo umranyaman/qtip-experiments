@@ -1,8 +1,7 @@
 #!gmake
 
-# Illumina version: 1.5.1
-# 454 version: 2.1.8
-# SOLiD version: 1.0.1
+# Illumina version: 2.1.8
+# 454 version: 2.5.8
 
 AR=artbinvanillaicecream031114linux64tgz.tgz
 URL=http://www.niehs.nih.gov/research/resources/assets/docs/$(AR)
