@@ -36,48 +36,49 @@ def handle_dir(dirname):
                     name = os.path.basename(dirname)
                     target_full = os.path.join(dirname, target)
 
-                    # subsampling png
-                    subsampling_png_src_fn = 'subsampling_series.png'
-                    subsampling_png_dst_fn = '%s_%s_subsampling_series.png' % (name, target)
-                    subsampling_png_full = os.path.join(target_full, subsampling_png_src_fn)
-                    subsampling_tsv_out_dir = os.path.join('summary', 'subsampling_plots')
-                    mkdir_quiet(subsampling_tsv_out_dir)
-                    subsampling_png_out = os.path.join(subsampling_tsv_out_dir, subsampling_png_dst_fn)
-                    if os.path.exists(subsampling_png_full):
-                        shutil.copyfile(subsampling_png_full, subsampling_png_out)
-                    else:
-                        logging.warning('Could not find source file "%s"' % subsampling_png_full)
-
-                    # subsampling tsvs
-                    subsampling_tsv_out_dir = os.path.join('summary', 'subsampling_tables')
-                    mkdir_quiet(subsampling_tsv_out_dir)
-                    for i in xrange(1, 6):
-                        subsampling_tsv_src_fn = 'subsampling_series_%d.tsv' % i
-                        subsampling_tsv_dst_fn = '%s_%s_subsampling_series_%d.tsv' % (name, target, i)
-                        subsampling_tsv_full = os.path.join(target_full, subsampling_tsv_src_fn)
-                        subsampling_tsv_out = os.path.join(subsampling_tsv_out_dir, subsampling_tsv_dst_fn)
-                        if os.path.exists(subsampling_tsv_full):
-                            shutil.copyfile(subsampling_tsv_full, subsampling_tsv_out)
+                    for tt in ['test', 'training']:
+                        # subsampling png
+                        subsampling_tsv_out_dir = os.path.join('summary', 'subsampling_plots', tt)
+                        subsampling_png_src_fn = 'subsampling_series_%s.png' % tt
+                        subsampling_png_dst_fn = '%s_%s_subsampling_series.png' % (name, target)
+                        subsampling_png_full = os.path.join(target_full, subsampling_png_src_fn)
+                        mkdir_quiet(subsampling_tsv_out_dir)
+                        subsampling_png_out = os.path.join(subsampling_tsv_out_dir, subsampling_png_dst_fn)
+                        if os.path.exists(subsampling_png_full):
+                            shutil.copyfile(subsampling_png_full, subsampling_png_out)
                         else:
-                            logging.warning('Could not find source file "%s"' % subsampling_tsv_full)
+                            logging.warning('Could not find source file "%s"' % subsampling_png_full)
 
-                    # ROC tables
-                    roc_src_fn = 'roc_table.tsv'
-                    roc_src_orig_fn = 'roc_table_orig.tsv'
-                    roc_tsv_full = os.path.join(target_full, 'subsampled', fraction, replicate, roc_src_fn)
-                    roc_orig_tsv_full = os.path.join(target_full, 'subsampled', fraction, replicate, roc_src_orig_fn)
-                    roc_tsv_out_dir = os.path.join('summary', 'roc_table')
-                    mkdir_quiet(roc_tsv_out_dir)
-                    roc_dst_fn = '%s_%s_roc_table.tsv' % (name, target)
-                    roc_tsv_out = os.path.join(roc_tsv_out_dir, roc_dst_fn)
-                    roc_dst_orig_fn = '%s_%s_roc_table_orig.tsv' % (name, target)
-                    roc_tsv_orig_out = os.path.join(roc_tsv_out_dir, roc_dst_orig_fn)
-                    for fn, ofn in zip([roc_tsv_full, roc_orig_tsv_full],
-                                       [roc_tsv_out, roc_tsv_orig_out]):
-                        if os.path.exists(fn):
-                            shutil.copyfile(fn, ofn)
-                        else:
-                            logging.warning('Could not find source file "%s"' % fn)
+                        # subsampling tsvs
+                        subsampling_tsv_out_dir = os.path.join('summary', 'subsampling_tables', tt)
+                        mkdir_quiet(subsampling_tsv_out_dir)
+                        for i in xrange(1, 6):
+                            subsampling_tsv_src_fn = 'subsampling_series_%s_%d.tsv' % (tt, i)
+                            subsampling_tsv_dst_fn = '%s_%s_subsampling_series_%d.tsv' % (name, target, i)
+                            subsampling_tsv_full = os.path.join(target_full, subsampling_tsv_src_fn)
+                            subsampling_tsv_out = os.path.join(subsampling_tsv_out_dir, subsampling_tsv_dst_fn)
+                            if os.path.exists(subsampling_tsv_full):
+                                shutil.copyfile(subsampling_tsv_full, subsampling_tsv_out)
+                            else:
+                                logging.warning('Could not find source file "%s"' % subsampling_tsv_full)
+
+                        # ROC tables
+                        roc_tsv_out_dir = os.path.join('summary', 'roc_table', tt)
+                        mkdir_quiet(roc_tsv_out_dir)
+                        roc_src_fn = 'roc_table.tsv'
+                        roc_src_orig_fn = 'roc_table_orig.tsv'
+                        roc_tsv_full = os.path.join(target_full, 'subsampled', fraction, replicate, tt, roc_src_fn)
+                        roc_orig_tsv_full = os.path.join(target_full, 'subsampled', fraction, replicate, tt, roc_src_orig_fn)
+                        roc_dst_fn = '%s_%s_roc_table.tsv' % (name, target)
+                        roc_tsv_out = os.path.join(roc_tsv_out_dir, roc_dst_fn)
+                        roc_dst_orig_fn = '%s_%s_roc_table_orig.tsv' % (name, target)
+                        roc_tsv_orig_out = os.path.join(roc_tsv_out_dir, roc_dst_orig_fn)
+                        for fn, ofn in zip([roc_tsv_full, roc_orig_tsv_full],
+                                           [roc_tsv_out, roc_tsv_orig_out]):
+                            if os.path.exists(fn):
+                                shutil.copyfile(fn, ofn)
+                            else:
+                                logging.warning('Could not find source file "%s"' % fn)
 
 
 def go():
