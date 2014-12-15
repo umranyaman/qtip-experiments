@@ -39,18 +39,18 @@ ZM_INDEX=$(TS_INDEXES)/$(ZM_INDEX_BASE)
 ifeq ($(wildcard $(FA_HG)),) 
 $(error "$(FA_HG) doesn't exist")
 endif
-ifeq ($(wildcard $(FA_MM)),) 
-$(error "$(FA_MM) doesn't exist")
-endif
+#ifeq ($(wildcard $(FA_MM)),) 
+#$(error "$(FA_MM) doesn't exist")
+#endif
 ifeq ($(wildcard $(FA_ZM)),) 
 $(error "$(FA_ZM) doesn't exist")
 endif
 ifeq ($(wildcard $(HG_INDEX).1.bt2),) 
 $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
-ifeq ($(wildcard $(MM_INDEX).1.bt2),) 
-$(error "$(MM_INDEX).1.bt2 doesn't exist")
-endif
+#ifeq ($(wildcard $(MM_INDEX).1.bt2),) 
+#$(error "$(MM_INDEX).1.bt2 doesn't exist")
+#endif
 ifeq ($(wildcard $(ZM_INDEX).1.bt2),) 
 $(error "$(ZM_INDEX).1.bt2 doesn't exist")
 endif
@@ -62,11 +62,19 @@ BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
 BT2_ARGS=
 
+BWA_HOME=$(TS_HOME)/software/bwa
+BWA=$(BWA_HOME)/bwa
+BWA_ARGS=
+
 $(BOWTIE2):
 	$(MAKE) -C $(BOWTIE2_HOME)
 
+$(BWA):
+	$(MAKE) -C $(BWA_HOME)
+
 include ../mason.mk
 include ../bowtie2ts.mk
+include ../bwamemts.mk
 include ../predict.mk
 
 .PHONY: clean
@@ -75,7 +83,10 @@ clean:
 	rm -rf *.ts
 
 .PHONY: preds
-preds: \
+preds: preds_bt2 preds_bwamem
+
+.PHONY: preds_bt2
+preds_bt2: \
     r0_bt2s_hg_mason_ill_hg_100_100k.pred \
     r0_bt2s_hg_mason_ill_hg_250_100k.pred \
     r0_bt2s_mm_mason_ill_mm_100_100k.pred \
@@ -89,8 +100,26 @@ preds: \
     r12_bt2s100_zm_mason_ill_zm_100_100k.pred \
     r12_bt2s250_zm_mason_ill_zm_250_100k.pred
 
+.PHONY: preds_bwamem
+preds_bwamem: \
+    r0_bwamem_hg_mason_ill_hg_100_100k.pred \
+    r0_bwamem_hg_mason_ill_hg_250_100k.pred \
+    r0_bwamem_mm_mason_ill_mm_100_100k.pred \
+    r0_bwamem_mm_mason_ill_mm_250_100k.pred \
+    r0_bwamem_zm_mason_ill_zm_100_100k.pred \
+    r0_bwamem_zm_mason_ill_zm_250_100k.pred \
+    r12_bwamem100_hg_mason_ill_hg_100_100k.pred \
+    r12_bwamem250_hg_mason_ill_hg_250_100k.pred \
+    r12_bwamem100_mm_mason_ill_mm_100_100k.pred \
+    r12_bwamem250_mm_mason_ill_mm_250_100k.pred \
+    r12_bwamem100_zm_mason_ill_zm_100_100k.pred \
+    r12_bwamem250_zm_mason_ill_zm_250_100k.pred
+
 .PHONY: tss
-tss: \
+tss: tss_bt2 tss_bwamem tss_mosaik
+
+.PHONY: tss_bt2
+tss_bt2: \
     r0_bt2s_hg_mason_ill_hg_100_100k.ts \
     r0_bt2s_hg_mason_ill_hg_250_100k.ts \
     r0_bt2s_mm_mason_ill_mm_100_100k.ts \
@@ -103,6 +132,20 @@ tss: \
     r12_bt2s250_mm_mason_ill_mm_250_100k.ts \
     r12_bt2s100_zm_mason_ill_zm_100_100k.ts \
     r12_bt2s250_zm_mason_ill_zm_250_100k.ts
+
+tss_bwamem: \
+    r0_bwamem_hg_mason_ill_hg_100_100k.ts \
+    r0_bwamem_hg_mason_ill_hg_250_100k.ts \
+    r0_bwamem_mm_mason_ill_mm_100_100k.ts \
+    r0_bwamem_mm_mason_ill_mm_250_100k.ts \
+    r0_bwamem_zm_mason_ill_zm_100_100k.ts \
+    r0_bwamem_zm_mason_ill_zm_250_100k.ts \
+    r12_bwamem100_hg_mason_ill_hg_100_100k.ts \
+    r12_bwamem250_hg_mason_ill_hg_250_100k.ts \
+    r12_bwamem100_mm_mason_ill_mm_100_100k.ts \
+    r12_bwamem250_mm_mason_ill_mm_250_100k.ts \
+    r12_bwamem100_zm_mason_ill_zm_100_100k.ts \
+    r12_bwamem250_zm_mason_ill_zm_250_100k.ts
 
 .PHONY: reads
 reads: \
@@ -119,17 +162,31 @@ reads: \
     r1_mason_ill_zm_100_100k.fq.gz \
     r1_mason_ill_zm_250_100k.fq.gz
 
+, := ,
+
 $(eval $(call bt2ts,bt2s_hg,100000,100000,,--sensitive,$(FA_HG),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2s_mm,100000,100000,,--sensitive,$(FA_MM),$(MM_INDEX)))
 $(eval $(call bt2ts,bt2s_zm,100000,100000,,--sensitive,$(FA_ZM),$(ZM_INDEX)))
+
+$(eval $(call bwamemts,bwamem_hg,100000,100000,,,$(FA_HG),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem_mm,100000,100000,,,$(FA_MM),$(MM_INDEX)))
+$(eval $(call bwamemts,bwamem_zm,100000,100000,,,$(FA_ZM),$(ZM_INDEX)))
 
 $(eval $(call bt2ts,bt2s100_hg,100000,100000,,-I 200 -X 400 --sensitive,$(FA_HG),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2s100_mm,100000,100000,,-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX)))
 $(eval $(call bt2ts,bt2s100_zm,100000,100000,,-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX)))
 
+$(eval $(call bwamemts,bwamem100_hg,100000,100000,,-I 300$(,)25,$(FA_HG),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem100_mm,100000,100000,,-I 300$(,)25,$(FA_MM),$(MM_INDEX)))
+$(eval $(call bwamemts,bwamem100_zm,100000,100000,,-I 300$(,)25,$(FA_ZM),$(ZM_INDEX)))
+
 $(eval $(call bt2ts,bt2s250_hg,100000,100000,,-I 500 -X 1000 --sensitive,$(FA_HG),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2s250_mm,100000,100000,,-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX)))
 $(eval $(call bt2ts,bt2s250_zm,100000,100000,,-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX)))
+
+$(eval $(call bwamemts,bwamem250_hg,100000,100000,,-I 750$(,)62,$(FA_HG),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem250_mm,100000,100000,,-I 750$(,)62,$(FA_MM),$(MM_INDEX)))
+$(eval $(call bwamemts,bwamem250_zm,100000,100000,,-I 750$(,)62,$(FA_ZM),$(ZM_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_hg_100_100k,$(FA_HG),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_hg_250_100k,$(FA_HG),250,100000,7724))
