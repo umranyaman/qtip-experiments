@@ -51,10 +51,10 @@ cat > .hg19.snap.sh <<EOF
 #PBS -q batch
 #PBS -l walltime=1:00:00
 #PBS -j n
-#PBS -l pmem=32gb
-#PBS -l vmem=32gb
-#PBS -l pvmem=32gb
-#PBS -l mem=32gb
+#PBS -l pmem=60gb
+#PBS -l vmem=60gb
+#PBS -l pvmem=60gb
+#PBS -l mem=60gb
 cd $PWD
 $TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/hg19.fa hg19.fa.snap
 EOF
@@ -109,10 +109,10 @@ cat > .mm10.snap.sh <<EOF
 #PBS -q batch
 #PBS -l walltime=1:00:00
 #PBS -j n
-#PBS -l pmem=32gb
-#PBS -l vmem=32gb
-#PBS -l pvmem=32gb
-#PBS -l mem=32gb
+#PBS -l pmem=60gb
+#PBS -l vmem=60gb
+#PBS -l pvmem=60gb
+#PBS -l mem=60gb
 cd $PWD
 $TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/mm10.fa mm10.fa.snap
 EOF
@@ -167,10 +167,10 @@ cat > .zm_AGPv3.snap.sh <<EOF
 #PBS -q batch
 #PBS -l walltime=1:00:00
 #PBS -j n
-#PBS -l pmem=32gb
-#PBS -l vmem=32gb
-#PBS -l pvmem=32gb
-#PBS -l mem=32gb
+#PBS -l pmem=60gb
+#PBS -l vmem=60gb
+#PBS -l pvmem=60gb
+#PBS -l mem=60gb
 cd $PWD
 $TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/zm_AGPv3.fa zm_AGPv3.fa.snap
 EOF
