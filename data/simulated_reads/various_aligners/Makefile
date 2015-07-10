@@ -36,9 +36,9 @@ endif
 ifeq ($(wildcard $(HG_INDEX).amb),) 
 $(error "$(HG_INDEX).amb doesn't exist")
 endif
-#ifeq ($(wildcard $(HG_INDEX).mosaik),)
-#$(error "$(HG_INDEX).mosaik doesn't exist")
-#endif
+ifeq ($(wildcard $(HG_INDEX).mosaik),)
+$(error "$(HG_INDEX).mosaik doesn't exist")
+endif
 
 .PHONY: all
 all: tss
@@ -103,9 +103,7 @@ preds_bwamem: \
 .PHONY: preds_mosaik
 preds_mosaik: \
     r0_mosaik_mason_ill_100_100k.pred \
-    r0_mosaik_mason_ill_250_100k.pred \
-    r12_mosaik100_mason_ill_100_100k.pred \
-    r12_mosaik250_mason_ill_250_100k.pred
+    r0_mosaik_mason_ill_250_100k.pred
 
 .PHONY: tss
 tss: tss_bt2 tss_bwamem tss_mosaik
@@ -131,9 +129,7 @@ tss_bwamem: \
 .PHONY: tss_mosaik
 tss_mosaik: \
     r0_mosaik_mason_ill_100_100k.ts \
-    r0_mosaik_mason_ill_250_100k.ts \
-    r12_mosaik100_mason_ill_100_100k.ts \
-    r12_mosaik250_mason_ill_250_100k.ts
+    r0_mosaik_mason_ill_250_100k.ts
 
 .PHONY: reads
 reads: \
@@ -158,9 +154,9 @@ $(eval $(call bwamemts,bwamem,100000,100000,,,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bwamemts,bwamem100,100000,100000,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bwamemts,bwamem250,100000,100000,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call mosaikts,mosaik,100000,100000,,,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call mosaikts,mosaik100,100000,100000,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call mosaikts,mosaik250,100000,100000,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call mosaikts,mosaik,100000,100000,,-a fast,$(HG_FASTA),$(HG_INDEX)))
+#$(eval $(call mosaikts,mosaik100,100000,100000,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
+#$(eval $(call mosaikts,mosaik250,100000,100000,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_100k,$(HG_FASTA),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_100k,$(HG_FASTA),250,100000,7724))
