@@ -39,6 +39,9 @@ endif
 ifeq ($(wildcard $(HG_INDEX).mosaik),)
 $(error "$(HG_INDEX).mosaik doesn't exist")
 endif
+ifeq ($(wildcard $(HG_INDEX).snap),)
+$(error "$(HG_INDEX).snap doesn't exist")
+endif
 
 .PHONY: all
 all: tss
@@ -50,6 +53,10 @@ BT2_ARGS=
 BWA_HOME=$(TS_HOME)/software/bwa
 BWA=$(BWA_HOME)/bwa
 BWA_ARGS=
+
+SNAP_HOME=$(TS_HOME)/software/snap
+SNAP=$(SNAP_HOME)/snap/snap-aligner
+SNAP_ARGS=
 
 MOSAIK_HOME=$(TS_HOME)/software/mosaik
 MOSAIK_ALIGN=$(MOSAIK_HOME)/MosaikAligner
@@ -63,6 +70,9 @@ $(BOWTIE2):
 $(BWA):
 	$(MAKE) -C $(BWA_HOME)
 
+$(SNAP):
+	$(MAKE) -C $(BWA_HOME)
+
 $(MOSAIK_ALIGN) $(MOSAIK_BUILD):
 	$(MAKE) -C $(MOSAIK_HOME)
 
@@ -70,6 +80,7 @@ $(MOSAIK_ALIGN) $(MOSAIK_BUILD):
 include ../mason.mk
 include ../bowtie2ts.mk
 include ../bwamemts.mk
+include ../snapts.mk
 include ../mosaikts.mk
 include ../predict.mk
 
@@ -80,7 +91,7 @@ clean:
 	rm -rf *.ts
 
 .PHONY: preds
-preds: preds_bt2 preds_bwamem preds_mosaik
+preds: preds_bt2 preds_bwamem preds_snap preds_mosaik
 
 .PHONY: preds_bt2
 preds_bt2: \
@@ -105,8 +116,13 @@ preds_mosaik: \
     r0_mosaik_mason_ill_100_100k.pred \
     r0_mosaik_mason_ill_250_100k.pred
 
+.PHONY: preds_snap
+preds_snap: \
+    r0_snap_mason_ill_100_100k.pred \
+    r0_snap_mason_ill_250_100k.pred
+
 .PHONY: tss
-tss: tss_bt2 tss_bwamem tss_mosaik
+tss: tss_bt2 tss_bwamem tss_snap tss_mosaik
 
 .PHONY: tss_bt2
 tss_bt2: \
@@ -130,6 +146,11 @@ tss_bwamem: \
 tss_mosaik: \
     r0_mosaik_mason_ill_100_100k.ts \
     r0_mosaik_mason_ill_250_100k.ts
+
+.PHONY: tss_snap
+tss_snap: \
+    r0_snap_mason_ill_100_100k.ts \
+    r0_snap_mason_ill_250_100k.ts
 
 .PHONY: reads
 reads: \
@@ -157,6 +178,8 @@ $(eval $(call bwamemts,bwamem250,100000,100000,,-I 750$(,)62,$(HG_FASTA),$(HG_IN
 $(eval $(call mosaikts,mosaik,100000,100000,,-a fast,$(HG_FASTA),$(HG_INDEX)))
 #$(eval $(call mosaikts,mosaik100,100000,100000,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
 #$(eval $(call mosaikts,mosaik250,100000,100000,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
+
+$(eval $(call snapts,snap,100000,100000,,-a fast,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_100k,$(HG_FASTA),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_100k,$(HG_FASTA),250,100000,7724))
