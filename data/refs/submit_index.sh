@@ -56,7 +56,7 @@ cat > .hg19.snap.sh <<EOF
 #PBS -l pvmem=60gb
 #PBS -l mem=60gb
 cd $PWD
-$TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/hg19.fa hg19.fa.snap
+$TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/hg19.fa hg19.fa.snap -bSpace
 EOF
 echo qsub .hg19.snap.sh
 
@@ -114,7 +114,7 @@ cat > .mm10.snap.sh <<EOF
 #PBS -l pvmem=60gb
 #PBS -l mem=60gb
 cd $PWD
-$TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/mm10.fa mm10.fa.snap
+$TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/mm10.fa mm10.fa.snap -bSpace
 EOF
 echo qsub .mm10.snap.sh
 
@@ -172,6 +172,6 @@ cat > .zm_AGPv3.snap.sh <<EOF
 #PBS -l pvmem=60gb
 #PBS -l mem=60gb
 cd $PWD
-$TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/zm_AGPv3.fa zm_AGPv3.fa.snap
+$TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/zm_AGPv3.fa zm_AGPv3.fa.snap -bSpace
 EOF
 echo qsub .zm_AGPv3.snap.sh
