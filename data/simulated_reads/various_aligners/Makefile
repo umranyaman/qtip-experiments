@@ -152,7 +152,9 @@ tss_bwamem: \
 .PHONY: tss_snap
 tss_snap: \
     r0_snap_mason_ill_100_100k.ts \
-    r0_snap_mason_ill_250_100k.ts
+    r0_snap_mason_ill_250_100k.ts \
+    r12_snap100_mason_ill_100_100k.ts \
+    r12_snap250_mason_ill_250_100k.ts
 
 .PHONY: reads
 reads: \
