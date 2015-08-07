@@ -91,7 +91,8 @@ clean:
 	rm -rf *.ts
 
 .PHONY: preds
-preds: preds_bt2 preds_bwamem preds_snap preds_mosaik
+preds: preds_bt2 preds_bwamem preds_snap
+#preds: preds_bt2 preds_bwamem preds_snap preds_mosaik
 
 .PHONY: preds_bt2
 preds_bt2: \
@@ -111,10 +112,10 @@ preds_bwamem: \
     r12_bwamem100_mason_ill_100_100k.pred \
     r12_bwamem250_mason_ill_250_100k.pred
 
-.PHONY: preds_mosaik
-preds_mosaik: \
-    r0_mosaik_mason_ill_100_100k.pred \
-    r0_mosaik_mason_ill_250_100k.pred
+#.PHONY: preds_mosaik
+#preds_mosaik: \
+#    r0_mosaik_mason_ill_100_100k.pred \
+#    r0_mosaik_mason_ill_250_100k.pred
 
 .PHONY: preds_snap
 preds_snap: \
@@ -122,7 +123,8 @@ preds_snap: \
     r0_snap_mason_ill_250_100k.pred
 
 .PHONY: tss
-tss: tss_bt2 tss_bwamem tss_snap tss_mosaik
+tss: tss_bt2 tss_bwamem tss_snap
+#tss: tss_bt2 tss_bwamem tss_snap tss_mosaik
 
 .PHONY: tss_bt2
 tss_bt2: \
@@ -142,10 +144,10 @@ tss_bwamem: \
     r12_bwamem100_mason_ill_100_100k.ts \
     r12_bwamem250_mason_ill_250_100k.ts
 
-.PHONY: tss_mosaik
-tss_mosaik: \
-    r0_mosaik_mason_ill_100_100k.ts \
-    r0_mosaik_mason_ill_250_100k.ts
+#.PHONY: tss_mosaik
+#tss_mosaik: \
+#    r0_mosaik_mason_ill_100_100k.ts \
+#    r0_mosaik_mason_ill_250_100k.ts
 
 .PHONY: tss_snap
 tss_snap: \

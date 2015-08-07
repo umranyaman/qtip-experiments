@@ -27,6 +27,8 @@ def handle_dir(dirname, dry_run=True):
     with open(os.path.join(dirname, 'Makefile')) as fh:
         in_reads = False
         for ln in fh:
+            if ln[0] == '#':
+                continue
             if tss_re.match(ln):
                 in_reads = True
             elif in_reads:
