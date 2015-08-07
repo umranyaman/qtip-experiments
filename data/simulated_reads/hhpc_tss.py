@@ -42,12 +42,17 @@ def handle_dir(dirname, dry_run=True):
                     elif os.path.exists(target_full):
                         # delete it???
                         pass
+                    my_mem_gb = mem_gb
+                    if '_bwamem' in target_full:
+                        my_mem_gb = 12
+                    if '_snap' in target_full:
+                        my_mem_gb = 64
                     pbs_lns = list()
                     pbs_lns.append('#PBS -q batch')
                     pbs_lns.append('#PBS -l walltime=48:00:00')
                     pbs_lns.append('#PBS -j n')
                     for mem_arg in ['pmem', 'vmem', 'pvmem', 'mem']:
-                        pbs_lns.append('#PBS -l %s=%dgb' % (mem_arg, mem_gb))
+                        pbs_lns.append('#PBS -l %s=%dgb' % (mem_arg, my_mem_gb))
                     pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
                     pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
