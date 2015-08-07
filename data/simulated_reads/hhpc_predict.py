@@ -27,6 +27,8 @@ def handle_dir(dirname, dry_run=True):
     with open(os.path.join(dirname, 'Makefile')) as fh:
         in_reads = False
         for ln in fh:
+            if ln[0] == '#':
+                continue
             if pred_re.match(ln):
                 in_reads = True
             elif in_reads:
@@ -53,19 +55,20 @@ def handle_dir(dirname, dry_run=True):
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
                     pbs_lns.append('if make %s ; then touch %s/DONE ; fi' % (target, target))
-                    qsub_dir = '.pred_qsubs'
-                    mkdir_quiet(qsub_dir)
-                    cur_dir = os.getcwd()
-                    os.chdir(qsub_dir)
-                    qsub_fn = '.%s.%d.sh' % (target, idx)
-                    with open(qsub_fn, 'w') as ofh:
+                    #qsub_dir = '.pred_qsubs'
+                    #mkdir_quiet(qsub_dir)
+                    #cur_dir = os.getcwd()
+                    #os.chdir(qsub_dir)
+                    qsub_basename = '.' + target + '.sh'
+                    qsub_fullname = os.path.join(dirname, qsub_basename)
+                    with open(qsub_fullname, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1
-                    print 'qsub %s' % qsub_fn
+                    print 'pushd %s && qsub %s && popd' % (dirname, qsub_basename)
                     if not dry_run:
-                        os.system('qsub %s' % qsub_fn)
+                        os.system('cd %s && qsub %s' % (dirname, qsub_basename))
                         time.sleep(0.2)
-                    os.chdir(cur_dir)
+                    #os.chdir(cur_dir)
 
 
 def go():
