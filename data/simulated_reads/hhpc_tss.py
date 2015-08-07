@@ -67,7 +67,7 @@ def handle_dir(dirname, dry_run=True):
                     mkdir_quiet(qsub_dir)
                     cur_dir = os.getcwd()
                     os.chdir(qsub_dir)
-                    qsub_fn = '.%s.%d.sh' % (target, idx)
+                    qsub_fn = os.path.join(dirname, '.' + target + '.sh')
                     with open(qsub_fn, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1
