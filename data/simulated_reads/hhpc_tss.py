@@ -67,13 +67,14 @@ def handle_dir(dirname, dry_run=True):
                     #mkdir_quiet(qsub_dir)
                     #cur_dir = os.getcwd()
                     #os.chdir(qsub_dir)
-                    qsub_fn = os.path.join(dirname, '.' + target + '.sh')
-                    with open(qsub_fn, 'w') as ofh:
+                    qsub_basename = '.' + target + '.sh'
+                    qsub_fullname = os.path.join(dirname, qsub_basename)
+                    with open(qsub_fullname, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1
-                    print 'pushd %s && qsub %s && popd' % (dirname, qsub_fn)
+                    print 'pushd %s && qsub %s && popd' % (dirname, qsub_basename)
                     if not dry_run:
-                        os.system('cd %s && qsub %s' % (dirname, qsub_fn))
+                        os.system('cd %s && qsub %s' % (dirname, qsub_basename))
                         time.sleep(0.2)
                     #os.chdir(cur_dir)
 
