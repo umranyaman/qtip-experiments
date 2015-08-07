@@ -62,7 +62,7 @@ def handle_dir(dirname, dry_run=True):
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                     pbs_lns.append('export TMPDIR=/scratch1/langmead-fs1/temp/langmead')
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
-                    pbs_lns.append('if make -C %s %s ; then touch %s/DONE ; fi' % (dirname, target, target))
+                    pbs_lns.append('if make %s ; then touch %s/DONE ; fi' % (dirname, target, target))
                     #qsub_dir = '.tss_qsubs'
                     #mkdir_quiet(qsub_dir)
                     #cur_dir = os.getcwd()
@@ -71,9 +71,9 @@ def handle_dir(dirname, dry_run=True):
                     with open(qsub_fn, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1
-                    print 'qsub %s' % qsub_fn
+                    print 'pushd %s && qsub %s && popd' % (dirname, qsub_fn)
                     if not dry_run:
-                        os.system('qsub %s' % qsub_fn)
+                        os.system('cd %s && qsub %s' % (dirname, qsub_fn))
                         time.sleep(0.2)
                     #os.chdir(cur_dir)
 
