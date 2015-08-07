@@ -49,6 +49,8 @@ def handle_dir(dirname, dry_run=True):
                         my_mem_gb = 12
                     if '_snap' in target_full:
                         my_mem_gb = 64
+                    if '_10M.' in target_full:
+                        my_mem_gb = int(my_mem_gb * 1.5)
                     pbs_lns = list()
                     pbs_lns.append('#PBS -q batch')
                     pbs_lns.append('#PBS -l walltime=48:00:00')
