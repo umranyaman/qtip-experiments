@@ -41,6 +41,10 @@ BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
 BT2_ARGS=
 
+SNAP_HOME=$(TS_HOME)/software/snap
+SNAP=$(SNAP_HOME)/snap/snap-aligner
+SNAP_ARGS=
+
 $(BOWTIE2):
 	$(MAKE) -C $(BOWTIE2_HOME)
 
