@@ -46,6 +46,7 @@ $(BOWTIE2):
 
 include ../mason.mk
 include ../bowtie2ts.mk
+include ../snapts.mk
 include ../predict.mk
 
 .PHONY: clean
@@ -53,27 +54,33 @@ clean:
 	rm -f *.fq.gz
 	rm -rf *.ts *.pred
 
-.PHONY: preds
-preds: \
-    r0_bt2s_mason_ill_100_10M.pred \
-    r0_bt2sl_mason_ill_100_10M.pred \
-    r0_bt2s_mason_ill_250_10M.pred \
-    r0_bt2sl_mason_ill_250_10M.pred \
-    r12_bt2s100_mason_ill_100_10M.pred \
-    r12_bt2sl100_mason_ill_100_10M.pred \
-    r12_bt2s250_mason_ill_250_10M.pred \
-    r12_bt2sl250_mason_ill_250_10M.pred
+.PHONY: preds_bt2 preds_snap
 
-.PHONY: tss
-tss: \
+preds_bt2: \
+    r0_bt2s_mason_ill_100_10M.pred \
+    r0_bt2s_mason_ill_250_10M.pred \
+    r12_bt2s100_mason_ill_100_10M.pred \
+    r12_bt2s250_mason_ill_250_10M.pred
+
+preds_snap: \
+    r0_snap_mason_ill_100_10M.pred \
+    r0_snap_mason_ill_250_10M.pred \
+    r12_snap100_mason_ill_100_10M.pred \
+    r12_snap250_mason_ill_250_10M.pred
+
+.PHONY: tss_bt2 tss_snap
+
+tss_bt2: \
     r0_bt2s_mason_ill_100_10M.ts \
-    r0_bt2sl_mason_ill_100_10M.ts \
     r0_bt2s_mason_ill_250_10M.ts \
-    r0_bt2sl_mason_ill_250_10M.ts \
     r12_bt2s100_mason_ill_100_10M.ts \
-    r12_bt2sl100_mason_ill_100_10M.ts \
-    r12_bt2s250_mason_ill_250_10M.ts \
-    r12_bt2sl250_mason_ill_250_10M.ts
+    r12_bt2s250_mason_ill_250_10M.ts
+
+tss_snap: \
+    r0_snap_mason_ill_100_10M.ts \
+    r0_snap_mason_ill_250_10M.ts \
+    r12_snap100_mason_ill_100_10M.ts \
+    r12_snap250_mason_ill_250_10M.ts
 
 .PHONY: reads
 reads: \
@@ -83,11 +90,12 @@ reads: \
     r1_mason_ill_250_10M.fq.gz
 
 $(eval $(call bt2ts,bt2s,50000,50000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl,50000,50000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2s100,50000,50000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl100,50000,50000,,-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2s250,50000,50000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl250,50000,50000,,-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+
+$(eval $(call snapts,snap,100000,100000,,,,,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snapts100,100000,100000,,,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snapts250,100000,100000,,,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_10M,$(HG_FASTA),100,10000000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_10M,$(HG_FASTA),250,10000000,7724))
