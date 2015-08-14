@@ -1,6 +1,6 @@
 # Must already have a "built" version of the FASTA reference somewhere
 
-TS=python $(TS_HOME)/bin/ts.py
+TS=python -W error $(TS_HOME)/bin/ts.py
 TS_ARGS=--compress-output --verbose --write-all
 
 r0_%.fq.mkb: r0_%.fq.gz

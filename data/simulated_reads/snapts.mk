@@ -11,7 +11,7 @@
 # 8. Reference to use
 # 9. Index to use
 
-TS=python $(TS_HOME)/bin/ts.py
+TS=python -W error $(TS_HOME)/bin/ts.py
 TS_ARGS=--compress-output --verbose --write-all
 
 define snapts
