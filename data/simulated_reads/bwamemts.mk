@@ -1,6 +1,6 @@
 # Must already have a BWA index of the FASTA reference somewhere
 
-TS=python -W error $(TS_HOME)/bin/ts.py
+TS=python $(TS_HOME)/bin/ts.py
 TS_ARGS=--compress-output --verbose --write-all
 
 define bwamemts

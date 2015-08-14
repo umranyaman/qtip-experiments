@@ -1,4 +1,4 @@
-PRED=python -W error $(TS_HOME)/bin/predict.py
+PRED=python $(TS_HOME)/bin/predict.py
 PRED_ARGS=--write-all
 
 %.pred: %.ts
