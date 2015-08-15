@@ -98,8 +98,8 @@ $(eval $(call bt2ts,bt2s100,50000,50000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$
 $(eval $(call bt2ts,bt2s250,50000,50000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call snapts,snap,100000,100000,,,,,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call snapts,snapts100,100000,100000,,,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call snapts,snapts250,100000,100000,,,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snap100,100000,100000,,,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snap250,100000,100000,,,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_10M,$(HG_FASTA),100,10000000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_10M,$(HG_FASTA),250,10000000,7724))
