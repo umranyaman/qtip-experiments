@@ -1,7 +1,7 @@
 # Must already have a Bowtie 2 index of the FASTA reference somewhere
 
 TS=python $(TS_HOME)/bin/ts.py
-TS_ARGS=--compress-output --verbose --write-all
+TS_ARGS=--compress-output --verbose --write-all --input-reads-simulated
 BT2_EXTRA_ARGS=--mm
 
 define bt2ts
