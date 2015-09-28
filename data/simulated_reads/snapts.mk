@@ -11,7 +11,7 @@
 # 8. Reference to use
 # 9. Index to use
 
-TS+=python $(TS_HOME)/src/ts.py
+TS=python $(TS_HOME)/src/ts.py
 TS_ARGS+=
 SNAP_ARGS+=-t 1
 
