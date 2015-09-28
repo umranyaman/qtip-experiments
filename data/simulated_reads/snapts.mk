@@ -12,7 +12,7 @@
 # 9. Index to use
 
 TS=python $(TS_HOME)/src/ts.py
-SNAP_ARGS+=-t 1
+SNAP_ARGS+=-t 1 -=
 
 define snapts
 
