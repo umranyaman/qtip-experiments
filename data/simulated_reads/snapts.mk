@@ -12,7 +12,7 @@
 # 9. Index to use
 
 TS=python $(TS_HOME)/src/ts.py
-TS_ARGS=--compress-output --verbose --write-all --input-reads-simulated
+TS_ARGS=
 
 define snapts
 
