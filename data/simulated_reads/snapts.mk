@@ -13,6 +13,7 @@
 
 TS=python $(TS_HOME)/src/ts.py
 SNAP_ARGS+=-t 1 -=
+SNAP_TS_ARGS=--write-orig-mapq
 
 define snapts
 
