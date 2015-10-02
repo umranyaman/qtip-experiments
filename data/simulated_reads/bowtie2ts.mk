@@ -9,7 +9,6 @@ r0_$1_%.out: r0_%.fq.gz
 	$$(TS) --ref $6 \
 	       --bt2-exe $$(BOWTIE2) \
 	       --index $7 \
-	       --sim-fraction 0.01 \
 	       --sim-unp-min $2 \
 	       $$(BT2_TS_ARGS) $$(TS_ARGS) $4 \
 	       --output-directory $$@ \
@@ -22,7 +21,6 @@ r12_$1_%.out: r1_%.fq.gz
 	$$(TS) --ref $6 \
 	       --bt2-exe $$(BOWTIE2) \
 	       --index $7 \
-	       --sim-fraction 0.01 \
 	       --sim-conc-min $2 --sim-disc-min $3 --sim-bad-end-min $3 \
 	       $$(BT2_TS_ARGS) $$(TS_ARGS) $4 \
 	       --output-directory $$@ \
