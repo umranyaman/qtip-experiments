@@ -33,6 +33,12 @@ endif
 ifeq ($(wildcard $(HG_INDEX).1.bt2),) 
 $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
+ifeq ($(wildcard $(HG_INDEX).amb),)
+$(error "$(HG_INDEX).amb doesn't exist")
+endif
+ifeq ($(wildcard $(HG_INDEX).snap),)
+$(error "$(HG_INDEX).snap doesn't exist")
+endif
 
 .PHONY: all
 all: tss
@@ -41,6 +47,10 @@ BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
 BT2_ARGS=
 
+BWA_HOME=$(TS_HOME)/software/bwa
+BWA=$(BWA_HOME)/bwa
+BWA_ARGS=
+
 SNAP_HOME=$(TS_HOME)/software/snap
 SNAP=$(SNAP_HOME)/snap/snap-aligner
 SNAP_ARGS=
@@ -48,61 +58,63 @@ SNAP_ARGS=
 $(BOWTIE2):
 	$(MAKE) -C $(BOWTIE2_HOME)
 
+$(BWA):
+	$(MAKE) -C $(BWA_HOME)
+
+$(SNAP):
+	$(MAKE) -C $(BWA_HOME)
+
 include ../mason.mk
 include ../bowtie2ts.mk
+include ../bwamemts.mk
 include ../snapts.mk
-include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
 	rm -rf *.ts *.pred
 
-.PHONY: preds_bt2 preds_snap
+.PHONY: out_bt2 out_snap out_bwamem
 
-preds_bt2: \
-    r0_bt2s_mason_ill_100_10M.pred \
-    r0_bt2s_mason_ill_250_10M.pred \
-    r12_bt2s100_mason_ill_100_10M.pred \
-    r12_bt2s250_mason_ill_250_10M.pred
+out_bt2: \
+    r0_bt2s_mason_ill_100_50M.out \
+    r0_bt2s_mason_ill_250_50M.out \
+    r12_bt2s100_mason_ill_100_50M.out \
+    r12_bt2s250_mason_ill_250_50M.out
 
-preds_snap: \
-    r0_snap_mason_ill_100_10M.pred \
-    r0_snap_mason_ill_250_10M.pred \
-    r12_snap100_mason_ill_100_10M.pred \
-    r12_snap250_mason_ill_250_10M.pred
+out_snap: \
+    r0_snap_mason_ill_100_50M.out \
+    r0_snap_mason_ill_250_50M.out \
+    r12_snap100_mason_ill_100_50M.out \
+    r12_snap250_mason_ill_250_50M.out
 
-.PHONY: tss_bt2 tss_snap
-
-tss_bt2: \
-    r0_bt2s_mason_ill_100_10M.ts \
-    r0_bt2s_mason_ill_250_10M.ts \
-    r12_bt2s100_mason_ill_100_10M.ts \
-    r12_bt2s250_mason_ill_250_10M.ts
-
-tss_snap: \
-    r0_snap_mason_ill_100_10M.ts \
-    r0_snap_mason_ill_250_10M.ts \
-    r12_snap100_mason_ill_100_10M.ts \
-    r12_snap250_mason_ill_250_10M.ts
+out_bwamem: \
+    r0_bwamem_mason_ill_100_50M.out \
+    r0_bwamem_mason_ill_250_50M.out \
+    r12_bwamem100_mason_ill_100_50M.out \
+    r12_bwamem250_mason_ill_250_50M.out
 
 .PHONY: reads
 reads: \
-    r0_mason_ill_100_10M.fq.gz \
-    r0_mason_ill_250_10M.fq.gz \
-    r1_mason_ill_100_10M.fq.gz \
-    r1_mason_ill_250_10M.fq.gz
+    r0_mason_ill_100_50M.fq.gz \
+    r0_mason_ill_250_50M.fq.gz \
+    r1_mason_ill_100_50M.fq.gz \
+    r1_mason_ill_250_50M.fq.gz
 
-$(eval $(call bt2ts,bt2s,50000,50000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s100,50000,50000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s250,50000,50000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,1,1,,,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100,1,1,,-I 200 -X 400,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s250,1,1,,-I 500 -X 1000,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call snapts,snap,100000,100000,,,,,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call snapts,snap100,100000,100000,,,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call snapts,snap250,100000,100000,,,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem,1,1,,,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem100,1,1,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem250,1,1,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call mason_ill_unp_reads,ill_100_10M,$(HG_FASTA),100,10000000,7724))
-$(eval $(call mason_ill_unp_reads,ill_250_10M,$(HG_FASTA),250,10000000,7724))
+$(eval $(call snapts,snap,1,1,,,,,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snap100,1,1,,,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snap250,1,1,,,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call mason_ill_pair_reads,ill_100_10M,$(HG_FASTA),100,10000000,300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_250_10M,$(HG_FASTA),250,10000000,750,250,7724))
+$(eval $(call mason_ill_unp_reads,ill_100_50M,$(HG_FASTA),100,50000000,7724))
+$(eval $(call mason_ill_unp_reads,ill_250_50M,$(HG_FASTA),250,50000000,7724))
+
+$(eval $(call mason_ill_pair_reads,ill_100_50M,$(HG_FASTA),100,50000000,300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_250_50M,$(HG_FASTA),250,50000000,750,250,7724))
