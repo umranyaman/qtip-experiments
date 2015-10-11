@@ -41,7 +41,7 @@ $(error "$(HG_INDEX).snap doesn't exist")
 endif
 
 .PHONY: all
-all: tss
+all: outs
 
 BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
@@ -72,9 +72,10 @@ include ../snapts.mk
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
-	rm -rf *.ts *.pred
+	rm -rf *.out
 
-.PHONY: out_bt2 out_snap out_bwamem
+.PHONY: outs
+outs: out_bt2 out_snap out_bwamem
 
 out_bt2: \
     r0_bt2s_mason_ill_100_50M.out \

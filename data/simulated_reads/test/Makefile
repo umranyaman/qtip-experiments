@@ -35,7 +35,7 @@ $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
 
 .PHONY: all
-all: tss
+all: outs
 
 BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
@@ -46,50 +46,30 @@ $(BOWTIE2):
 
 include ../mason.mk
 include ../bowtie2ts.mk
-include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
-	rm -rf *.ts
+	rm -rf *.out
 
-.PHONY: preds
-preds: preds_unpaired preds_paired
+.PHONY: outs
+outs: out_unpaired out_paired
 
-.PHONY: preds_unpaired
-preds_unpaired: \
-    r0_bt2s_mason_ill_250_1_100k.pred \
-    r0_bt2s_mason_ill_250_2_100k.pred \
-    r0_bt2s_mason_ill_250_3_100k.pred \
-    r0_bt2s_mason_ill_250_4_100k.pred \
-    r0_bt2s_mason_ill_250_5_100k.pred
+.PHONY: out_unpaired
+out_unpaired: \
+    r0_bt2s_mason_ill_250_1_100k.out \
+    r0_bt2s_mason_ill_250_2_100k.out \
+    r0_bt2s_mason_ill_250_3_100k.out \
+    r0_bt2s_mason_ill_250_4_100k.out \
+    r0_bt2s_mason_ill_250_5_100k.out
 
-.PHONY: preds_paired
-preds_paired: \
-    r12_bt2s100_mason_ill_100_1_100k.pred \
-    r12_bt2s100_mason_ill_100_2_100k.pred \
-    r12_bt2s100_mason_ill_100_3_100k.pred \
-    r12_bt2s100_mason_ill_100_4_100k.pred \
-    r12_bt2s100_mason_ill_100_5_100k.pred
-
-.PHONY: tss
-tss: tss_unpaired tss_paired
-
-.PHONY: tss_unpaired
-tss_unpaired: \
-    r0_bt2s_mason_ill_250_1_100k.ts \
-    r0_bt2s_mason_ill_250_2_100k.ts \
-    r0_bt2s_mason_ill_250_3_100k.ts \
-    r0_bt2s_mason_ill_250_4_100k.ts \
-    r0_bt2s_mason_ill_250_5_100k.ts
-
-.PHONY: tss_paired
-tss_paired: \
-    r12_bt2s100_mason_ill_100_1_100k.ts \
-    r12_bt2s100_mason_ill_100_2_100k.ts \
-    r12_bt2s100_mason_ill_100_3_100k.ts \
-    r12_bt2s100_mason_ill_100_4_100k.ts \
-    r12_bt2s100_mason_ill_100_5_100k.ts
+.PHONY: out_paired
+out_paired: \
+    r12_bt2s100_mason_ill_100_1_100k.out \
+    r12_bt2s100_mason_ill_100_2_100k.out \
+    r12_bt2s100_mason_ill_100_3_100k.out \
+    r12_bt2s100_mason_ill_100_4_100k.out \
+    r12_bt2s100_mason_ill_100_5_100k.out
 
 # Reads
 .PHONY: reads
@@ -105,11 +85,13 @@ reads: \
     r1_mason_ill_100_4_100k.fq.gz \
     r1_mason_ill_100_5_100k.fq.gz
 
+SUBSAMPLING_ARGS=--subsampling-series 0.05,0.1,0.2,0.3,0.4,0.5,1.0 --trials=5 --predict-for-training
+
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s100,100000,100000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,100000,$(SUBSAMPLING_ARGS),,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100,100000,100000,$(SUBSAMPLING_ARGS),-I 200 -X 400,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_250_1_100k,$(HG_FASTA),250,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_2_100k,$(HG_FASTA),250,100000,1523))
