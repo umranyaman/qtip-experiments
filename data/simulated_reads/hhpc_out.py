@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 """
 python hhpc_out.py dry
@@ -35,10 +36,10 @@ def handle_dir(dirname, dry_run=True):
                     in_out = False
                 else:
                     target = ln.split()[0]
-                    print >> sys.stderr, '  Found a .out target: %s' % target
+                    print('  Found a .out target: %s' % target, file=sys.stderr)
                     target_full = os.path.join(dirname, target)
                     if os.path.exists(os.path.join(target_full, 'DONE')):
-                        print >> sys.stderr, '  Skipping target %s because of DONE' % target
+                        print('  Skipping target %s because of DONE' % target, file=sys.stderr)
                         continue
                     elif os.path.exists(target_full):
                         # delete it???
@@ -67,7 +68,7 @@ def handle_dir(dirname, dry_run=True):
                     with open(qsub_fullname, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1
-                    print 'pushd %s && qsub %s && popd' % (dirname, qsub_basename)
+                    print('pushd %s && qsub %s && popd' % (dirname, qsub_basename))
                     if not dry_run:
                         os.system('cd %s && qsub %s' % (dirname, qsub_basename))
                         time.sleep(0.5)
@@ -82,10 +83,10 @@ def go():
         raise RuntimeError('Must have TS_INDEXES set')
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
-            print >> sys.stderr, 'Found a Makefile: %s' % (os.path.join(dirname, 'Makefile'))
+            print('Found a Makefile: %s' % (os.path.join(dirname, 'Makefile')), file=sys.stderr)
             handle_dir(dirname, dry_run=sys.argv[1] == 'dry')
 
 if len(sys.argv) == 1:
-    print "pass argument 'dry' for dry run, or 'wet' for normal run"
+    print("pass argument 'dry' for dry run, or 'wet' for normal run")
 else:
     go()
