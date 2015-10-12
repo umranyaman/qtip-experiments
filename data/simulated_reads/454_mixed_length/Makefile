@@ -35,7 +35,7 @@ $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
 
 .PHONY: all
-all: tss
+all: outs
 
 BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
@@ -46,31 +46,27 @@ $(BOWTIE2):
 
 include ../mason.mk
 include ../bowtie2ts.mk
-include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
-	rm -rf *.ts
+	rm -rf *.out
 
-.PHONY: preds
-preds: \
-    r0_bt2s_mason_fff_50to500_100k.pred \
-    r0_bt2sl_mason_fff_50to500_100k.pred
-
-.PHONY: tss
-tss: \
-    r0_bt2s_mason_fff_50to500_100k.ts \
-    r0_bt2sl_mason_fff_50to500_100k.ts
+.PHONY: outs
+outs: \
+    r0_bt2s_mason_fff_50to500_100k.out \
+    r0_bt2sl_mason_fff_50to500_100k.out
 
 .PHONY: reads
 reads: \
     r0_mason_fff_50to500_100k.fq.gz
 
+SUBSAMPLING_ARGS=--subsampling-series 0.05,0.1,0.2,0.3,0.4,0.5,1.0 --trials=5 --predict-for-training --keep-intermediates
+
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl,100000,100000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,100000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,100000,100000,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_fff_unp_reads,fff_50to500_100k,$(HG_FASTA),275,225,100000,7724))

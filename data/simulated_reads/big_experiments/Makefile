@@ -75,21 +75,21 @@ clean:
 	rm -rf *.out
 
 .PHONY: outs
-outs: out_bt2 out_snap out_bwamem
+outs: outs_bt2 outs_snap outs_bwamem
 
-out_bt2: \
+outs_bt2: \
     r0_bt2s_mason_ill_100_50M.out \
     r0_bt2s_mason_ill_250_50M.out \
     r12_bt2s100_mason_ill_100_50M.out \
     r12_bt2s250_mason_ill_250_50M.out
 
-out_snap: \
+outs_snap: \
     r0_snap_mason_ill_100_50M.out \
     r0_snap_mason_ill_250_50M.out \
     r12_snap100_mason_ill_100_50M.out \
     r12_snap250_mason_ill_250_50M.out
 
-out_bwamem: \
+outs_bwamem: \
     r0_bwamem_mason_ill_100_50M.out \
     r0_bwamem_mason_ill_250_50M.out \
     r12_bwamem100_mason_ill_100_50M.out \

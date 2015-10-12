@@ -30,21 +30,18 @@ HG_INDEX=$(TS_INDEXES)/$(HG_INDEX_BASE)
 ifeq ($(wildcard $(HG_FASTA)),) 
 $(error "$(HG_FASTA) doesn't exist")
 endif
-ifeq ($(wildcard $(HG_INDEX).1.bt2),) 
+ifeq ($(wildcard $(HG_INDEX).1.bt2),)
 $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
 ifeq ($(wildcard $(HG_INDEX).amb),) 
 $(error "$(HG_INDEX).amb doesn't exist")
-endif
-ifeq ($(wildcard $(HG_INDEX).mosaik),)
-$(error "$(HG_INDEX).mosaik doesn't exist")
 endif
 ifeq ($(wildcard $(HG_INDEX).snap),)
 $(error "$(HG_INDEX).snap doesn't exist")
 endif
 
 .PHONY: all
-all: tss
+all: outs
 
 BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
@@ -58,12 +55,6 @@ SNAP_HOME=$(TS_HOME)/software/snap
 SNAP=$(SNAP_HOME)/snap/snap-aligner
 SNAP_ARGS=
 
-MOSAIK_HOME=$(TS_HOME)/software/mosaik
-MOSAIK_ALIGN=$(MOSAIK_HOME)/MosaikAligner
-MOSAIK_BUILD=$(MOSAIK_HOME)/MosaikBuild
-MOSAIK_ALIGN_ARGS=
-MOSAIK_BUILD_ARGS=
-
 $(BOWTIE2):
 	$(MAKE) -C $(BOWTIE2_HOME)
 
@@ -71,90 +62,47 @@ $(BWA):
 	$(MAKE) -C $(BWA_HOME)
 
 $(SNAP):
-	$(MAKE) -C $(BWA_HOME)
-
-$(MOSAIK_ALIGN) $(MOSAIK_BUILD):
-	$(MAKE) -C $(MOSAIK_HOME)
+	$(MAKE) -C $(SNAP_HOME)
 
 
 include ../mason.mk
 include ../bowtie2ts.mk
 include ../bwamemts.mk
 include ../snapts.mk
-include ../mosaikts.mk
-include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
 	rm -f *.mkb
-	rm -rf *.ts
+	rm -rf *.out
 
-.PHONY: preds
-preds: preds_bt2 preds_bwamem preds_snap
-#preds: preds_bt2 preds_bwamem preds_snap preds_mosaik
+.PHONY: outs
+outs: outs_bt2 outs_bwamem outs_snap
 
-.PHONY: preds_bt2
-preds_bt2: \
-    r0_bt2s_mason_ill_100_100k.pred \
-    r0_bt2s_mason_ill_250_100k.pred \
-    r12_bt2s100_mason_ill_100_100k.pred \
-    r12_bt2s250_mason_ill_250_100k.pred \
-    r0_bt2sl_mason_ill_100_100k.pred \
-    r0_bt2sl_mason_ill_250_100k.pred \
-    r12_bt2sl100_mason_ill_100_100k.pred \
-    r12_bt2sl250_mason_ill_250_100k.pred
+.PHONY: outs_bt2
+outs_bt2: \
+    r0_bt2s_mason_ill_100_100k.out \
+    r0_bt2s_mason_ill_250_100k.out \
+    r12_bt2s100_mason_ill_100_100k.out \
+    r12_bt2s250_mason_ill_250_100k.out \
+    r0_bt2sl_mason_ill_100_100k.out \
+    r0_bt2sl_mason_ill_250_100k.out \
+    r12_bt2sl100_mason_ill_100_100k.out \
+    r12_bt2sl250_mason_ill_250_100k.out
 
-.PHONY: preds_bwamem
-preds_bwamem: \
-    r0_bwamem_mason_ill_100_100k.pred \
-    r0_bwamem_mason_ill_250_100k.pred \
-    r12_bwamem100_mason_ill_100_100k.pred \
-    r12_bwamem250_mason_ill_250_100k.pred
+.PHONY: outs_bwamem
+outs_bwamem: \
+    r0_bwamem_mason_ill_100_100k.out \
+    r0_bwamem_mason_ill_250_100k.out \
+    r12_bwamem100_mason_ill_100_100k.out \
+    r12_bwamem250_mason_ill_250_100k.out
 
-#.PHONY: preds_mosaik
-#preds_mosaik: \
-#    r0_mosaik_mason_ill_100_100k.pred \
-#    r0_mosaik_mason_ill_250_100k.pred
-
-.PHONY: preds_snap
-preds_snap: \
-    r0_snap_mason_ill_100_100k.pred \
-    r0_snap_mason_ill_250_100k.pred
-
-.PHONY: tss
-tss: tss_bt2 tss_bwamem tss_snap
-#tss: tss_bt2 tss_bwamem tss_snap tss_mosaik
-
-.PHONY: tss_bt2
-tss_bt2: \
-    r0_bt2s_mason_ill_100_100k.ts \
-    r0_bt2s_mason_ill_250_100k.ts \
-    r12_bt2s100_mason_ill_100_100k.ts \
-    r12_bt2s250_mason_ill_250_100k.ts \
-    r0_bt2sl_mason_ill_100_100k.ts \
-    r0_bt2sl_mason_ill_250_100k.ts \
-    r12_bt2sl100_mason_ill_100_100k.ts \
-    r12_bt2sl250_mason_ill_250_100k.ts
-
-.PHONY: tss_bwamem
-tss_bwamem: \
-    r0_bwamem_mason_ill_100_100k.ts \
-    r0_bwamem_mason_ill_250_100k.ts \
-    r12_bwamem100_mason_ill_100_100k.ts \
-    r12_bwamem250_mason_ill_250_100k.ts
-
-#.PHONY: tss_mosaik
-#tss_mosaik: \
-#    r0_mosaik_mason_ill_100_100k.ts \
-#    r0_mosaik_mason_ill_250_100k.ts
-
-.PHONY: tss_snap
-tss_snap: \
-    r0_snap_mason_ill_100_100k.ts \
-    r0_snap_mason_ill_250_100k.ts \
-    r12_snap100_mason_ill_100_100k.ts \
-    r12_snap250_mason_ill_250_100k.ts
+.PHONY: outs_snap
+outs_snap: \
+    r0_snap_mason_ill_100_100k.out \
+    r0_snap_mason_ill_250_100k.out \
+    r12_snap100_mason_ill_100_100k.out \
+    r12_snap250_mason_ill_250_100k.out
 
 .PHONY: reads
 reads: \
@@ -163,29 +111,27 @@ reads: \
     r1_mason_ill_100_100k.fq.gz \
     r1_mason_ill_250_100k.fq.gz
 
+SUBSAMPLING_ARGS=--subsampling-series 0.05,0.1,0.2,0.3,0.4,0.5,1.0 --trials=5 --predict-for-training --keep-intermediates
+
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl,100000,100000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s100,100000,100000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl100,100000,100000,,-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s250,100000,100000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl250,100000,100000,,-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,100000,100000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,100000,100000,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100,100000,100000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl100,100000,100000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s250,100000,100000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl250,100000,100000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 
 , := ,
 
-$(eval $(call bwamemts,bwamem,100000,100000,,,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bwamemts,bwamem100,100000,100000,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bwamemts,bwamem250,100000,100000,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem,100000,100000,$(SUBSAMPLING_ARGS),,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem100,100000,100000,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bwamemts,bwamem250,100000,100000,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call mosaikts,mosaik,100000,100000,,-a fast,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call mosaikts,mosaik100,100000,100000,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call mosaikts,mosaik250,100000,100000,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
-
-$(eval $(call snapts,snap,100000,100000,,,,,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call snapts,snapts100,100000,100000,,,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call snapts,snapts250,100000,100000,,,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snap,100000,100000,$(SUBSAMPLING_ARGS),,,,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snapts100,100000,100000,$(SUBSAMPLING_ARGS),,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snapts250,100000,100000,$(SUBSAMPLING_ARGS),,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_100k,$(HG_FASTA),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_100k,$(HG_FASTA),250,100000,7724))

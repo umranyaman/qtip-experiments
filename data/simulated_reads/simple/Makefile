@@ -30,12 +30,12 @@ HG_INDEX=$(TS_INDEXES)/$(HG_INDEX_BASE)
 ifeq ($(wildcard $(HG_FASTA)),) 
 $(error "$(HG_FASTA) doesn't exist")
 endif
-ifeq ($(wildcard $(HG_INDEX).1.bt2),) 
+ifeq ($(wildcard $(HG_INDEX).1.bt2),)
 $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
 
 .PHONY: all
-all: tss
+all: outs
 
 BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
@@ -46,34 +46,22 @@ $(BOWTIE2):
 
 include ../mason.mk
 include ../bowtie2ts.mk
-include ../predict.mk
 
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
-	rm -rf *.ts *.pred
+	rm -rf *.out
 
-.PHONY: preds
-preds: \
-    r0_bt2s_mason_ill_100_100k.pred \
-    r0_bt2sl_mason_ill_100_100k.pred \
-    r0_bt2s_mason_ill_250_100k.pred \
-    r0_bt2sl_mason_ill_250_100k.pred \
-    r12_bt2s100_mason_ill_100_100k.pred \
-    r12_bt2sl100_mason_ill_100_100k.pred \
-    r12_bt2s250_mason_ill_250_100k.pred \
-    r12_bt2sl250_mason_ill_250_100k.pred
-
-.PHONY: tss
-tss: \
-    r0_bt2s_mason_ill_100_100k.ts \
-    r0_bt2sl_mason_ill_100_100k.ts \
-    r0_bt2s_mason_ill_250_100k.ts \
-    r0_bt2sl_mason_ill_250_100k.ts \
-    r12_bt2s100_mason_ill_100_100k.ts \
-    r12_bt2sl100_mason_ill_100_100k.ts \
-    r12_bt2s250_mason_ill_250_100k.ts \
-    r12_bt2sl250_mason_ill_250_100k.ts
+.PHONY: outs
+outs: \
+    r0_bt2s_mason_ill_100_100k.out \
+    r0_bt2sl_mason_ill_100_100k.out \
+    r0_bt2s_mason_ill_250_100k.out \
+    r0_bt2sl_mason_ill_250_100k.out \
+    r12_bt2s100_mason_ill_100_100k.out \
+    r12_bt2sl100_mason_ill_100_100k.out \
+    r12_bt2s250_mason_ill_250_100k.out \
+    r12_bt2sl250_mason_ill_250_100k.out
 
 .PHONY: reads
 reads: \
@@ -82,12 +70,14 @@ reads: \
     r1_mason_ill_100_100k.fq.gz \
     r1_mason_ill_250_100k.fq.gz
 
-$(eval $(call bt2ts,bt2s,100000,100000,,--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl,100000,100000,,--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s100,100000,100000,,-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl100,100000,100000,,-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s250,100000,100000,,-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl250,100000,100000,,-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+SUBSAMPLING_ARGS=--subsampling-series 0.05,0.1,0.2,0.3,0.4,0.5,1.0 --trials=5 --predict-for-training --keep-intermediates
+
+$(eval $(call bt2ts,bt2s,100000,100000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,100000,100000,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100,100000,100000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl100,100000,100000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s250,100000,100000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl250,100000,100000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_100k,$(HG_FASTA),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_100k,$(HG_FASTA),250,100000,7724))

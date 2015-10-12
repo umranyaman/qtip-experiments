@@ -30,7 +30,7 @@ HG_INDEX=$(TS_INDEXES)/$(HG_INDEX_BASE)
 ifeq ($(wildcard $(HG_FASTA)),) 
 $(error "$(HG_FASTA) doesn't exist")
 endif
-ifeq ($(wildcard $(HG_INDEX).1.bt2),) 
+ifeq ($(wildcard $(HG_INDEX).1.bt2),)
 $(error "$(HG_INDEX).1.bt2 doesn't exist")
 endif
 
@@ -53,26 +53,25 @@ clean:
 	rm -rf *.out
 
 .PHONY: outs
-outs: out_unpaired out_paired
+outs: outs_unpaired outs_paired
 
-.PHONY: out_unpaired
-out_unpaired: \
+.PHONY: outs_unpaired
+outs_unpaired: \
     r0_bt2s_mason_ill_250_1_100k.out \
     r0_bt2s_mason_ill_250_2_100k.out \
     r0_bt2s_mason_ill_250_3_100k.out \
     r0_bt2s_mason_ill_250_4_100k.out \
     r0_bt2s_mason_ill_250_5_100k.out
 
-.PHONY: out_paired
-out_paired: \
+.PHONY: outs_paired
+outs_paired: \
     r12_bt2s100_mason_ill_100_1_100k.out \
     r12_bt2s100_mason_ill_100_2_100k.out \
     r12_bt2s100_mason_ill_100_3_100k.out \
     r12_bt2s100_mason_ill_100_4_100k.out \
     r12_bt2s100_mason_ill_100_5_100k.out
 
-# Reads
-.PHONY: reads
+å.PHONY: reads
 reads: \
     r0_mason_ill_250_1_100k.fq.gz \
     r0_mason_ill_250_2_100k.fq.gz \
