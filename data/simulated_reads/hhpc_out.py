@@ -17,7 +17,7 @@ import re
 
 
 idx = 0
-re_out = re.compile('^out_[_a-zA-Z01-9]*:.*')
+re_out = re.compile('^outs_[_a-zA-Z01-9]*:.*')
 mem_gb = 8
 
 
