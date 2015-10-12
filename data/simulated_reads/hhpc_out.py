@@ -5,7 +5,7 @@ python hhpc_out.py dry
 
 for dry run: write scripts but doesn't qsub them
 
-python hhpc_out.py dry
+python hhpc_out.py wet
 
 for normal run: write scripts and also qsub them
 """
@@ -19,17 +19,6 @@ import re
 idx = 0
 re_out = re.compile('^out_[_a-zA-Z01-9]*:.*')
 mem_gb = 8
-
-
-def mkdir_quiet(dr):
-    # Create output directory if needed
-    import errno
-    if not os.path.isdir(dr):
-        try:
-            os.makedirs(dr)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
 
 
 def handle_dir(dirname, dry_run=True):
