@@ -109,8 +109,7 @@ r1_mason_ill_100_50M.fq.gz: r1_mason_ill_100_1_50M.fq.gz \
                             r1_mason_ill_100_3_50M.fq.gz \
                             r1_mason_ill_100_4_50M.fq.gz \
                             r1_mason_ill_100_5_50M.fq.gz
-    gzip -dc $^ | gzip -c > $@
-    gzip -dc $^ | gzip -c > $@
+	gzip -dc $^ | gzip -c > $@
 
 $(eval $(call bt2ts,bt2s,1,1,,,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2s100,1,1,,-I 200 -X 400,$(HG_FASTA),$(HG_INDEX)))
