@@ -1,14 +1,6 @@
-BT2_EG=$(BT2_HOME)/example
-MASON=$(TS_HOME)/software/mason/mason
-MASON_CONVERT=python $(TS_HOME)/bin/mason_convert.py
 TS_BWA_HOME=$(TS_HOME)/software/bwa
 TS_SNAP_HOME=$(TS_HOME)/software/snap
 TS_BT2_HOME=$(TS_HOME)/software/bowtie2
-
-# This experiment does not have labeled test data...
-
-# Need to simulate the reads and label them appropriately before we can have
-# a test that fully exercises the prediction module and its summaries.
 
 .PHONY: all
 all: bwamem_paired.sam bt2_paired.sam snap_paired.sam \
