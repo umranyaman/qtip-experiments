@@ -3,6 +3,7 @@ MASON=$(TS_HOME)/software/mason/mason
 MASON_CONVERT=python $(TS_HOME)/bin/mason_convert.py
 TS_BWA_HOME=$(TS_HOME)/software/bwa
 TS_SNAP_HOME=$(TS_HOME)/software/snap
+TS_BT2_HOME=$(TS_HOME)/software/bowtie2
 
 # This experiment does not have labeled test data...
 
@@ -46,7 +47,7 @@ bt2_paired.sam: ERR050082_1.sm_excerpt.fastq ERR050082_2.sm_excerpt.fastq
 		--index $(TS_INDEXES)/hg19.fa \
 		--seed 34 \
 		--aligner bowtie2 \
-		--bt2-exe $(BT2_HOME)/bowtie2 \
+		--bt2-exe $(TS_BT2_HOME)/bowtie2 \
 		--vanilla-output $@ \
 		--write-orig-mapq \
 		--write-precise-mapq
@@ -58,7 +59,7 @@ bt2_unpaired.sam: ERR050082_1.sm_excerpt.fastq,
 		--index $(TS_INDEXES)/hg19.fa \
 		--seed 34 \
 		--aligner bowtie2 \
-		--bt2-exe $(BT2_HOME)/bowtie2 \
+		--bt2-exe $(TS_BT2_HOME)/bowtie2 \
 		--vanilla-output $@ \
 		--write-orig-mapq \
 		--write-precise-mapq
