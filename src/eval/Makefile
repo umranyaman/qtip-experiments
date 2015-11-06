@@ -6,10 +6,10 @@ TS_BT2_HOME=$(TS_HOME)/software/bowtie2
 all: even_tiered_unpaired.csv even_tiered_paired.csv
 
 even_tiered_unpaired.csv: bwamem_unpaired.sam bt2_unpaired.sam snap_unpaired.sam
-    python multi_aligner.py --sam $^ --tier 1 1 1 > $@
+	python multi_aligner.py --sam $^ --tier 1 1 1 > $@
 
 even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
-    python multi_aligner.py --sam $^ --tier 1 1 1 > $@
+	python multi_aligner.py --sam $^ --tier 1 1 1 > $@
 
 bwamem_paired.sam: ERR050082_1.sm_excerpt.fastq ERR050082_2.sm_excerpt.fastq
 	python ../ts.py \
