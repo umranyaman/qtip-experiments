@@ -22,7 +22,7 @@ bwamem_paired.sam: ERR050082_1.sm_excerpt.fastq ERR050082_2.sm_excerpt.fastq
 bwamem_unpaired.sam: ERR050082_1.sm_excerpt.fastq
 	python ../ts.py \
 		--ref $(TS_REFS)/hg19.fa \
-		--m1 $< \
+		--U $< \
 		--index $(TS_INDEXES)/hg19.fa \
 		--seed 34 \
 		--aligner bwa-mem \
@@ -47,7 +47,7 @@ bt2_paired.sam: ERR050082_1.sm_excerpt.fastq ERR050082_2.sm_excerpt.fastq
 bt2_unpaired.sam: ERR050082_1.sm_excerpt.fastq,
 	python ../ts.py \
 		--ref $(TS_REFS)/hg19.fa \
-		--m1 $< \
+		--U $< \
 		--index $(TS_INDEXES)/hg19.fa \
 		--seed 34 \
 		--aligner bowtie2 \
@@ -72,7 +72,7 @@ snap_paired.sam: ERR050082_1.sm_excerpt.fastq ERR050082_2.sm_excerpt.fastq
 snap_unpaired.sam: ERR050082_1.sm_excerpt.fastq
 	python ../ts.py \
 		--ref $(TS_REFS)/hg19.fa \
-		--m1 $< \
+		--U $< \
 		--index $(TS_INDEXES)/hg19.fa.snap \
 		--seed 34 \
 		--aligner snap \
