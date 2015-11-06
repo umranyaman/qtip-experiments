@@ -61,7 +61,7 @@ snap_paired.sam: ERR050082_1.sm_excerpt.fastq ERR050082_2.sm_excerpt.fastq
 		--ref $(TS_REFS)/hg19.fa \
 		--m1 ERR050082_1.sm_excerpt.fastq \
 		--m2 ERR050082_2.sm_excerpt.fastq \
-		--index $(TS_INDEXES)/hg19.fa \
+		--index $(TS_INDEXES)/hg19.fa.snap \
 		--seed 34 \
 		--aligner snap \
 		--snap-exe $(TS_SNAP_HOME)/snap/snap-aligner \
@@ -73,7 +73,7 @@ snap_unpaired.sam: ERR050082_1.sm_excerpt.fastq
 	python ../ts.py \
 		--ref $(TS_REFS)/hg19.fa \
 		--m1 $< \
-		--index $(TS_INDEXES)/hg19.fa \
+		--index $(TS_INDEXES)/hg19.fa.snap \
 		--seed 34 \
 		--aligner snap \
 		--snap-exe $(TS_SNAP_HOME)/snap/snap-aligner \
