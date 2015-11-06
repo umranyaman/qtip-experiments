@@ -5,8 +5,11 @@ TS_BT2_HOME=$(TS_HOME)/software/bowtie2
 .PHONY: all
 all: even_tiered_unpaired.csv even_tiered_paired.csv
 
-even_tiered_unpaired.csv: bwamem_unpaired.sam bt2_unpaired.sam snap_unpaired.sam
-	python multi_aligner.py --sam $^ --tier 1 1 1 > $@
+even_tiered_unpaired.csv: bt2vs_unpaired.sam bt2vsl_unpaired.sam bwamem_unpaired.sam bt2_unpaired.sam snap_unpaired.sam
+	python multi_aligner.py \
+	    --sam $^ \
+	    --name bt2vs bt2vsl bwamem bt2 snap \
+	    --tier 1 1 2 2 2 > $@
 
 even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
 	python multi_aligner.py --sam $^ --tier 1 1 1 > $@
@@ -44,7 +47,7 @@ bt2_paired.sam: ERR050082_1.sm_excerpt.fastq ERR050082_2.sm_excerpt.fastq
 		--index $(TS_INDEXES)/hg19.fa \
 		--seed 34 \
 		--aligner bowtie2 \
-		--bt2-exe $(TS_BT2_HOME)/bowtie2 \
+		--bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 \
 		--vanilla-output $@ \
 		--write-orig-mapq \
 		--write-precise-mapq
@@ -56,10 +59,39 @@ bt2_unpaired.sam: ERR050082_1.sm_excerpt.fastq
 		--index $(TS_INDEXES)/hg19.fa \
 		--seed 34 \
 		--aligner bowtie2 \
-		--bt2-exe $(TS_BT2_HOME)/bowtie2 \
+		--bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 \
 		--vanilla-output $@ \
 		--write-orig-mapq \
 		--write-precise-mapq
+
+# Extra sensitive
+bt2vs_unpaired.sam: ERR050082_1.sm_excerpt.fastq
+	python ../ts.py \
+		--ref $(TS_REFS)/hg19.fa \
+		--U $< \
+		--index $(TS_INDEXES)/hg19.fa \
+		--seed 34 \
+		--aligner bowtie2 \
+		--bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 \
+		--vanilla-output $@ \
+		--write-orig-mapq \
+		--write-precise-mapq \
+		-- \
+		--very-sensitive
+
+bt2vsl_unpaired.sam: ERR050082_1.sm_excerpt.fastq
+	python ../ts.py \
+		--ref $(TS_REFS)/hg19.fa \
+		--U $< \
+		--index $(TS_INDEXES)/hg19.fa \
+		--seed 34 \
+		--aligner bowtie2 \
+		--bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 \
+		--vanilla-output $@ \
+		--write-orig-mapq \
+		--write-precise-mapq \
+		-- \
+		--very-sensitive-local
 
 snap_paired.sam: ERR050082_1.sm_excerpt.fastq ERR050082_2.sm_excerpt.fastq
 	python ../ts.py \

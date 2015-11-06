@@ -1,6 +1,11 @@
+from __future__ import print_function
+
 import sys
 import re
+import os
 import numpy
+import pandas
+from collections import defaultdict
 
 __author__ = 'langmead'
 
@@ -42,6 +47,15 @@ bt2_v     4     30  False, False, False,  True       0             1            
 Other MAPQs too: original, precise.
 
 So maybe the output needs a header row that
+
+Maybe this script should output ROC tables?
+- Tool
+- "Correct" = (a) same as alignment found in all better tiers, or (b) same as
+  alignment found in all better and equal tiers
+- MAPQ used is (a) predicted integer, (b) predicted decimal, (c) orig integer
+
+So total number of tables = 6 * # tools
+
 """
 
 VERSION = '0.0.0'
@@ -49,14 +63,28 @@ VERSION = '0.0.0'
 
 def add_args(parser):
     # Overall arguments
+    parser.add_argument('--wiggle', metavar='int', type=int, required=False, default=10,
+                        help='# bases difference there can be between two alignments that are the same')
     parser.add_argument('--sam', metavar='paths', type=str, nargs='+', required=True,
                         help='SAM file(s) containing aligned reads')
+    parser.add_argument('--name', metavar='strings', type=str, nargs='+', required=True,
+                        help='Tool names')
     parser.add_argument('--tier', metavar='ints', type=int, nargs='+', required=True,
                         help='Tiers, lower being more accurate (in expectation)')
 
 mapq_re = re.compile('Zm:[iZ]:([0-9]+)')
 mapq_prec_re = re.compile('Zp:Z:([.0-9]+)')
 digre = re.compile('([01-9]+)')
+
+
+def tally_cor_per(lc):
+    """ Some predictions from our model are the same; this helper function
+        gathers all the correct/incorrect information for each group of equal
+        predictions. """
+    tally = defaultdict(lambda: [0, 0])
+    for p, c in lc:
+        tally[p][0 if c else 1] += 1
+    return tally
 
 
 def cigar_to_list(cigar_string):
@@ -66,6 +94,9 @@ def cigar_to_list(cigar_string):
 
 def parse_sam_loc_mapq(st):
     toks = st.split('\t')
+    flags = int(toks[1])
+    if (flags & 4) != 0:
+        return None
     rname = toks[2]
     rpos = int(toks[3])
     clist = cigar_to_list(toks[5])
@@ -113,26 +144,129 @@ def same_alns_matrix(ls, wiggle=50):
     return sim
 
 
-def go(args):
-    sams = map(lambda x: open(x, 'rb'), args['sam'])
-    tiers = map(int, args['tier'])
+def same_alns_tiered(ls, better_tiers, equal_tiers, wiggle=50):
+    """ Return a numpy matrix of bools indicating which tools agree with each
+        other. """
+    sim = numpy.zeros((len(ls), len(ls)), dtype=bool)
+    tier_results = []
 
-    # Not efficient but hardly matters
+    for i in range(len(ls)):
+        sim[i, i] = True
+        for j in range(i+1, len(ls)):
+            sim[i, j] = sim[j, i] = compare_2_alns(ls[i], ls[j], wiggle=wiggle)
+
+    for i in range(len(ls)):
+        num_better = numpy.sum(sim[i, better_tiers[i]])
+        num_equal = numpy.sum(sim[i, equal_tiers[i]])
+        num_oall = numpy.sum(sim[i])
+        correct_l = num_better == len(better_tiers[i])
+        correct_s = correct_l and num_equal == len(equal_tiers[i])
+        tier_results.append((num_better, num_equal, num_oall, correct_l, correct_s))
+
+    return tier_results
+
+
+def preprocess_tiers(tiers):
     better_tiers, equal_tiers = [], []
     for i in range(len(tiers)):
-        better_tier = [False] * len(tiers)
-        equal_tier = [False] * len(tiers)
+        better_tier = []
+        equal_tier = []
         for j in range(len(tiers)):
             if tiers[j] < tiers[i]:
-                better_tier[j] = True
+                better_tier.append(j)
             elif tiers[j] == tiers[i]:
-                equal_tier[j] = True
+                equal_tier.append(j)
         better_tiers.append(better_tier)
         equal_tiers.append(equal_tier)
+    return better_tiers, equal_tiers
 
-    assert len(sams) == len(tiers)
+
+def preprocess_sm(fn):
+    print("Preprocessing %s..." % fn)
+    ret = os.system("samtools view -b %s > %s" % (fn, fn + '.bam'))
+    if ret != 0:
+        raise RuntimeError('samtools view-to-bam failed')
+    ret = os.system("samtools sort -n %s %s" % (fn + '.bam', fn + '.sorted'))
+    if ret != 0:
+        raise RuntimeError('samtools sort failed')
+    ret = os.system("samtools view %s > %s" % (fn + '.sorted.bam', fn + '.sorted.sam'))
+    if ret != 0:
+        raise RuntimeError('samtools view-to-sam failed')
+    return fn + '.sorted.sam'
+
+
+def roc_table(ls):
+    """ Return the ROC table given a list of pcors and a parallel list of
+        correct/incorrect booleans. """
+    tally = tally_cor_per(ls)
+    cum_cor, cum_incor = 0, 0
+    mapqs, cors, incors, cum_cors, cum_incors = [], [], [], [], []
+    for p in sorted(tally.keys(), reverse=True):
+        ncor, nincor = tally[p]
+        cum_cor += ncor
+        cum_incor += nincor
+        mapqs.append(p)
+        cors.append(ncor)
+        incors.append(nincor)
+        cum_cors.append(cum_cor)
+        cum_incors.append(cum_incor)
+    return pandas.DataFrame.from_dict({'mapq': mapqs, 'cor': cors, 'incor': incors,
+                                       'cum_cor': cum_cors, 'cum_incor': cum_incors})
+
+
+def auc(ls):
+    """ Calculate area under curve given predictions and correct/incorrect
+        information. """
+    area, tot_cor, tot_incor = 0, 0, 0
+    last_tot_cor, last_tot_incor = 0, 0
+    for pcor, ci in sorted(tally_cor_per(ls).items(), reverse=True):
+        tot_cor += ci[0]
+        tot_incor += ci[1]
+        cor_diff = tot_cor - last_tot_cor
+        incor_diff = tot_incor - last_tot_incor
+        if incor_diff > 0:
+            area += (0.5 * cor_diff * incor_diff)
+            area += last_tot_cor * incor_diff
+        last_tot_cor, last_tot_incor = tot_cor, tot_incor
+    return area
+
+
+def ranking_error(ls):
+    """ Return the ranking error given a list of pcors and a parallel list of
+        correct/incorrect booleans.  Round off to nearest MAPQ first if
+        rounded=True.  """
+    err, sofar = 0, 0
+    # from low-confidence to high confidence
+    for p, tup in sorted(tally_cor_per(ls).items()):
+        ncor, nincor = tup
+        ntot = ncor + nincor
+        assert ntot > 0
+        if nincor > 0:
+            # spread error over this grouping of tied pcors
+            frac = float(nincor) / ntot
+            assert frac <= 1.0
+            err += frac * sum(range(sofar, sofar + ntot))
+        sofar += ntot
+    return err
+
+
+def go(args):
+    names = args['name']
+    sams = map(lambda x: open(x, 'rb'), map(preprocess_sm, args['sam']))
+    better_tiers, equal_tiers = preprocess_tiers(map(int, args['tier']))
+    assert len(sams) == len(better_tiers)
+    assert len(sams) == len(equal_tiers)
+    assert len(sams) == len(names)
+    rocs = {}
+    for nm in args['name']:
+        rocs[nm + "_loose_orig"] = []
+        rocs[nm + "_loose_int"] = []
+        rocs[nm + "_loose_dec"] = []
+        rocs[nm + "_strict_orig"] = []
+        rocs[nm + "_strict_int"] = []
+        rocs[nm + "_strict_dec"] = []
     while True:
-        lns = []
+        lns, rdnames = [], []
         for sam in sams:
             while True:
                 ln = sam.readline()
@@ -141,33 +275,46 @@ def go(args):
                     break
                 elif ln[0] == '@':
                     continue
+                toks = ln.split('\t')
+                flags = int(toks[1])
+                if (flags & 256) != 0:  # skip secondary
+                    continue
+                if (flags & 2048) != 0:  # skip spliced
+                    continue
                 lns.append(ln)
+                rdnames.append(toks[0])
                 break
 
+        if not all(map(lambda x: rdnames[0] == x, rdnames)):
+            print("Warning: read names don't match: %s" % str(rdnames), file=sys.stderr)
         assert len(lns) == len(sams)
         if all(map(lambda x: x is None, lns)):
             break
-        assert not any((lambda x: x is None, lns))
+        assert not any(map(lambda x: x is None, lns))
         parsed_sam = map(parse_sam_loc_mapq, lns)
-        if True:
-            # report tiered outputs
-            sim = same_alns_matrix(parsed_sam, args['wiggle'])
-            i = 0
-            for ps, tier in zip(parsed_sam, tiers):
-                rname, pos, mapq, mapq_orig, mapq_prec = ps
-                num_better = numpy.sum(sim[i, better_tiers[i]])
-                num_equal = numpy.sum(sim[i, equal_tiers[i]])
-                num_oall = numpy.sum(sim[i])
-                print (','.join(map(str, [i, num_oall, num_better, num_equal, mapq, mapq_orig, mapq_prec])))
-                i += 1
-        else:
-            # just report number of other alignments that agree, regardless of tier
-            sim = same_alns_count(parsed_sam, args['wiggle'])
-            i = 1
-            for ps, si in zip(parsed_sam, sim):
-                rname, pos, mapq, mapq_orig, mapq_prec = ps
-                print (','.join(map(str, [i, si, mapq, mapq_orig, mapq_prec])))
-                i += 1
+        if any(map(lambda x: x is None, parsed_sam)):
+            continue  # skippy
+        sim = same_alns_tiered(parsed_sam, better_tiers, equal_tiers, args['wiggle'])
+        for i, tup in enumerate(zip(parsed_sam, names)):
+            ps, nm = tup
+            rname, pos, mapq, mapq_orig, mapq_prec = ps
+            print (','.join(map(str, [i] + list(sim[i]) + [mapq, mapq_orig, mapq_prec])))
+            correct_l, correct_s = sim[i][-2], sim[i][-1]
+            rocs[nm + '_loose_orig'].append((mapq_orig, correct_l))
+            rocs[nm + '_strict_orig'].append((mapq_orig, correct_s))
+            rocs[nm + '_loose_int'].append((mapq, correct_l))
+            rocs[nm + '_strict_int'].append((mapq, correct_s))
+            rocs[nm + '_loose_dec'].append((mapq_prec, correct_l))
+            rocs[nm + '_strict_dec'].append((mapq_prec, correct_s))
+
+    for k, l in rocs.items():
+        fn = k + '_roc.csv'
+        roc_table(l).to_csv(fn, sep=',', index=False)
+        print('Wrote roc_table output to "%s"' % fn, file=sys.stderr)
+
+        fn = k + '_summ.csv'
+        with open(fn, 'wb') as fh:
+            fh.write('%f,%f\n' % (auc(l), ranking_error(l)))
 
 
 def go_profile(args):
@@ -265,6 +412,38 @@ if __name__ == "__main__":
                 self.assertTrue(numpy.all(numpy.array([[True, True, True],
                                                        [True, True, True],
                                                        [True, True, True]]) == sim))
+
+            def test_same_alns_tiered_1(self):
+                a = parse_sam_loc_mapq(
+                    '''ERR050082.24499	163	1	1639199	5	100M	=	1639570	471	CGGCTGAGACAGAGCCCGGATGCTGAGCTGGGAGGAGGCGTCGGGTGTCATGTGGGGGACAAGCCCACATCCACGTCCACCAGGCTGAGGAAATAACCTA	:FDGEHFFCAKIJGCKMJJHJDGIIKIJJHJILILLLNLIGJLKKGMHMJGK@J9IIJGG+LIIGJJJE?8FFIIGK+DCJIDKB4GDFF1*9A@C@*0+	AS:i:-5	XS:i:-5	XN:i:0	XM:i:2	XO:i:0	XG:i:	NM:i:2	MD:Z:91C7C0	YS:i:0	YN:i:-60	Yn:i:0	ZN:i:-60	Zn:i:0	YT:Z:CP	Zm:Z:4	Zp:Z:5.088''')
+                b = parse_sam_loc_mapq(
+                    '''ERR050082.24501	83	1	1639728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
+                c = parse_sam_loc_mapq(
+                    '''ERR050082.24501	83	1	1639728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
+                better_tiers = [[], [], []]
+                equal_tiers = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
+                sim = same_alns_tiered([a, b, c], better_tiers, equal_tiers, wiggle=10)
+                self.assertEqual((0, 1, 1, True, False), sim[0])
+                self.assertEqual((0, 2, 2, True, False), sim[1])
+                self.assertEqual((0, 2, 2, True, False), sim[2])
+                sim = same_alns_tiered([a, b, c], better_tiers, equal_tiers, wiggle=1000)
+                self.assertEqual((0, 3, 3, True, True), sim[0])
+                self.assertEqual((0, 3, 3, True, True), sim[1])
+                self.assertEqual((0, 3, 3, True, True), sim[2])
+
+            def test_same_alns_tiered_2(self):
+                a = parse_sam_loc_mapq(
+                    '''ERR050082.24499	83	1	1639728	5	100M	=	1639570	471	CGGCTGAGACAGAGCCCGGATGCTGAGCTGGGAGGAGGCGTCGGGTGTCATGTGGGGGACAAGCCCACATCCACGTCCACCAGGCTGAGGAAATAACCTA	:FDGEHFFCAKIJGCKMJJHJDGIIKIJJHJILILLLNLIGJLKKGMHMJGK@J9IIJGG+LIIGJJJE?8FFIIGK+DCJIDKB4GDFF1*9A@C@*0+	AS:i:-5	XS:i:-5	XN:i:0	XM:i:2	XO:i:0	XG:i:	NM:i:2	MD:Z:91C7C0	YS:i:0	YN:i:-60	Yn:i:0	ZN:i:-60	Zn:i:0	YT:Z:CP	Zm:Z:4	Zp:Z:5.088''')
+                b = parse_sam_loc_mapq(
+                    '''ERR050082.24501	83	1	1639728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
+                c = parse_sam_loc_mapq(
+                    '''ERR050082.24501	83	1	1639728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
+                better_tiers = [[], [0], [0]]
+                equal_tiers = [[0], [1, 2], [1, 2]]
+                sim = same_alns_tiered([a, b, c], better_tiers, equal_tiers, wiggle=10)
+                self.assertEqual((0, 1, 3, True, True), sim[0])
+                self.assertEqual((1, 2, 3, True, True), sim[1])
+                self.assertEqual((1, 2, 3, True, True), sim[2])
 
         unittest.main(argv=[sys.argv[0]])
 
