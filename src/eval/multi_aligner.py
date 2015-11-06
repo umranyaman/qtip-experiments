@@ -1,12 +1,13 @@
 import sys
 import re
+import numpy
 
 __author__ = 'langmead'
 
 """
-Given SAM files from multiple different read alignment tools, iterate through
-each, assuming alignments are in the same order in each, and if all the tools
-align the read, ask how many.
+Given SAM files from multiple alignment tools, iterate through alignments
+(assuming same order in each SAM), and if all the tools align the read, ask
+how many.
 
 Imagine 3 tools and 3 separate boxplots.  For a given tool, the boxplots show
 (a) the distribution of MAPQs for alignments where this tool agrees with the
@@ -20,16 +21,38 @@ simulation?
 Could we build confidence by taking a given tool, running it with strictly
 more stringent sensitivity settings and seeing a more pronounced mean shift
 for the predicted MAPQs than for the
-"""
 
+Another idea is to "tier" SAM files in some way.  Maybe the SAMs correspond to
+various levels of sensitivity for the same tool, so we care more about whether
+an alignment is in agreement with the "higher sensitivity" tiers than with the
+other tiers.
+
+Maybe we should output something generic and rely on the caller to think about
+the SAMs in a "tiered" fashion.
+
+For every alignment we have information like this
+
+Tool   Tier   MAPQ  Row of similarity matrix    Agreement w/  Agreement w/  Agreement w/
+                                                higher tiers    own tier       others
+bt2_vs    1     11   True,  True, False, False       0             1             2
+bt2_s     2     10   True,  True, False, False       1             1             2
+bt2_f     3     30  False, False,  True, False       0             1             1
+bt2_v     4     30  False, False, False,  True       0             1             1
+
+Other MAPQs too: original, precise.
+
+So maybe the output needs a header row that
+"""
 
 VERSION = '0.0.0'
 
 
 def add_args(parser):
     # Overall arguments
-    parser.add_argument('--sam', metavar='path', type=str, nargs='+', required=True,
+    parser.add_argument('--sam', metavar='paths', type=str, nargs='+', required=True,
                         help='SAM file(s) containing aligned reads')
+    parser.add_argument('--tier', metavar='ints', type=int, nargs='+', required=True,
+                        help='Tiers, lower being more accurate (in expectation)')
 
 mapq_re = re.compile('Zm:[iZ]:([0-9]+)')
 mapq_prec_re = re.compile('Zp:Z:([.0-9]+)')
@@ -67,7 +90,9 @@ def compare_2_alns(a, b, wiggle=50):
     return arefid == brefid and abs(apos - bpos) < wiggle
 
 
-def count_same_alns(ls, wiggle=50):
+def same_alns_count(ls, wiggle=50):
+    """ Return a list of ints indicating the number of tools "agreeing" with
+        this alignment. """
     sim = [1] * len(ls)
     for i in range(len(ls)):
         for j in range(i+1, len(ls)):
@@ -77,8 +102,35 @@ def count_same_alns(ls, wiggle=50):
     return sim
 
 
+def same_alns_matrix(ls, wiggle=50):
+    """ Return a numpy matrix of bools indicating which tools agree with each
+        other. """
+    sim = numpy.zeros((len(ls), len(ls)), dtype=bool)
+    for i in range(len(ls)):
+        sim[i, i] = True
+        for j in range(i+1, len(ls)):
+            sim[i, j] = sim[j, i] = compare_2_alns(ls[i], ls[j], wiggle=wiggle)
+    return sim
+
+
 def go(args):
     sams = map(lambda x: open(x, 'rb'), args['sam'])
+    tiers = map(int, args['tier'])
+
+    # Not efficient but hardly matters
+    better_tiers, equal_tiers = [], []
+    for i in range(len(tiers)):
+        better_tier = [False] * len(tiers)
+        equal_tier = [False] * len(tiers)
+        for j in range(len(tiers)):
+            if tiers[j] < tiers[i]:
+                better_tier[j] = True
+            elif tiers[j] == tiers[i]:
+                equal_tier[j] = True
+        better_tiers.append(better_tier)
+        equal_tiers.append(equal_tier)
+
+    assert len(sams) == len(tiers)
     while True:
         lns = []
         for sam in sams:
@@ -97,12 +149,25 @@ def go(args):
             break
         assert not any((lambda x: x is None, lns))
         parsed_sam = map(parse_sam_loc_mapq, lns)
-        sim = count_same_alns(parsed_sam, args['wiggle'])
-        i = 1
-        for ps, si in zip(parsed_sam, sim):
-            rname, pos, mapq, mapq_orig, mapq_prec = ps
-            print (','.join(map(str, [i, si, mapq, mapq_orig, mapq_prec])))
-            i += 1
+        if True:
+            # report tiered outputs
+            sim = same_alns_matrix(parsed_sam, args['wiggle'])
+            i = 0
+            for ps, tier in zip(parsed_sam, tiers):
+                rname, pos, mapq, mapq_orig, mapq_prec = ps
+                num_better = numpy.sum(sim[i, better_tiers[i]])
+                num_equal = numpy.sum(sim[i, equal_tiers[i]])
+                num_oall = numpy.sum(sim[i])
+                print (','.join(map(str, [i, num_oall, num_better, num_equal, mapq, mapq_orig, mapq_prec])))
+                i += 1
+        else:
+            # just report number of other alignments that agree, regardless of tier
+            sim = same_alns_count(parsed_sam, args['wiggle'])
+            i = 1
+            for ps, si in zip(parsed_sam, sim):
+                rname, pos, mapq, mapq_orig, mapq_prec = ps
+                print (','.join(map(str, [i, si, mapq, mapq_orig, mapq_prec])))
+                i += 1
 
 
 def go_profile(args):
@@ -162,9 +227,9 @@ if __name__ == "__main__":
                     '''ERR050082.24501	83	1	1639728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
                 c = parse_sam_loc_mapq(
                     '''ERR050082.24501	83	1	1639728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
-                sim = count_same_alns([a, b, c], wiggle=10)
+                sim = same_alns_count([a, b, c], wiggle=10)
                 self.assertEqual([1, 2, 2], sim)
-                sim = count_same_alns([a, b, c], wiggle=1000)
+                sim = same_alns_count([a, b, c], wiggle=1000)
                 self.assertEqual([3, 3, 3], sim)
 
             def test_count_same_alns_2(self):
@@ -178,12 +243,28 @@ if __name__ == "__main__":
                     '''ERR050082.24501	83	1	1649728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
                 e = parse_sam_loc_mapq(
                     '''ERR050082.24501	83	1	1649728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
-                sim = count_same_alns([a, b, c, d, e], wiggle=10)
+                sim = same_alns_count([a, b, c, d, e], wiggle=10)
                 self.assertEqual([1, 2, 2, 2, 2], sim)
-                sim = count_same_alns([a, b, c, d, e], wiggle=1000)
+                sim = same_alns_count([a, b, c, d, e], wiggle=1000)
                 self.assertEqual([3, 3, 3, 2, 2], sim)
-                sim = count_same_alns([a, b, c, d, e], wiggle=20000)
+                sim = same_alns_count([a, b, c, d, e], wiggle=20000)
                 self.assertEqual([5, 5, 5, 5, 5], sim)
+
+            def test_same_alns_matrix_1(self):
+                a = parse_sam_loc_mapq(
+                    '''ERR050082.24499	163	1	1639199	5	100M	=	1639570	471	CGGCTGAGACAGAGCCCGGATGCTGAGCTGGGAGGAGGCGTCGGGTGTCATGTGGGGGACAAGCCCACATCCACGTCCACCAGGCTGAGGAAATAACCTA	:FDGEHFFCAKIJGCKMJJHJDGIIKIJJHJILILLLNLIGJLKKGMHMJGK@J9IIJGG+LIIGJJJE?8FFIIGK+DCJIDKB4GDFF1*9A@C@*0+	AS:i:-5	XS:i:-5	XN:i:0	XM:i:2	XO:i:0	XG:i:	NM:i:2	MD:Z:91C7C0	YS:i:0	YN:i:-60	Yn:i:0	ZN:i:-60	Zn:i:0	YT:Z:CP	Zm:Z:4	Zp:Z:5.088''')
+                b = parse_sam_loc_mapq(
+                    '''ERR050082.24501	83	1	1639728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
+                c = parse_sam_loc_mapq(
+                    '''ERR050082.24501	83	1	1639728	41	100M	=	1639307	-521	GGTGCTGCCACAGGCAGGATGCGGGCTCCGCTTCAGCTAAGCAACAAGTGTTCCCAAGAATGGATATGGAGGCTGGGCGCGGTGGCTCACGCCTGTAATC	&=7@@9CEC?I:KGFDFBJ?GBJHIK@JKEHKJHJLKI?ELIGHKIJIAIKJFLKGJJEJGKLKEGMNMNKLNLLJJILCNKMMIKKIDJIKKJKHFHBD	NM:i:1	MD:Z:0A99	AS:i:99	XS:i:89	XA:Z:1,-1576518,100M,3;	Zm:Z:27	Zp:Z:40.752''')
+                sim = same_alns_matrix([a, b, c], wiggle=10)
+                self.assertTrue(numpy.all(numpy.array([[True,  False, False],
+                                                       [False, True,  True],
+                                                       [False, True,  True]]) == sim))
+                sim = same_alns_matrix([a, b, c], wiggle=1000)
+                self.assertTrue(numpy.all(numpy.array([[True, True, True],
+                                                       [True, True, True],
+                                                       [True, True, True]]) == sim))
 
         unittest.main(argv=[sys.argv[0]])
 
