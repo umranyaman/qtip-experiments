@@ -25,7 +25,7 @@ even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
 		python ../ts.py \
 			$(BWA_ARGS) $(ARGS) \
 			--m1 $(<:.1=.$$i) \
-			--m2 $(<:_1.sm_excerpt.fastq.1=_2.sm_excerpt.fastq.$$i) \
+			--m2 $(<:_1.excerpt.fastq.1=_2.excerpt.fastq.$$i) \
 			--out $(@:.sam=.sam.$$i) \
 			-- -t 8 ; \
 	done
@@ -44,7 +44,7 @@ even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
 		python ../ts.py \
 			$(BT2_ARGS) $(ARGS) \
 			--m1 $(<:.1=.$$i) \
-			--m2 $(<:_1.sm_excerpt.fastq.1=_2.sm_excerpt.fastq.$$i) \
+			--m2 $(<:_1.excerpt.fastq.1=_2.excerpt.fastq.$$i) \
 			--out $(@:.sam=) \
 			-- -p 8 ; \
 	done
@@ -80,7 +80,7 @@ bt2vs_unpaired.sam: ERR050082_1.sm_excerpt.fastq
 		python ../ts.py \
 			$(SNAP_ARGS) $(ARGS) \
 			--m1 $(<:.1=.$$i) \
-			--m2 $(<:_1.sm_excerpt.fastq.1=_2.sm_excerpt.fastq.$$i) \
+			--m2 $(<:_1.excerpt.fastq.1=_2.excerpt.fastq.$$i) \
 			--out $(@:.sam=) \
 			-- -t 8 ; \
 	done
