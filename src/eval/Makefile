@@ -6,7 +6,8 @@ BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 --index 
 BWA_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(TS_INDEXES)/hg19.fa
 SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap/snap-aligner --index $(TS_INDEXES)/hg19.fa.snap
 
-ARGS=--ref $(TS_REFS)/hg19.fa --write-orig-mapq --write-precise-mapq --keep-intermediates --seed 346 --predict-for-training
+ARGS=--ref $(TS_REFS)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346
+ARGS_SAMP=--keep-intermediates --predict-for-training
 
 .PHONY: all
 all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
@@ -37,7 +38,7 @@ even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
 %.bwa.pair.sam.0: %.fastq.0
 	for i in `seq 0 9`; do \
 		python ../ts.py \
-			$(BWA_ARGS) $(ARGS) \
+			$(BWA_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--m1 $(<:.0=.$$i) \
 			--m2 $(<:_1.excerpt.fastq.0=_2.excerpt.fastq.$$i) \
 			--out $(@:.sam.0=.sam.$$i) \
@@ -56,7 +57,7 @@ even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
 %.bwa.unp.sam.0: %.fastq.0
 	for i in `seq 0 9`; do \
 		python ../ts.py \
-			$(BWA_ARGS) $(ARGS) \
+			$(BWA_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--U $(<:.0=.$$i) \
 			--out $(@:.sam=.sam.$$i) \
 			-- -t 8 ; \
@@ -79,7 +80,7 @@ even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
 %.bt2.pair.sam.0: %.fastq.0
 	for i in `seq 0 9`; do \
 		python ../ts.py \
-			$(BT2_ARGS) $(ARGS) \
+			$(BT2_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--m1 $(<:.0=.$$i) \
 			--m2 $(<:_1.excerpt.fastq.0=_2.excerpt.fastq.$$i) \
 			--out $(@:.sam=) \
@@ -98,7 +99,7 @@ even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
 %.bt2.unp.sam.0: %.fastq.0
 	for i in `seq 0 9`; do \
 		python ../ts.py \
-			$(BT2_ARGS) $(ARGS) \
+			$(BT2_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--U $(<:.0=.$$i) \
 			--out $(@:.sam=.sam.$$i) \
 			-- -p 8 ; \
@@ -121,7 +122,7 @@ even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
 %.snap.pair.sam.0: %.fastq.0
 	for i in `seq 0 9`; do \
 		python ../ts.py \
-			$(SNAP_ARGS) $(ARGS) \
+			$(SNAP_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--m1 $(<:.0=.$$i) \
 			--m2 $(<:_1.excerpt.fastq.0=_2.excerpt.fastq.$$i) \
 			--out $(@:.sam=.sam.$$i) \
@@ -140,7 +141,7 @@ even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
 %.snap.unp.sam.0: %.fastq.0
 	for i in `seq 0 9`; do \
 		python ../ts.py \
-			$(SNAP_ARGS) $(ARGS) \
+			$(SNAP_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--U $(<:.0=.$$i) \
 			--out $(@:.sam=.sam.$$i) \
 			-- -t 8 ; \
