@@ -67,11 +67,13 @@ bt2vs_unpaired.sam: ERR050082_1.sm_excerpt.fastq
 		-- -p 8
 
 %.snap.unp.sam: %.fastq.1
-	python ../ts.py \
-		$(SNAP_ARGS) $(ARGS) \
-		--U $< \
-		--out $(@:.sam=) \
-		-- -t 8
+	for i in `seq 0 9`; do \
+		python ../ts.py \
+			$(SNAP_ARGS) $(ARGS) \
+			--U $(<:.1=.$$i) \
+			--out $(@:.sam=.sam.$$i) \
+			-- -t 8 ; \
+	done
 
 %.snap.pair.sam: %.fastq.1
 	for i in `seq 0 9`; do \
