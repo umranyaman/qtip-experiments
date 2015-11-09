@@ -12,14 +12,17 @@ ARGS_SAMP=--keep-intermediates --predict-for-training
 .PHONY: all
 all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 
-%.csv: %.bwa.unp.sam %.bt2.unp.sam %.snap.unp.sam %.bt2vs.unp.sam %.bt2vsl.unp.sam
+%.unp.csv: %.bwa.unp.sam %.bt2.unp.sam %.snap.unp.sam %.bt2vs.unp.sam %.bt2vsl.unp.sam
 	python multi_aligner.py \
 	    --sam $^ \
 	    --name bwamem bt2 snap bt2vs bt2vsl \
 	    --tier 1 1 2 2 2 > $@
 
-even_tiered_paired.csv: bwamem_paired.sam bt2_paired.sam snap_paired.sam
-	python multi_aligner.py --sam $^ --tier 1 1 1 > $@
+%.pair.csv: %.bwa.pair.sam %.bt2.pair.sam %.snap.pair.sam %.bt2vs.pair.sam %.bt2vsl.pair.sam
+	python multi_aligner.py \
+	    --sam $^ \
+	    --name bwamem bt2 snap bt2vs bt2vsl \
+	    --tier 1 1 2 2 2 > $@
 
 # #######
 # BWA-MEM
