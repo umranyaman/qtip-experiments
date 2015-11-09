@@ -9,6 +9,8 @@ SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap/snap-aligner --index $(
 ARGS=--ref $(TS_REFS)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346
 ARGS_SAMP=--keep-intermediates --predict-for-training
 
+NTHREADS=16
+
 .PHONY: all
 all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 
@@ -35,7 +37,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 		--m1 $< \
 		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
 		--vanilla-output $@ \
-		-- -t 8
+		-- -t $(NTHREADS)
 
 # BWA-MEM paired-end samples
 %.bwa.pair.sam.0: %.fastq.0
@@ -45,7 +47,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 			--m1 $(<:.0=.$$i) \
 			--m2 $(<:_1.excerpt.fastq.0=_2.excerpt.fastq.$$i) \
 			--out $(@:.sam.0=.sam.$$i) \
-			-- -t 8 ; \
+			-- -t $(NTHREADS) ; \
 	done
 
 # BWA-MEM unpaired overall
@@ -54,7 +56,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 		$(BWA_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
-		-- -t 8
+		-- -t $(NTHREADS)
 
 # BWA-MEM unpaired samples
 %.bwa.unp.sam.0: %.fastq.0
@@ -63,7 +65,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 			$(BWA_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--U $(<:.0=.$$i) \
 			--out $(@:.sam=.sam.$$i) \
-			-- -t 8 ; \
+			-- -t $(NTHREADS) ; \
 	done
 
 # #######
@@ -77,7 +79,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 		--m1 $< \
 		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
 		--vanilla-output $@ \
-		-- -p 8
+		-- -p $(NTHREADS)
 
 # Bowtie2 paired-end samples
 %.bt2.pair.sam.0: %.fastq.0
@@ -87,7 +89,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 			--m1 $(<:.0=.$$i) \
 			--m2 $(<:_1.excerpt.fastq.0=_2.excerpt.fastq.$$i) \
 			--out $(@:.sam=) \
-			-- -p 8 ; \
+			-- -p $(NTHREADS) ; \
 	done
 
 # Bowtie2 unpaired overall
@@ -96,7 +98,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 		$(BT2_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
-		-- -p 8
+		-- -p $(NTHREADS)
 
 # Bowtie2 unpaired samples
 %.bt2.unp.sam.0: %.fastq.0
@@ -105,7 +107,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 			$(BT2_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--U $(<:.0=.$$i) \
 			--out $(@:.sam=.sam.$$i) \
-			-- -p 8 ; \
+			-- -p $(NTHREADS) ; \
 	done
 
 # #######
@@ -119,7 +121,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 		--m1 $< \
 		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
 		--vanilla-output $@ \
-		-- -t 8
+		-- -t $(NTHREADS)
 
 # SNAP paired-end samples
 %.snap.pair.sam.0: %.fastq.0
@@ -129,7 +131,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 			--m1 $(<:.0=.$$i) \
 			--m2 $(<:_1.excerpt.fastq.0=_2.excerpt.fastq.$$i) \
 			--out $(@:.sam=.sam.$$i) \
-			-- -t 8 ; \
+			-- -t $(NTHREADS) ; \
 	done
 
 # SNAP unpaired overall
@@ -138,7 +140,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 		$(SNAP_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
-		-- -t 8
+		-- -t $(NTHREADS)
 
 # SNAP unpaired samples
 %.snap.unp.sam.0: %.fastq.0
@@ -147,7 +149,7 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 			$(SNAP_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--U $(<:.0=.$$i) \
 			--out $(@:.sam=.sam.$$i) \
-			-- -t 8 ; \
+			-- -t $(NTHREADS) ; \
 	done
 
 # ###############
@@ -159,14 +161,30 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 		$(BT2_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
-		-- -p 8 --very-sensitive
+		-- -p $(NTHREADS) --very-sensitive
+
+%.bt2vs.pair.sam: %.fastq
+	python ../ts.py \
+		$(BT2_ARGS) $(ARGS) \
+		--m1 $< \
+		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
+		--vanilla-output $@ \
+		-- -p $(NTHREADS) --very-sensitive
 
 %.bt2vsl.unp.sam: %.fastq
 	python ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
-		-- -p 8 --very-sensitive-local
+		-- -p $(NTHREADS) --very-sensitive-local
+
+%.bt2vsl.pair.sam: %.fastq
+	python ../ts.py \
+		$(BT2_ARGS) $(ARGS) \
+		--m1 $< \
+		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
+		--vanilla-output $@ \
+		-- -p $(NTHREADS) --very-sensitive-local
 
 %.fastq.0: %.fastq
 	python sample_fastq.py -n 100000 -s 10 $< $(@:.0=) -r 43547
@@ -174,5 +192,6 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 
 .PHONY: clean
 clean:
-	rm -f snap_*.sam bwamem_*.sam bt2_*.sam
+	rm -f *.unp.sam *.pair.sam
+	rm -f *_roc.csv *_summ.csv
 	rm -rf bt2_unpaired bwamem_paired bwamem_unpaired
