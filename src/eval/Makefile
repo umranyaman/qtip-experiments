@@ -15,13 +15,13 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 %.unp.csv: %.bwa.unp.sam %.bt2.unp.sam %.snap.unp.sam %.bt2vs.unp.sam %.bt2vsl.unp.sam
 	python multi_aligner.py \
 	    --sam $^ \
-	    --name bwamem bt2 snap bt2vs bt2vsl \
+	    --name bt2vs bt2vsl bwamem bt2 snap \
 	    --tier 1 1 2 2 2 > $@
 
 %.pair.csv: %.bwa.pair.sam %.bt2.pair.sam %.snap.pair.sam %.bt2vs.pair.sam %.bt2vsl.pair.sam
 	python multi_aligner.py \
 	    --sam $^ \
-	    --name bwamem bt2 snap bt2vs bt2vsl \
+	    --name bt2vs bt2vsl bwamem bt2 snap \
 	    --tier 1 1 2 2 2 > $@
 
 # #######
