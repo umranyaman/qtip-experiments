@@ -182,16 +182,19 @@ def preprocess_tiers(tiers):
 
 
 def preprocess_sm(fn):
-    print("Preprocessing %s..." % fn)
-    ret = os.system("samtools view -b %s > %s" % (fn, fn + '.bam'))
-    if ret != 0:
-        raise RuntimeError('samtools view-to-bam failed')
-    ret = os.system("samtools sort -n %s %s" % (fn + '.bam', fn + '.sorted'))
-    if ret != 0:
-        raise RuntimeError('samtools sort failed')
-    ret = os.system("samtools view %s > %s" % (fn + '.sorted.bam', fn + '.sorted.sam'))
-    if ret != 0:
-        raise RuntimeError('samtools view-to-sam failed')
+    print("Preprocessing %s..." % fn, file=sys.stderr)
+    if not os.path.exists(fn + '.bam'):
+        ret = os.system("samtools view -b %s > %s" % (fn, fn + '.bam'))
+        if ret != 0:
+            raise RuntimeError('samtools view-to-bam failed')
+    if not os.path.exists(fn + '.sorted.bam'):
+        ret = os.system("samtools sort -n %s %s" % (fn + '.bam', fn + '.sorted'))
+        if ret != 0:
+            raise RuntimeError('samtools sort failed')
+    if not os.path.exists(fn + '.sorted.sam'):
+        ret = os.system("samtools view %s > %s" % (fn + '.sorted.bam', fn + '.sorted.sam'))
+        if ret != 0:
+            raise RuntimeError('samtools view-to-sam failed')
     return fn + '.sorted.sam'
 
 
@@ -335,7 +338,7 @@ if __name__ == "__main__":
                     'include the predicted and old MAPQs.')
 
     if '--version' in sys.argv:
-        print('Tandem simulator, version ' + VERSION)
+        print('Tandem simulator, version ' + VERSION, file=sys.stderr)
         sys.exit(0)
 
     if '--test' in sys.argv:
