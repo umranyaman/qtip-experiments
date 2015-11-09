@@ -12,17 +12,22 @@ ARGS_SAMP=--keep-intermediates --predict-for-training
 NTHREADS=16
 
 .PHONY: all
-all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
+all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
+     ERR050083_1.unp.csv ERR050083_1.pair.csv
 
 %.unp.csv: %.bwa.unp.sam %.bt2.unp.sam %.snap.unp.sam %.bt2vs.unp.sam %.bt2vsl.unp.sam
 	python multi_aligner.py \
 	    --sam $^ \
+	    --prefix $(<:.bwa.unp.sam=) \
+	    --suffix ".unp" \
 	    --name bt2vs bt2vsl bwamem bt2 snap \
 	    --tier 1 1 2 2 2 > $@
 
 %.pair.csv: %.bwa.pair.sam %.bt2.pair.sam %.snap.pair.sam %.bt2vs.pair.sam %.bt2vsl.pair.sam
 	python multi_aligner.py \
 	    --sam $^ \
+	    --prefix $(<:.bwa.pair.sam=) \
+	    --suffix ".pair" \
 	    --name bt2vs bt2vsl bwamem bt2 snap \
 	    --tier 1 1 2 2 2 > $@
 
@@ -194,4 +199,5 @@ all: ERR050082_1.excerpt.csv ERR050083_1.excerpt.csv
 clean:
 	rm -f *.unp.sam *.pair.sam
 	rm -f *_roc.csv *_summ.csv
+	rm -f *.unp.csv *.pair.csv
 	rm -rf bt2_unpaired bwamem_paired bwamem_unpaired

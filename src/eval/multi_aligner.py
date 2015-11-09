@@ -69,6 +69,8 @@ def add_args(parser):
                         help='SAM file(s) containing aligned reads')
     parser.add_argument('--name', metavar='strings', type=str, nargs='+', required=True,
                         help='Tool names')
+    parser.add_argument('--prefix', type=str, required=False, help='Prefix for output files')
+    parser.add_argument('--suffix', type=str, required=False, help='Suffix for output files')
     parser.add_argument('--tier', metavar='ints', type=int, nargs='+', required=True,
                         help='Tiers, lower being more accurate (in expectation)')
 
@@ -254,6 +256,10 @@ def ranking_error(ls):
 
 
 def go(args):
+
+    def decorate_filename(fn) :
+        return ('' if args.prefix is not None else args.prefix) + fn + ('' if args.suffix is not None else args.suffix)
+
     names = args['name']
     sams = map(lambda x: open(x, 'rb'), map(preprocess_sm, args['sam']))
     better_tiers, equal_tiers = preprocess_tiers(map(int, args['tier']))
@@ -311,13 +317,14 @@ def go(args):
             rocs[nm + '_strict_dec'].append((mapq_prec, correct_s))
 
     for k, l in rocs.items():
-        fn = k + '_roc.csv'
+        fn = decorate_filename(k) + '.roc.csv'
         roc_table(l).to_csv(fn, sep=',', index=False)
-        print('Wrote roc_table output to "%s"' % fn, file=sys.stderr)
+        print('Wrote ROC table output to "%s"' % fn, file=sys.stderr)
 
-        fn = k + '_summ.csv'
+        fn = decorate_filename(k) + '.summ.csv'
         with open(fn, 'wb') as fh:
             fh.write('%f,%f\n' % (auc(l), ranking_error(l)))
+        print('Wrote summary output to "%s"' % fn, file=sys.stderr)
 
 
 def go_profile(args):
