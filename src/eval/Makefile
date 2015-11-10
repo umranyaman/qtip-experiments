@@ -40,7 +40,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	python ../ts.py \
 		$(BWA_ARGS) $(ARGS) \
 		--m1 $< \
-		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
+		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
@@ -50,7 +50,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		python ../ts.py \
 			$(BWA_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--m1 $(<:.0=.$$i) \
-			--m2 $(<:_1.excerpt.fastq.0=_2.excerpt.fastq.$$i) \
+			--m2 $(<:_1.fastq.0=_2.fastq.$$i) \
 			--out $(@:.sam.0=.sam.$$i) \
 			-- -t $(NTHREADS) ; \
 	done
@@ -82,7 +82,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	python ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
 		--m1 $< \
-		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
+		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS)
 
@@ -92,7 +92,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		python ../ts.py \
 			$(BT2_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--m1 $(<:.0=.$$i) \
-			--m2 $(<:_1.excerpt.fastq.0=_2.excerpt.fastq.$$i) \
+			--m2 $(<:_1.fastq.0=_2.fastq.$$i) \
 			--out $(@:.sam=) \
 			-- -p $(NTHREADS) ; \
 	done
@@ -124,7 +124,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	python ../ts.py \
 		$(SNAP_ARGS) $(ARGS) \
 		--m1 $< \
-		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
+		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
@@ -134,7 +134,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		python ../ts.py \
 			$(SNAP_ARGS) $(ARGS) $(ARGS_SAMP) \
 			--m1 $(<:.0=.$$i) \
-			--m2 $(<:_1.excerpt.fastq.0=_2.excerpt.fastq.$$i) \
+			--m2 $(<:_1.fastq.0=_2.fastq.$$i) \
 			--out $(@:.sam=.sam.$$i) \
 			-- -t $(NTHREADS) ; \
 	done
@@ -172,7 +172,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	python ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
 		--m1 $< \
-		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
+		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS) --very-sensitive
 
@@ -187,13 +187,13 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	python ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
 		--m1 $< \
-		--m2 $(<:_1.excerpt.fastq=_2.excerpt.fastq) \
+		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS) --very-sensitive-local
 
 %.fastq.0: %.fastq
 	python sample_fastq.py -n 100000 -s 10 $< $(@:.0=) -r 43547
-	python sample_fastq.py -n 100000 -s 10 $(<:_1.excerpt.fastq=_2.excerpt.fastq) $(@:_1.excerpt.fastq.0=_2.excerpt.fastq) -r 43547
+	python sample_fastq.py -n 100000 -s 10 $(<:_1.fastq=_2.fastq) $(@:_1.fastq.0=_2.fastq) -r 43547
 
 .PHONY: clean
 clean:
