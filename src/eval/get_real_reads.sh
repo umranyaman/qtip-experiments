@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
-curl ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR050/ERR050082/ERR050082_1.fastq.gz | gzip -dc | head -n 10000000 > ERR050082_1.excerpt.fastq
-curl ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR050/ERR050082/ERR050082_2.fastq.gz | gzip -dc | head -n 10000000 > ERR050082_2.excerpt.fastq
+for d in ERR050082 ERR050083 ; do
 
-curl ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR050/ERR050083/ERR050083_1.fastq.gz | gzip -dc | head -n 10000000 > ERR050083_1.excerpt.fastq
-curl ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR050/ERR050083/ERR050083_2.fastq.gz | gzip -dc | head -n 10000000 > ERR050083_2.excerpt.fastq
+    pref=`echo ${d} | sed 's/\(......\).*/\1/'`
+
+    for m in 1 2 ; do
+        curl ftp://ftp.sra.ebi.ac.uk/vol1/fastq/${pref}/${d}/${d}_${m}.fastq.gz | gzip -dc > ${d}_${m}.fastq
+    done
+done
