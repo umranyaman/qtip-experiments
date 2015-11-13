@@ -307,6 +307,8 @@ def go(args):
             rocs[nm + '_loose_dec'][mapq_prec][0 if correct_l else 1] += 1
             rocs[nm + '_strict_dec'][mapq_prec][0 if correct_s else 1] += 1
         lni += 1
+        if args['upto'] is not None and lni >= args['upto']:
+            break
         if lni % ival == 0:
             elapsed_time = time.time() - itime
             print('  Handled %d alignments across %d files (~%d per sec)...' %
@@ -459,6 +461,7 @@ if __name__ == "__main__":
     _parser.add_argument('--profile', action='store_const', const=True, default=False, help='Print profiling info')
     _parser.add_argument('--verbose', action='store_const', const=True, default=False, help='Be talkative')
     _parser.add_argument('--version', action='store_const', const=True, default=False, help='Print version and quit')
+    _parser.add_argument('--upto', metavar='int', type=int, help='Stop after this many alignments')
 
     _args = _parser.parse_args(sys.argv[1:])
 
