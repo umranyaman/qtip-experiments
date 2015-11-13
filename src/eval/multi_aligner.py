@@ -79,16 +79,6 @@ mapq_prec_re = re.compile('Zp:Z:([.0-9]+)')
 digre = re.compile('([01-9]+)')
 
 
-def tally_cor_per(lc):
-    """ Some predictions from our model are the same; this helper function
-        gathers all the correct/incorrect information for each group of equal
-        predictions. """
-    tally = defaultdict(lambda: [0, 0])
-    for p, c in lc:
-        tally[p][0 if c else 1] += 1
-    return tally
-
-
 def cigar_to_list(cigar_string):
     spl = digre.split(cigar_string)
     return zip(spl[2::2], map(int, spl[1::2]))
@@ -189,21 +179,24 @@ def preprocess_sm(fn):
         ret = os.system("samtools view -b %s > %s" % (fn, fn + '.bam'))
         if ret != 0:
             raise RuntimeError('samtools view-to-bam failed')
+        os.remove(fn)
     if not os.path.exists(fn + '.sorted.bam'):
         ret = os.system("samtools sort -n %s %s" % (fn + '.bam', fn + '.sorted'))
         if ret != 0:
             raise RuntimeError('samtools sort failed')
+        os.remove(fn + '.bam')
     if not os.path.exists(fn + '.sorted.sam'):
         ret = os.system("samtools view %s > %s" % (fn + '.sorted.bam', fn + '.sorted.sam'))
         if ret != 0:
             raise RuntimeError('samtools view-to-sam failed')
+        os.remove(fn + '.sorted.bam')
+    print("DONE", file=sys.stderr)
     return fn + '.sorted.sam'
 
 
-def roc_table(ls):
+def roc_table(tally):
     """ Return the ROC table given a list of pcors and a parallel list of
         correct/incorrect booleans. """
-    tally = tally_cor_per(ls)
     cum_cor, cum_incor = 0, 0
     mapqs, cors, incors, cum_cors, cum_incors = [], [], [], [], []
     for p in sorted(tally.keys(), reverse=True):
@@ -219,12 +212,12 @@ def roc_table(ls):
                                        'cum_cor': cum_cors, 'cum_incor': cum_incors})
 
 
-def auc(ls):
+def auc(tally):
     """ Calculate area under curve given predictions and correct/incorrect
         information. """
     area, tot_cor, tot_incor = 0, 0, 0
     last_tot_cor, last_tot_incor = 0, 0
-    for pcor, ci in sorted(tally_cor_per(ls).items(), reverse=True):
+    for pcor, ci in sorted(tally, reverse=True):
         tot_cor += ci[0]
         tot_incor += ci[1]
         cor_diff = tot_cor - last_tot_cor
@@ -236,13 +229,13 @@ def auc(ls):
     return area
 
 
-def ranking_error(ls):
+def ranking_error(tally):
     """ Return the ranking error given a list of pcors and a parallel list of
         correct/incorrect booleans.  Round off to nearest MAPQ first if
         rounded=True.  """
     err, sofar = 0, 0
     # from low-confidence to high confidence
-    for p, tup in sorted(tally_cor_per(ls).items()):
+    for p, tup in sorted(tally.items()):
         ncor, nincor = tup
         ntot = ncor + nincor
         assert ntot > 0
@@ -257,7 +250,7 @@ def ranking_error(ls):
 
 def go(args):
 
-    def decorate_filename(fn) :
+    def decorate_filename(fn):
         return ('' if args['prefix'] is not None else args['prefix']) + fn + ('' if args['suffix'] is not None else args['suffix'])
 
     names = args['name']
@@ -268,12 +261,12 @@ def go(args):
     assert len(sams) == len(names)
     rocs = {}
     for nm in args['name']:
-        rocs[nm + "_loose_orig"] = []
-        rocs[nm + "_loose_int"] = []
-        rocs[nm + "_loose_dec"] = []
-        rocs[nm + "_strict_orig"] = []
-        rocs[nm + "_strict_int"] = []
-        rocs[nm + "_strict_dec"] = []
+        rocs[nm + "_loose_orig"] = defaultdict(lambda: [0, 0])
+        rocs[nm + "_loose_int"] = defaultdict(lambda: [0, 0])
+        rocs[nm + "_loose_dec"] = defaultdict(lambda: [0, 0])
+        rocs[nm + "_strict_orig"] = defaultdict(lambda: [0, 0])
+        rocs[nm + "_strict_int"] = defaultdict(lambda: [0, 0])
+        rocs[nm + "_strict_dec"] = defaultdict(lambda: [0, 0])
     while True:
         lns, rdnames = [], []
         for sam in sams:
@@ -309,12 +302,12 @@ def go(args):
             rname, pos, mapq, mapq_orig, mapq_prec = ps
             print (','.join(map(str, [i] + list(sim[i]) + [mapq, mapq_orig, mapq_prec])))
             correct_l, correct_s = sim[i][-2], sim[i][-1]
-            rocs[nm + '_loose_orig'].append((mapq_orig, correct_l))
-            rocs[nm + '_strict_orig'].append((mapq_orig, correct_s))
-            rocs[nm + '_loose_int'].append((mapq, correct_l))
-            rocs[nm + '_strict_int'].append((mapq, correct_s))
-            rocs[nm + '_loose_dec'].append((mapq_prec, correct_l))
-            rocs[nm + '_strict_dec'].append((mapq_prec, correct_s))
+            rocs[nm + '_loose_orig'][mapq_orig][0 if correct_l else 1] += 1
+            rocs[nm + '_strict_orig'][mapq_orig][0 if correct_s else 1] += 1
+            rocs[nm + '_loose_int'][mapq][0 if correct_l else 1] += 1
+            rocs[nm + '_strict_int'][mapq][0 if correct_s else 1] += 1
+            rocs[nm + '_loose_dec'][mapq_prec][0 if correct_l else 1] += 1
+            rocs[nm + '_strict_dec'][mapq_prec][0 if correct_s else 1] += 1
 
     for k, l in rocs.items():
         fn = decorate_filename(k) + '.roc.csv'
