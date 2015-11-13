@@ -5,6 +5,7 @@ import re
 import os
 import numpy
 import pandas
+import time
 from collections import defaultdict
 
 __author__ = 'langmead'
@@ -267,6 +268,9 @@ def go(args):
         rocs[nm + "_strict_orig"] = defaultdict(lambda: [0, 0])
         rocs[nm + "_strict_int"] = defaultdict(lambda: [0, 0])
         rocs[nm + "_strict_dec"] = defaultdict(lambda: [0, 0])
+    ival = 50000
+    lni = 0
+    itime = time.time()
     while True:
         lns, rdnames = [], []
         for sam in sams:
@@ -308,6 +312,10 @@ def go(args):
             rocs[nm + '_strict_int'][mapq][0 if correct_s else 1] += 1
             rocs[nm + '_loose_dec'][mapq_prec][0 if correct_l else 1] += 1
             rocs[nm + '_strict_dec'][mapq_prec][0 if correct_s else 1] += 1
+        lni += 1
+        if lni % ival == 0:
+            elapsed_time = time.time() - itime
+            print('  Handled %d alignments across %d files (~%d per sec)...' % (i, len(sams), int(i / elapsed_time)))
 
     for k, l in rocs.items():
         fn = decorate_filename(k) + '.roc.csv'
