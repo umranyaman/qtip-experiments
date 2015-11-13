@@ -4,7 +4,6 @@ import sys
 import re
 import os
 import numpy
-import pandas
 import time
 from collections import defaultdict
 
@@ -195,22 +194,17 @@ def preprocess_sm(fn):
     return fn + '.sorted.sam'
 
 
-def roc_table(tally):
+def write_tally_to_roc(tally, fn):
     """ Return the ROC table given a list of pcors and a parallel list of
         correct/incorrect booleans. """
     cum_cor, cum_incor = 0, 0
-    mapqs, cors, incors, cum_cors, cum_incors = [], [], [], [], []
-    for p in sorted(tally.keys(), reverse=True):
-        ncor, nincor = tally[p]
-        cum_cor += ncor
-        cum_incor += nincor
-        mapqs.append(p)
-        cors.append(ncor)
-        incors.append(nincor)
-        cum_cors.append(cum_cor)
-        cum_incors.append(cum_incor)
-    return pandas.DataFrame.from_dict({'mapq': mapqs, 'cor': cors, 'incor': incors,
-                                       'cum_cor': cum_cors, 'cum_incor': cum_incors})
+    with open(fn, 'wb') as fh:
+        fh.write(','.join(['mapq', 'cor', 'incor', 'cum_cor', 'cum_incor']) + '\n')
+        for p in sorted(tally.keys(), reverse=True):
+            ncor, nincor = tally[p]
+            cum_cor += ncor
+            cum_incor += nincor
+            fh.write(','.join(map(str, [p, ncor, nincor, cum_cor, cum_incor])) + '\n')
 
 
 def auc(tally):
@@ -320,7 +314,7 @@ def go(args):
 
     for k, l in rocs.items():
         fn = decorate_filename(k) + '.roc.csv'
-        roc_table(l).to_csv(fn, sep=',', index=False)
+        write_tally_to_roc(l, fn)
         print('Wrote ROC table output to "%s"' % fn, file=sys.stderr)
 
         fn = decorate_filename(k) + '.summ.csv'
