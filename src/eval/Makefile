@@ -16,7 +16,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
      ERR050083_1.unp.csv ERR050083_1.pair.csv
 
 %.unp.csv: %.bt2vs.unp.sam %.bt2vsl.unp.sam %.bwa.unp.sam %.bt2.unp.sam %.snap.unp.sam
-	python multi_aligner.py \
+	pypy multi_aligner.py \
 	    --sam $^ \
 	    --prefix $(<:.bwa.unp.sam=) \
 	    --suffix ".unp" \
@@ -24,7 +24,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	    --tier 1 1 2 2 2 > $@
 
 %.pair.csv: %.bt2vs.pair.sam %.bt2vsl.pair.sam %.bwa.pair.sam %.bt2.pair.sam %.snap.pair.sam
-	python multi_aligner.py \
+	pypy multi_aligner.py \
 	    --sam $^ \
 	    --prefix $(<:.bwa.pair.sam=) \
 	    --suffix ".pair" \
