@@ -212,7 +212,7 @@ def auc(tally):
         information. """
     area, tot_cor, tot_incor = 0, 0, 0
     last_tot_cor, last_tot_incor = 0, 0
-    for pcor, ci in sorted(tally, reverse=True):
+    for pcor, ci in sorted(tally.items(), reverse=True):
         tot_cor += ci[0]
         tot_incor += ci[1]
         cor_diff = tot_cor - last_tot_cor
