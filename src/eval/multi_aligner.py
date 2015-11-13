@@ -315,7 +315,8 @@ def go(args):
         lni += 1
         if lni % ival == 0:
             elapsed_time = time.time() - itime
-            print('  Handled %d alignments across %d files (~%d per sec)...' % (i, len(sams), int(i / elapsed_time)))
+            print('  Handled %d alignments across %d files (~%d per sec)...' % (i, len(sams), int(i / elapsed_time)),
+                  file=sys.stderr)
 
     for k, l in rocs.items():
         fn = decorate_filename(k) + '.roc.csv'
