@@ -262,7 +262,7 @@ def go(args):
         rocs[nm + "_strict_orig"] = defaultdict(lambda: [0, 0])
         rocs[nm + "_strict_int"] = defaultdict(lambda: [0, 0])
         rocs[nm + "_strict_dec"] = defaultdict(lambda: [0, 0])
-    ival = 50000
+    ival = 200000
     lni = 0
     itime = time.time()
     while True:
