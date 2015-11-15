@@ -246,7 +246,7 @@ def ranking_error(tally):
 def go(args):
 
     def decorate_filename(fn):
-        return ('' if args['prefix'] is not None else args['prefix']) + fn + ('' if args['suffix'] is not None else args['suffix'])
+        return ('' if args['prefix'] is None else args['prefix']) + fn + ('' if args['suffix'] is None else args['suffix'])
 
     names = args['name']
     sams = map(lambda x: open(x, 'rb'), map(preprocess_sm, args['sam']))
