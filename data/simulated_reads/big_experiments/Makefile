@@ -130,6 +130,9 @@ $(eval $(call snapts,snap,1,1,,,,,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call snapts,snap100,1,1,,,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call snapts,snap250,1,1,,,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
 
+$(eval $(call mason_ill_unp_reads,ill_100_50M,$(HG_FASTA),100,50000000,7724))
+$(eval $(call mason_ill_unp_reads,ill_250_50M,$(HG_FASTA),250,50000000,7724))
+
 $(eval $(call mason_ill_pair_reads,ill_100_1_50M,$(HG_FASTA),100,50000000,300,100,7724))
 $(eval $(call mason_ill_pair_reads,ill_100_2_50M,$(HG_FASTA),100,50000000,300,100,7247))
 $(eval $(call mason_ill_pair_reads,ill_100_3_50M,$(HG_FASTA),100,50000000,300,100,2334))
