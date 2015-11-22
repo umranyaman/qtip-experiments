@@ -64,7 +64,7 @@ $(BWA):
 $(SNAP):
 	$(MAKE) -C $(BWA_HOME)
 
-include ../mason.mk
+include ../mason2.mk
 include ../bowtie2ts.mk
 include ../bwamemts.mk
 include ../snapts.mk
