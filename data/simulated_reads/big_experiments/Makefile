@@ -111,6 +111,13 @@ r1_mason_ill_100_50M.fq.gz: r1_mason_ill_100_1_50M.fq.gz \
                             r1_mason_ill_100_5_50M.fq.gz
 	gzip -dc $^ | gzip -c > $@
 
+r1_mason_ill_250_50M.fq.gz: r1_mason_ill_250_1_50M.fq.gz \
+                            r1_mason_ill_250_2_50M.fq.gz \
+                            r1_mason_ill_250_3_50M.fq.gz \
+                            r1_mason_ill_250_4_50M.fq.gz \
+                            r1_mason_ill_250_5_50M.fq.gz
+	gzip -dc $^ | gzip -c > $@
+
 $(eval $(call bt2ts,bt2s,1,1,,,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2s100,1,1,,-I 200 -X 400,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call bt2ts,bt2s250,1,1,,-I 500 -X 1000,$(HG_FASTA),$(HG_INDEX)))
@@ -123,8 +130,14 @@ $(eval $(call snapts,snap,1,1,,,,,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call snapts,snap100,1,1,,,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
 $(eval $(call snapts,snap250,1,1,,,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call mason_ill_unp_reads,ill_100_50M,$(HG_FASTA),100,50000000,7724))
-$(eval $(call mason_ill_unp_reads,ill_250_50M,$(HG_FASTA),250,50000000,7724))
+$(eval $(call mason_ill_pair_reads,ill_100_1_50M,$(HG_FASTA),100,50000000,300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_100_2_50M,$(HG_FASTA),100,50000000,300,100,7247))
+$(eval $(call mason_ill_pair_reads,ill_100_3_50M,$(HG_FASTA),100,50000000,300,100,2334))
+$(eval $(call mason_ill_pair_reads,ill_100_4_50M,$(HG_FASTA),100,50000000,300,100,1923))
+$(eval $(call mason_ill_pair_reads,ill_100_5_50M,$(HG_FASTA),100,50000000,300,100,9542))
 
-$(eval $(call mason_ill_pair_reads,ill_100_50M,$(HG_FASTA),100,50000000,300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_250_50M,$(HG_FASTA),250,50000000,750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_250_1_50M,$(HG_FASTA),250,50000000,750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_250_2_50M,$(HG_FASTA),250,50000000,750,250,7247))
+$(eval $(call mason_ill_pair_reads,ill_250_3_50M,$(HG_FASTA),250,50000000,750,250,2334))
+$(eval $(call mason_ill_pair_reads,ill_250_4_50M,$(HG_FASTA),250,50000000,750,250,1923))
+$(eval $(call mason_ill_pair_reads,ill_250_5_50M,$(HG_FASTA),250,50000000,750,250,9542))
