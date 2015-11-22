@@ -6,7 +6,7 @@ for LEN in 100 250 ; do
 
 if [ "$PAIRED" == "1" ] ; then
 for REP in 1 2 3 4 5 ; do
-cat >.mason_reads_${PAIRED}_${LEN}.sh <<EOF
+cat >.mason_reads_${PAIRED}_${REP}_${LEN}.sh <<EOF
 #!/bin/bash -l
 #SBATCH
 #SBATCH --nodes=1
