@@ -10,7 +10,7 @@ cat >.mason_reads_${PAIRED}_${REP}_${LEN}.sh <<EOF
 #!/bin/bash -l
 #SBATCH
 #SBATCH --nodes=1
-#SBATCH --mem=32G
+#SBATCH --mem=64G
 #SBATCH --partition=shared
 #SBATCH --time=8:00:00
 make r${PAIRED}_mason_ill_${LEN}_${REP}_${AMT}.fq.gz
@@ -22,7 +22,7 @@ cat >.mason_reads_${PAIRED}_${LEN}.sh <<EOF
 #!/bin/bash -l
 #SBATCH
 #SBATCH --nodes=1
-#SBATCH --mem=32G
+#SBATCH --mem=64G
 #SBATCH --partition=shared
 #SBATCH --time=8:00:00
 make r${PAIRED}_mason_ill_${LEN}_${AMT}.fq.gz
