@@ -1,6 +1,10 @@
 #!/bin/sh
 
 AMT=50M
+MEM="128G"
+PARTITION=lrgmem
+NHOURS=8
+
 for PAIRED in 0 1 ; do
 for LEN in 100 250 ; do
 
@@ -10,9 +14,9 @@ cat >.mason_reads_${PAIRED}_${REP}_${LEN}.sh <<EOF
 #!/bin/bash -l
 #SBATCH
 #SBATCH --nodes=1
-#SBATCH --mem=64G
-#SBATCH --partition=shared
-#SBATCH --time=8:00:00
+#SBATCH --mem=${MEM}
+#SBATCH --partition=${PARTITION}
+#SBATCH --time=${NHOURS}:00:00
 make r${PAIRED}_mason_ill_${LEN}_${REP}_${AMT}.fq.gz
 EOF
 echo "sbatch .mason_reads_${PAIRED}_${REP}_${LEN}.sh"
@@ -22,9 +26,9 @@ cat >.mason_reads_${PAIRED}_${LEN}.sh <<EOF
 #!/bin/bash -l
 #SBATCH
 #SBATCH --nodes=1
-#SBATCH --mem=64G
-#SBATCH --partition=shared
-#SBATCH --time=8:00:00
+#SBATCH --mem=${MEM}
+#SBATCH --partition=${PARTITION}
+#SBATCH --time=${NHOURS}:00:00
 make r${PAIRED}_mason_ill_${LEN}_${AMT}.fq.gz
 EOF
 echo "sbatch .mason_reads_${PAIRED}_${LEN}.sh"
