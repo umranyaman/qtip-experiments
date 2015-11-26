@@ -92,7 +92,7 @@ clean:
 	rm -rf *.out
 
 .PHONY: outs
-preds: outs_bt2 outs_bwamem
+outs: outs_bt2 outs_bwamem
 
 .PHONY: outs_bt2
 outs_bt2: \
