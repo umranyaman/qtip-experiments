@@ -2,11 +2,11 @@
 from __future__ import print_function
 
 """
-python hhpc_out.py dry
+python marcc_out.py dry
 
 for dry run: write scripts but doesn't qsub them
 
-python hhpc_out.py wet
+python marcc_out.py wet
 
 for normal run: write scripts and also qsub them
 """
@@ -20,7 +20,7 @@ import re
 idx = 0
 re_out = re.compile('^outs_[_a-zA-Z01-9]*:.*')
 mem_gb = 8
-
+hours = 4
 
 def handle_dir(dirname, dry_run=True):
     global idx
@@ -44,20 +44,21 @@ def handle_dir(dirname, dry_run=True):
                     elif os.path.exists(target_full):
                         # delete it???
                         pass
-                    my_mem_gb = mem_gb
+                    my_mem_gb, my_hours = mem_gb, hours
                     if '_bwamem' in target_full:
                         my_mem_gb = int(round(1.5*my_mem_gb))
                     if '_snap' in target_full:
                         my_mem_gb = int(round(4.0*my_mem_gb))
                     if '_50M.' in target_full:
                         my_mem_gb = int(my_mem_gb * 1.5)
+                        my_hours *= 10
                     pbs_lns = list()
                     pbs_lns.append('#!/bin/bash -l')
                     pbs_lns.append('#SBATCH')
                     pbs_lns.append('#SBATCH --nodes=1')
                     pbs_lns.append('#SBATCH --mem=%dG' % my_mem_gb)
                     pbs_lns.append('#SBATCH --partition=shared')
-                    pbs_lns.append('#SBATCH --time=4:00:00')
+                    pbs_lns.append('#SBATCH --time=%d:00:00' % my_hours)
                     pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
                     pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
