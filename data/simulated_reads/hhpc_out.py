@@ -52,6 +52,7 @@ def handle_dir(dirname, dry_run=True):
                     if '_50M.' in target_full:
                         my_mem_gb = int(my_mem_gb * 1.5)
                     pbs_lns = list()
+                    pbs_lns.append('#!/bin/bash -l')
                     pbs_lns.append('#SBATCH')
                     pbs_lns.append('#SBATCH --nodes=1')
                     pbs_lns.append('#SBATCH --mem=%dG' % my_mem_gb)
