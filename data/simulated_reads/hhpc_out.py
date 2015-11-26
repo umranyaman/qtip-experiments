@@ -46,21 +46,20 @@ def handle_dir(dirname, dry_run=True):
                         pass
                     my_mem_gb = mem_gb
                     if '_bwamem' in target_full:
-                        my_mem_gb = 12
+                        my_mem_gb = int(round(1.5*my_mem_gb))
                     if '_snap' in target_full:
-                        my_mem_gb = 64
+                        my_mem_gb = int(round(4.0*my_mem_gb))
                     if '_50M.' in target_full:
                         my_mem_gb = int(my_mem_gb * 1.5)
                     pbs_lns = list()
-                    pbs_lns.append('#PBS -q batch')
-                    pbs_lns.append('#PBS -l walltime=48:00:00')
-                    pbs_lns.append('#PBS -j n')
-                    for mem_arg in ['pmem', 'vmem', 'pvmem', 'mem']:
-                        pbs_lns.append('#PBS -l %s=%dgb' % (mem_arg, my_mem_gb))
+                    pbs_lns.append('#SBATCH')
+                    pbs_lns.append('#SBATCH --nodes=1')
+                    pbs_lns.append('#SBATCH --mem=%dG' % my_mem_gb)
+                    pbs_lns.append('#SBATCH --partition=shared')
+                    pbs_lns.append('#SBATCH --time=4:00:00')
                     pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
                     pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
-                    pbs_lns.append('export TMPDIR=/scratch1/langmead-fs1/temp/langmead')
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
                     pbs_lns.append('if make %s ; then touch %s/DONE ; fi' % (target, target))
                     qsub_basename = '.' + target + '.sh'
@@ -68,9 +67,9 @@ def handle_dir(dirname, dry_run=True):
                     with open(qsub_fullname, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1
-                    print('pushd %s && qsub %s && popd' % (dirname, qsub_basename))
+                    print('pushd %s && sbatch %s && popd' % (dirname, qsub_basename))
                     if not dry_run:
-                        os.system('cd %s && qsub %s' % (dirname, qsub_basename))
+                        os.system('cd %s && sbatch %s' % (dirname, qsub_basename))
                         time.sleep(0.5)
 
 
