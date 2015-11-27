@@ -15,7 +15,7 @@ r0_$1_%.out: r0_%.fq.gz
 	       --U $$< \
 	       -- $5 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS)
 	-$$(BWA) > $$@/bwa_version 2>&1
-	$$(TS) --version > $$@/ts_version
+	-$$(TS) --version > $$@/ts_version
 
 r12_$1_%.out: r1_%.fq.gz
 	$$(TS) --ref $6 \
@@ -27,6 +27,6 @@ r12_$1_%.out: r1_%.fq.gz
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
 	       -- $5 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS)
 	-$$(BWA) > $$@/bwa_version 2>&1
-	$$(TS) --version > $$@/ts_version
+	-$$(TS) --version > $$@/ts_version
 
 endef

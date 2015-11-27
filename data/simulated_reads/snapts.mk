@@ -26,8 +26,8 @@ r0_$1_%.out: r0_%.fq.gz
 	       --output-directory $$@ \
 	       --U $$< \
 	       -- $5 $$(SNAP_ARGS) -- $6 -- $7
-	$$(SNAP) 2> $$@/snap_version
-	$$(TS) --version > $$@/ts_version
+	-$$(SNAP) 2> $$@/snap_version
+	-$$(TS) --version > $$@/ts_version
 
 r12_$1_%.out: r1_%.fq.gz
 	$$(TS) --ref $8 \
@@ -38,7 +38,7 @@ r12_$1_%.out: r1_%.fq.gz
 	       --output-directory $$@ \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
 	       -- $5 $$(SNAP_ARGS) -- $6 -- $7
-	$$(SNAP) 2> $$@/snap_version
-	$$(TS) --version > $$@/ts_version
+	-$$(SNAP) 2> $$@/snap_version
+	-$$(TS) --version > $$@/ts_version
 
 endef
