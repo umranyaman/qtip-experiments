@@ -53,7 +53,10 @@ clean:
 	rm -rf *.out
 
 .PHONY: outs
-outs: \
+outs: outs_bt2
+
+.PHONY: outs_bt2
+outs_bt2: \
     r0_bt2s_mason_fff_50to500_100k.out \
     r0_bt2sl_mason_fff_50to500_100k.out
 
