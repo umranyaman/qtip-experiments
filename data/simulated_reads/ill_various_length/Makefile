@@ -46,7 +46,6 @@ $(BOWTIE2):
 
 include ../mason.mk
 include ../bowtie2ts.mk
-include ../predict.mk
 
 .PHONY: outs
 outs: outs_bt2
