@@ -130,8 +130,8 @@ $(eval $(call bwamemts,bwamem100,100000,100000,$(SUBSAMPLING_ARGS),-I 300$(,)25,
 $(eval $(call bwamemts,bwamem250,100000,100000,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call snapts,snap,100000,100000,$(SUBSAMPLING_ARGS),,,,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call snapts,snapts100,100000,100000,$(SUBSAMPLING_ARGS),,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call snapts,snapts250,100000,100000,$(SUBSAMPLING_ARGS),,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snap100,100000,100000,$(SUBSAMPLING_ARGS),,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call snapts,snap250,100000,100000,$(SUBSAMPLING_ARGS),,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
 
 $(eval $(call mason_ill_unp_reads,ill_100_100k,$(HG_FASTA),100,100000,7724))
 $(eval $(call mason_ill_unp_reads,ill_250_100k,$(HG_FASTA),250,100000,7724))
