@@ -24,7 +24,7 @@ hours = 4
 
 def handle_dir(dirname, dry_run=True):
     global idx
-    with open(os.path.join(dirname, 'Makefile')) as fh:
+    with open(os.path.join(dirname, 'Makefile.disabled.disabled.disabled')) as fh:
         in_out = False
         for ln in fh:
             if ln[0] == '#':
@@ -52,6 +52,8 @@ def handle_dir(dirname, dry_run=True):
                     if '_50M.' in target_full:
                         my_mem_gb = int(my_mem_gb * 1.5)
                         my_hours *= 10
+                    if 'r12' in target_full and 'ill_various_length' in target_full:
+                        my_hours *= 2
                     pbs_lns = list()
                     pbs_lns.append('#!/bin/bash -l')
                     pbs_lns.append('#SBATCH')
@@ -83,8 +85,8 @@ def go():
     if 'TS_INDEXES' not in os.environ:
         raise RuntimeError('Must have TS_INDEXES set')
     for dirname, dirs, files in os.walk('.'):
-        if 'Makefile' in files:
-            print('Found a Makefile: %s' % (os.path.join(dirname, 'Makefile')), file=sys.stderr)
+        if 'Makefile.disabled.disabled.disabled' in files:
+            print('Found a Makefile.disabled.disabled.disabled: %s' % (os.path.join(dirname, 'Makefile.disabled.disabled.disabled')), file=sys.stderr)
             handle_dir(dirname, dry_run=sys.argv[1] == 'dry')
 
 if len(sys.argv) == 1:
