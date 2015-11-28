@@ -43,7 +43,7 @@ def copyfiles(fglob, dest, prefix=''):
         shutil.copyfile(fn, join(dest, prefix + os.path.basename(fn)))
 
 
-def compile_line(fh, combined_target_name, rate, trial, params_fn, summ_fn, first):
+def compile_line(ofh, combined_target_name, rate, trial, params_fn, summ_fn, first):
     headers = ['name', 'subsampling_rate', 'trial_no']
     values = [combined_target_name, rate, trial]
     for fn in [params_fn, summ_fn]:
@@ -53,8 +53,8 @@ def compile_line(fh, combined_target_name, rate, trial, params_fn, summ_fn, firs
             body = fh.readline().rstrip()
             values += body.split(',')
     if first:
-        fh.write(','.join(map(str, headers)) + '\n')
-    fh.write(','.join(map(str, values)) + '\n')
+        ofh.write(','.join(map(str, headers)) + '\n')
+    ofh.write(','.join(map(str, values)) + '\n')
 
 
 def handle_dir(dirname, dest_dirname, ofh, first):
