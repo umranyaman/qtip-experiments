@@ -40,7 +40,7 @@ def has_done(dr):
 def copyfiles(fglob, dest, prefix=''):
     assert os.path.isdir(dest) and os.path.exists(dest)
     for fn in glob.glob(fglob):
-        shutil.copyfile(fn, join(dest, prefix + os.path.basename(fn)))
+        os.system('cp -f %s %s' % (fn, join(dest, prefix + os.path.basename(fn))))
 
 
 def compile_line(ofh, combined_target_name, rate, trial, params_fn, summ_fn, first):
@@ -90,9 +90,9 @@ def handle_dir(dirname, dest_dirname, ofh, first):
 
                             mkdir_quiet(odir)
 
-                            copyfiles(join(target_full_st, 'featimport_*.csv'), odir)
+                            os.system('cp -f %s %s' % (join(target_full_st, 'featimport_*.csv'), odir))
                             params_fn = join(odir, 'params.csv')
-                            shutil.copyfile(join(target_full_st, 'params.csv'), params_fn)
+                            os.system('cp -f %s %s' % (join(target_full_st, 'params.csv'), params_fn))
 
                             for tt in ['test', 'training']:
 
@@ -104,7 +104,7 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                                 copyfiles(join(target_full_stt, 'cse*.csv'), odir, tt + '_')
                                 copyfiles(join(target_full_stt, 'roc*.csv'), odir, tt + '_')
                                 summ_fn = join(odir, tt + '_summary.csv')
-                                shutil.copyfile(join(target_full_stt, 'summary.csv'), summ_fn)
+                                os.system('cp -f %s %s' % (join(target_full_stt, 'summary.csv'), summ_fn))
                                 compile_line(ofh, combined_target_name, rate, trial, params_fn, summ_fn, first)
                                 first = False
 
