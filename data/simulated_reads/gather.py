@@ -57,7 +57,7 @@ def compile_line(fh, combined_target_name, rate, trial, params_fn, summ_fn, firs
     fh.write(','.join(map(str, values)) + '\n')
 
 
-def handle_dir(dirname, dest_dirname):
+def handle_dir(dirname, dest_dirname, ofh, first):
     name = os.path.basename(dirname)
     with open(join(dirname, 'Makefile')) as fh:
 
@@ -76,40 +76,37 @@ def handle_dir(dirname, dest_dirname):
                     combined_target_name = name + '_' + target[:-4]
                     odir = join(dest_dirname, combined_target_name)
 
-                    with open(join(odir, 'compiled.tsv')) as fh:
+                    for rate in sampling_rates:
 
-                        first = True
-                        for rate in sampling_rates:
+                        target_full_s = join(target_full, 'sample' + rate)
+                        if not os.path.isdir(target_full_s):
+                            raise RuntimeError('Directory "%s" does not exist' % target_full_s)
 
-                            target_full_s = join(target_full, 'sample' + rate)
-                            if not os.path.isdir(target_full_s):
-                                raise RuntimeError('Directory "%s" does not exist' % target_full_s)
+                        for trial in trials:
 
-                            for trial in trials:
+                            target_full_st = join(target_full_s, 'trial' + trial)
+                            if not os.path.isdir(target_full_st):
+                                raise RuntimeError('Directory "%s" does not exist' % target_full_st)
 
-                                target_full_st = join(target_full_s, 'trial' + trial)
-                                if not os.path.isdir(target_full_st):
-                                    raise RuntimeError('Directory "%s" does not exist' % target_full_st)
+                            mkdir_quiet(odir)
 
-                                mkdir_quiet(odir)
+                            copyfiles(join(target_full_st, 'featimport_*.csv'), odir)
+                            params_fn = join(odir, 'params.csv')
+                            shutil.copyfile(join(target_full_st, 'params.csv'), params_fn)
 
-                                copyfiles(join(target_full_st, 'featimport_*.csv'), odir)
-                                params_fn = join(odir, 'params.csv')
-                                shutil.copyfile(join(target_full_st, 'params.csv'), params_fn)
+                            for tt in ['test', 'training']:
 
-                                for tt in ['test', 'training']:
+                                target_full_stt = join(target_full_st, tt)
+                                if not os.path.isdir(target_full_stt):
+                                    raise RuntimeError('Directory "%s" does not exist' % target_full_stt)
 
-                                    target_full_stt = join(target_full_st, tt)
-                                    if not os.path.isdir(target_full_stt):
-                                        raise RuntimeError('Directory "%s" does not exist' % target_full_stt)
-
-                                    copyfiles(join(target_full_stt, 'cid*.csv'), odir, tt + '_')
-                                    copyfiles(join(target_full_stt, 'cse*.csv'), odir, tt + '_')
-                                    copyfiles(join(target_full_stt, 'roc*.csv'), odir, tt + '_')
-                                    summ_fn = join(odir, tt + '_summary.csv')
-                                    shutil.copyfile(join(target_full_stt, 'summary.csv'), summ_fn)
-                                    compile_line(fh, combined_target_name, rate, trial, params_fn, summ_fn, first)
-                                    first = False
+                                copyfiles(join(target_full_stt, 'cid*.csv'), odir, tt + '_')
+                                copyfiles(join(target_full_stt, 'cse*.csv'), odir, tt + '_')
+                                copyfiles(join(target_full_stt, 'roc*.csv'), odir, tt + '_')
+                                summ_fn = join(odir, tt + '_summary.csv')
+                                shutil.copyfile(join(target_full_stt, 'summary.csv'), summ_fn)
+                                compile_line(ofh, combined_target_name, rate, trial, params_fn, summ_fn, first)
+                                first = False
 
 
 def go():
@@ -117,10 +114,14 @@ def go():
     logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',
                         datefmt='%m/%d/%y-%H:%M:%S', level=logging.DEBUG)
 
-    for dirname, dirs, files in os.walk('.'):
-        if 'Makefile' in files:
-            logging.info('Found a Makefile: %s' % join(dirname, 'Makefile'))
-            handle_dir(dirname, 'summary')
+    odir = 'summary'
+    first = True
+    with open(join(odir, 'overall.csv')) as fh:
+        for dirname, dirs, files in os.walk('.'):
+            if 'Makefile' in files:
+                logging.info('Found a Makefile: %s' % join(dirname, 'Makefile'))
+                handle_dir(dirname, odir, fh, first)
+                first = False
 
     os.system('tar -cvzf summary.tar.gz summary')
 
