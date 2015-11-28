@@ -6,6 +6,7 @@ Gather together all the results from all the various simulation experiments.
 
 import os
 import re
+import sys
 import glob
 import shutil
 import logging
@@ -42,9 +43,22 @@ def copyfiles(fglob, dest, prefix=''):
         shutil.copyfile(fn, join(dest, prefix + os.path.basename(fn)))
 
 
+def compile_line(fh, combined_target_name, rate, trial, params_fn, summ_fn, first):
+    headers = ['name', 'subsampling_rate', 'trial_no']
+    values = [combined_target_name, rate, trial]
+    for fn in [params_fn, summ_fn]:
+        with open(fn, 'r') as fh:
+            header = fh.readline().rstrip()
+            headers += header.split(',')
+            body = fh.readline().rstrip()
+            values += body.split(',')
+    if first:
+        fh.write(','.join(map(str, headers)) + '\n')
+    fh.write(','.join(map(str, values)) + '\n')
+
+
 def handle_dir(dirname, dest_dirname):
     name = os.path.basename(dirname)
-    table = []
     with open(join(dirname, 'Makefile')) as fh:
 
         in_target = False
@@ -62,36 +76,40 @@ def handle_dir(dirname, dest_dirname):
                     combined_target_name = name + '_' + target[:-4]
                     odir = join(dest_dirname, combined_target_name)
 
-                    for rate in sampling_rates:
+                    with open(join(odir, 'compiled.tsv')) as fh:
 
-                        target_full_s = join(target_full, 'sample' + rate)
-                        if not os.path.isdir(target_full_s):
-                            raise RuntimeError('Directory "%s" does not exist' % target_full_s)
+                        first = True
+                        for rate in sampling_rates:
 
-                        for trial in trials:
+                            target_full_s = join(target_full, 'sample' + rate)
+                            if not os.path.isdir(target_full_s):
+                                raise RuntimeError('Directory "%s" does not exist' % target_full_s)
 
-                            target_full_st = join(target_full_s, 'trial' + trial)
-                            if not os.path.isdir(target_full_st):
-                                raise RuntimeError('Directory "%s" does not exist' % target_full_st)
+                            for trial in trials:
 
-                            mkdir_quiet(odir)
+                                target_full_st = join(target_full_s, 'trial' + trial)
+                                if not os.path.isdir(target_full_st):
+                                    raise RuntimeError('Directory "%s" does not exist' % target_full_st)
 
-                            copyfiles(join(target_full_st, 'featimport_*.csv'), odir)
-                            params_fn = join(odir, 'params.csv')
-                            shutil.copyfile(join(target_full_st, 'params.csv'), params_fn)
+                                mkdir_quiet(odir)
 
-                            for tt in ['test', 'training']:
+                                copyfiles(join(target_full_st, 'featimport_*.csv'), odir)
+                                params_fn = join(odir, 'params.csv')
+                                shutil.copyfile(join(target_full_st, 'params.csv'), params_fn)
 
-                                target_full_stt = join(target_full_st, tt)
-                                if not os.path.isdir(target_full_stt):
-                                    raise RuntimeError('Directory "%s" does not exist' % target_full_stt)
+                                for tt in ['test', 'training']:
 
-                                copyfiles(join(target_full_stt, 'cid*.csv'), odir, tt + '_')
-                                copyfiles(join(target_full_stt, 'cse*.csv'), odir, tt + '_')
-                                copyfiles(join(target_full_stt, 'roc*.csv'), odir, tt + '_')
-                                summ_fn = join(odir, tt + '_summary.csv')
-                                shutil.copyfile(join(target_full_stt, 'summary.csv'), summ_fn)
-                                table.append([combined_target_name, rate, trial, params_fn, summ_fn])
+                                    target_full_stt = join(target_full_st, tt)
+                                    if not os.path.isdir(target_full_stt):
+                                        raise RuntimeError('Directory "%s" does not exist' % target_full_stt)
+
+                                    copyfiles(join(target_full_stt, 'cid*.csv'), odir, tt + '_')
+                                    copyfiles(join(target_full_stt, 'cse*.csv'), odir, tt + '_')
+                                    copyfiles(join(target_full_stt, 'roc*.csv'), odir, tt + '_')
+                                    summ_fn = join(odir, tt + '_summary.csv')
+                                    shutil.copyfile(join(target_full_stt, 'summary.csv'), summ_fn)
+                                    compile_line(fh, combined_target_name, rate, trial, params_fn, summ_fn, first)
+                                    first = False
 
 
 def go():
