@@ -90,7 +90,7 @@ def handle_dir(dirname, dest_dirname):
                                 copyfiles(join(target_full_stt, 'cse*.csv'), odir, tt + '_')
                                 copyfiles(join(target_full_stt, 'roc*.csv'), odir, tt + '_')
                                 summ_fn = join(odir, tt + '_summary.csv')
-                                shutil.copyfile(join(target_full_st, 'summary.csv'), summ_fn)
+                                shutil.copyfile(join(target_full_stt, 'summary.csv'), summ_fn)
                                 table.append([combined_target_name, rate, trial, params_fn, summ_fn])
 
 
