@@ -46,8 +46,7 @@ def handle_dir(dirname, dry_run=True):
                         pass
                     my_mem_gb, my_hours = mem_gb, hours
                     if 'r12' in target_full and 'various_genomes' in target_full:
-                        my_hours *= 3
-                        my_hours /= 2
+                        my_hours *= 2
                     if '_bwamem' in target_full:
                         my_mem_gb = int(round(1.5*my_mem_gb))
                     if '_snap' in target_full:
