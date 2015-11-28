@@ -116,7 +116,7 @@ def go():
 
     odir = 'summary'
     first = True
-    with open(join(odir, 'overall.csv')) as fh:
+    with open(join(odir, 'overall.csv'), 'w') as fh:
         for dirname, dirs, files in os.walk('.'):
             if 'Makefile' in files:
                 logging.info('Found a Makefile: %s' % join(dirname, 'Makefile'))
