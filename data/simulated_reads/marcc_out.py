@@ -20,7 +20,7 @@ import re
 idx = 0
 re_out = re.compile('^outs_[_a-zA-Z01-9]*:.*')
 mem_gb = 8
-hours = 4
+hours = 6
 
 def handle_dir(dirname, dry_run=True):
     global idx
