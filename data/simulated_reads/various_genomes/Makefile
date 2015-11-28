@@ -124,7 +124,7 @@ outs_bwamem: \
     r12_bwamem100_zm_mason_ill_zm_100_100k.out \
     r12_bwamem250_zm_mason_ill_zm_250_100k.out
 
-SUBSAMPLING_ARGS=--subsampling-series 0.05,0.1,0.2,0.3,0.4,0.5,1.0 --trials=5 --predict-for-training --keep-intermediates
+SUBSAMPLING_ARGS=--subsampling-series 0.05,0.1,0.2,0.3,0.4,0.5,1.0 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 , := ,
 
