@@ -45,6 +45,9 @@ def handle_dir(dirname, dry_run=True):
                         # delete it???
                         pass
                     my_mem_gb, my_hours = mem_gb, hours
+                    if 'r12' in target_full and 'various_genomes' in target_full:
+                        my_hours *= 3
+                        my_hours /= 2
                     if '_bwamem' in target_full:
                         my_mem_gb = int(round(1.5*my_mem_gb))
                     if '_snap' in target_full:
@@ -53,7 +56,8 @@ def handle_dir(dirname, dry_run=True):
                         my_mem_gb = int(my_mem_gb * 1.5)
                         my_hours *= 10
                     if 'r12' in target_full and 'ill_various_length' in target_full:
-                        my_hours *= 2
+                        my_hours *= 3
+                        my_hours /= 2
                     pbs_lns = list()
                     pbs_lns.append('#!/bin/bash -l')
                     pbs_lns.append('#SBATCH')
