@@ -116,6 +116,7 @@ def go():
 
     odir = 'summary'
     first = True
+    mkdir_quiet(odir)
     with open(join(odir, 'overall.csv'), 'w') as fh:
         for dirname, dirs, files in os.walk('.'):
             if 'Makefile' in files:
