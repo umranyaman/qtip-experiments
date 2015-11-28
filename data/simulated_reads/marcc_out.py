@@ -58,6 +58,7 @@ def handle_dir(dirname, dry_run=True):
                     if 'r12' in target_full and 'ill_various_length' in target_full:
                         my_hours *= 3
                         my_hours /= 2
+                    qsub_basename = '.' + target + '.sh'
                     pbs_lns = list()
                     pbs_lns.append('#!/bin/bash -l')
                     pbs_lns.append('#SBATCH')
@@ -72,7 +73,6 @@ def handle_dir(dirname, dry_run=True):
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
                     pbs_lns.append('if make %s ; then touch %s/DONE ; fi' % (target, target))
-                    qsub_basename = '.' + target + '.sh'
                     qsub_fullname = os.path.join(dirname, qsub_basename)
                     with open(qsub_fullname, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
