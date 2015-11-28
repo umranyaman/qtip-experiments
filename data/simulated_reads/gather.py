@@ -35,14 +35,15 @@ def has_done(dr):
         raise RuntimeError('Directory "%s" does not contain DONE file' % dr)
 
 
-def copyfiles(fglob, dest):
+def copyfiles(fglob, dest, prefix=''):
     assert os.path.isdir(dest) and os.path.exists(dest)
     for fn in glob.glob(fglob):
-        shutil.copyfile(fn, dest)
+        shutil.copyfile(fn, os.path.join(dest, prefix + os.path.basename(fn)))
 
 
 def handle_dir(dirname, dest_dirname):
     name = os.path.basename(dirname)
+    table = []
     with open(os.path.join(dirname, 'Makefile')) as fh:
 
         in_target = False
@@ -57,6 +58,9 @@ def handle_dir(dirname, dest_dirname):
                     target_full = os.path.join(dirname, target)
                     has_done(target_full)
 
+                    combined_target_name = name + '_' + target[:-4]
+                    odir = os.path.join(dest_dirname, combined_target_name)
+
                     for rate in sampling_rates:
 
                         target_full_s = os.path.join(target_full, 'sample' + rate)
@@ -69,13 +73,11 @@ def handle_dir(dirname, dest_dirname):
                             if not os.path.isdir(target_full_st):
                                 raise RuntimeError('Directory "%s" does not exist' % target_full_st)
 
-                            combined_target_name = name + '_' + target[:-4]
-
-                            odir = os.path.join(dest_dirname, combined_target_name)
                             mkdir_quiet(odir)
 
                             copyfiles(os.path.join(target_full_st, 'featimport_*.csv'), odir)
                             shutil.copyfile(os.path.join(target_full_st, 'params.csv'), odir)
+                            params_fn = os.path.join(odir, 'params.csv')
 
                             for tt in ['test', 'training']:
 
@@ -83,10 +85,12 @@ def handle_dir(dirname, dest_dirname):
                                 if not os.path.isdir(target_full_stt):
                                     raise RuntimeError('Directory "%s" does not exist' % target_full_stt)
 
-                                copyfiles(os.path.join(target_full_stt, 'cid*.csv'), odir)
-                                copyfiles(os.path.join(target_full_stt, 'cse*.csv'), odir)
-                                copyfiles(os.path.join(target_full_stt, 'roc*.csv'), odir)
-                                shutil.copyfile(os.path.join(target_full_st, 'summary.csv'), odir)
+                                copyfiles(os.path.join(target_full_stt, 'cid*.csv'), odir, tt + '_')
+                                copyfiles(os.path.join(target_full_stt, 'cse*.csv'), odir, tt + '_')
+                                copyfiles(os.path.join(target_full_stt, 'roc*.csv'), odir, tt + '_')
+                                summ_fn = os.path.join(odir, tt + '_summary.csv')
+                                shutil.copyfile(os.path.join(target_full_st, 'summary.csv'), summ_fn)
+                                table.append([combined_target_name, rate, trial, params_fn, summ_fn])
 
 
 def go():
@@ -97,7 +101,7 @@ def go():
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
             logging.info('Found a Makefile: %s' % os.path.join(dirname, 'Makefile'))
-            handle_dir(dirname)
+            handle_dir(dirname, 'summary')
 
     os.system('tar -cvzf summary.tar.gz summary')
 
