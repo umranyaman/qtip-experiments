@@ -6,9 +6,7 @@ Gather together all the results from all the various simulation experiments.
 
 import os
 import re
-import sys
 import glob
-import shutil
 import logging
 from os.path import join
 
@@ -43,9 +41,9 @@ def copyfiles(fglob, dest, prefix=''):
         os.system('cp -f %s %s' % (fn, join(dest, prefix + os.path.basename(fn))))
 
 
-def compile_line(ofh, combined_target_name, rate, trial, params_fn, summ_fn, first):
-    headers = ['name', 'subsampling_rate', 'trial_no']
-    values = [combined_target_name, rate, trial]
+def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first):
+    headers = ['name', 'training', 'trial_no']
+    values = [combined_target_name, 'T' if tt == 'training' else 'F', trial]
     for fn in [params_fn, summ_fn]:
         with open(fn, 'r') as fh:
             header = fh.readline().rstrip()
@@ -105,7 +103,7 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                                 copyfiles(join(target_full_stt, 'roc*.csv'), odir, tt + '_')
                                 summ_fn = join(odir, tt + '_summary.csv')
                                 os.system('cp -f %s %s' % (join(target_full_stt, 'summary.csv'), summ_fn))
-                                compile_line(ofh, combined_target_name, rate, trial, params_fn, summ_fn, first)
+                                compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first)
                                 first = False
 
 
