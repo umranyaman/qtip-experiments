@@ -18,6 +18,73 @@ sampling_rates = ['0.05', '0.1', '0.2', '0.3', '0.4', '0.5', '1.0']
 trials = ['1', '2', '3', '4', '5']
 
 
+def parse_aligner_local(target):
+    # Parsing aligner info
+    toks = target.split('_')
+    aligner, local = 'bt2', False
+    if 'bwamem' in toks[1]:
+        aligner = 'bwamem'
+        local = True
+    if 'snap' in toks[1]:
+        aligner = 'snap'
+        local = True
+    if aligner == 'bt2' and toks[1][-1] == 'l':
+        toks[1] = toks[1][:-1]
+        local = True
+    return aligner, local
+
+
+def parse_species(target):
+    genome = 'hg'
+    toks = target.split('_')
+    # Parsing reference species info
+    if toks[2] == 'mm':
+        genome = 'mm'
+    if toks[2] == 'zm':
+        genome = 'zm'
+    return genome
+
+
+def parse_sim(target):
+    sim = 'mason'
+    toks = target.split('_')
+    # Parsing simulator info:
+    if toks[2] == 'wgsim':
+        sim = 'wgsim'
+    if toks[2] == 'art':
+        sim = 'art'
+    return sim
+
+
+def parse_sensitivity(target, aligner):
+    toks = target.split('_')
+    sensitivity = 's'
+    if aligner == 'bt2':
+        sensitivity = toks[1][3:]
+    return sensitivity
+
+
+def parse_paired(target):
+    return target.startswith('r12')
+
+
+def parse_readlen(target):
+    toks = target.split('_')
+    readlen = int(toks[-2])
+    if readlen == '50to500':
+        readlen = 500
+    return readlen
+
+
+def parse_name_and_target(combined):
+    toks = combined.split('_')
+    roff = 3
+    if toks[2] == 'r0' or toks[2] == 'r12':
+        roff = 2
+    assert toks[roff] == 'r0' or toks[roff] == 'r12'
+    return '_'.join(toks[:roff]), '_'.join(toks[roff:])
+
+
 def mkdir_quiet(dr):
     # Create output directory if needed
     import errno
@@ -42,8 +109,20 @@ def copyfiles(fglob, dest, prefix=''):
 
 
 def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first):
-    headers = ['name', 'training', 'trial_no']
-    values = [combined_target_name, 'T' if tt == 'training' else 'F', trial]
+    # TODO: parse name and write some other relevant variables, like whether
+    # we're doing local alignment or whether we're aligning pairs
+    name, target = parse_name_and_target(combined_target_name)
+    aligner, local = parse_aligner_local(target)
+    paired = parse_paired(target)
+    sim = parse_sim(target)
+    readlen = parse_readlen(target)
+    sensitivity = parse_sensitivity(target, aligner)
+    species = parse_species(target)
+    headers = ['name', 'training', 'trial_no', 'aligner', 'local', 'paired',
+               'sim', 'readlen', 'sensitivity', 'species']
+    values = [name, 'T' if tt == 'training' else 'F', trial, aligner,
+              'T' if local else 'F', 'T' if paired else 'F', sim,
+              str(readlen), sensitivity, species]
     for fn in [params_fn, summ_fn]:
         with open(fn, 'r') as fh:
             header = fh.readline().rstrip()
@@ -74,6 +153,8 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                     combined_target_name = name + '_' + target[:-4]
                     odir = join(dest_dirname, combined_target_name)
 
+                    # Parse some things from the target
+
                     for rate in sampling_rates:
 
                         target_full_s = join(target_full, 'sample' + rate)
@@ -103,7 +184,7 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                                 copyfiles(join(target_full_stt, 'roc*.csv'), odir, tt + '_')
                                 summ_fn = join(odir, tt + '_summary.csv')
                                 os.system('cp -f %s %s' % (join(target_full_stt, 'summary.csv'), summ_fn))
-                                compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first)
+                                compile_line(ofh, name, combined_target_name, tt, trial, params_fn, summ_fn, first)
                                 first = False
 
 
