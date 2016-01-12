@@ -8,7 +8,7 @@ cat >.${dat}.${ext} <<EOF
 #SBATCH --partition=shared
 #SBATCH --time=48:00:00
 #SBATCH --mem=12G
-time -v make ${dat}.${ext}
+/usr/bin/time -v make ${dat}.${ext}
 EOF
 echo "sbatch .${dat}.${ext}"
 done
@@ -18,7 +18,7 @@ cat >.${dat}.${ext} <<EOF
 #SBATCH --partition=shared
 #SBATCH --time=48:00:00
 #SBATCH --mem=64G
-time -v make ${dat}.${ext}
+/usr/bin/time -v make ${dat}.${ext}
 EOF
 echo "sbatch .${dat}.${ext}"
 done
@@ -29,7 +29,7 @@ cat >.${dat}.${pe} <<EOF
 #SBATCH --partition=shared
 #SBATCH --time=12:00:00
 #SBATCH --mem=4G
-make ${dat}.unp.csv
+/usr/bin/time -v make ${dat}.unp.csv
 EOF
 echo "sbatch .${dat}.${pe}"
 done
