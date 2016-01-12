@@ -2,6 +2,10 @@ TS_BWA_HOME=$(TS_HOME)/software/bwa
 TS_SNAP_HOME=$(TS_HOME)/software/snap
 TS_BT2_HOME=$(TS_HOME)/software/bowtie2
 
+#
+# Note: all default arguments being given to alignment tools
+#
+
 BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 --index $(TS_INDEXES)/hg19.fa
 BWA_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(TS_INDEXES)/hg19.fa
 SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap/snap-aligner --index $(TS_INDEXES)/hg19.fa.snap
@@ -9,7 +13,13 @@ SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap/snap-aligner --index $(
 ARGS=--ref $(TS_REFS)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346
 ARGS_SAMP=--keep-intermediates --predict-for-training
 
-NTHREADS=16
+NTHREADS=1
+
+#
+# These CSV files contain the ultimate output from multi_aligner.py when
+# analyzing SAMs from various aligners (bt2 --very-sensitive,
+# bt2 --very-sensitive-local, bwa-mem, bt2 --sensitive, and SNAP).
+#
 
 .PHONY: all
 all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
@@ -31,6 +41,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	    --name bt2vs bt2vsl bwamem bt2 snap \
 	    --tier 1 1 2 2 2 > $@
 
+#
+# Is it easy for me to record everything I'd need to make a table of
+# overheads?  I guess one issue I have is that these experiments use many
+# threads and, for the overhead calcs, I'd rather use one.
+#
+#
+#
+
 # #######
 # BWA-MEM
 # #######
@@ -44,17 +62,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
-# BWA-MEM paired-end samples
-%.bwa.pair.sam.0: %.fastq.0
-	for i in `seq 0 9`; do \
-		python ../ts.py \
-			$(BWA_ARGS) $(ARGS) $(ARGS_SAMP) \
-			--m1 $(<:.0=.$$i) \
-			--m2 $(<:_1.fastq.0=_2.fastq.$$i) \
-			--out $(@:.sam.0=.sam.$$i) \
-			-- -t $(NTHREADS) ; \
-	done
-
 # BWA-MEM unpaired overall
 %.bwa.unp.sam: %.fastq
 	python ../ts.py \
@@ -62,16 +69,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
-
-# BWA-MEM unpaired samples
-%.bwa.unp.sam.0: %.fastq.0
-	for i in `seq 0 9`; do \
-		python ../ts.py \
-			$(BWA_ARGS) $(ARGS) $(ARGS_SAMP) \
-			--U $(<:.0=.$$i) \
-			--out $(@:.sam=.sam.$$i) \
-			-- -t $(NTHREADS) ; \
-	done
 
 # #######
 # Bowtie2
@@ -86,17 +83,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS)
 
-# Bowtie2 paired-end samples
-%.bt2.pair.sam.0: %.fastq.0
-	for i in `seq 0 9`; do \
-		python ../ts.py \
-			$(BT2_ARGS) $(ARGS) $(ARGS_SAMP) \
-			--m1 $(<:.0=.$$i) \
-			--m2 $(<:_1.fastq.0=_2.fastq.$$i) \
-			--out $(@:.sam=) \
-			-- -p $(NTHREADS) ; \
-	done
-
 # Bowtie2 unpaired overall
 %.bt2.unp.sam: %.fastq
 	python ../ts.py \
@@ -104,16 +90,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--U $< \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS)
-
-# Bowtie2 unpaired samples
-%.bt2.unp.sam.0: %.fastq.0
-	for i in `seq 0 9`; do \
-		python ../ts.py \
-			$(BT2_ARGS) $(ARGS) $(ARGS_SAMP) \
-			--U $(<:.0=.$$i) \
-			--out $(@:.sam=.sam.$$i) \
-			-- -p $(NTHREADS) ; \
-	done
 
 # #######
 # SNAP
@@ -128,17 +104,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
-# SNAP paired-end samples
-%.snap.pair.sam.0: %.fastq.0
-	for i in `seq 0 9`; do \
-		python ../ts.py \
-			$(SNAP_ARGS) $(ARGS) $(ARGS_SAMP) \
-			--m1 $(<:.0=.$$i) \
-			--m2 $(<:_1.fastq.0=_2.fastq.$$i) \
-			--out $(@:.sam=.sam.$$i) \
-			-- -t $(NTHREADS) ; \
-	done
-
 # SNAP unpaired overall
 %.snap.unp.sam: %.fastq
 	python ../ts.py \
@@ -146,16 +111,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
-
-# SNAP unpaired samples
-%.snap.unp.sam.0: %.fastq.0
-	for i in `seq 0 9`; do \
-		python ../ts.py \
-			$(SNAP_ARGS) $(ARGS) $(ARGS_SAMP) \
-			--U $(<:.0=.$$i) \
-			--out $(@:.sam=.sam.$$i) \
-			-- -t $(NTHREADS) ; \
-	done
 
 # ###############
 # Extra sensitive
@@ -190,10 +145,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS) --very-sensitive-local
-
-%.fastq.0: %.fastq
-	python sample_fastq.py -n 100000 -s 10 $< $(@:.0=) -r 43547
-	python sample_fastq.py -n 100000 -s 10 $(<:_1.fastq=_2.fastq) $(@:_1.fastq.0=_2.fastq) -r 43547
 
 .PHONY: clean
 clean:
