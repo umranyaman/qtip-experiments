@@ -10,30 +10,23 @@ from collections import defaultdict
 __author__ = 'langmead'
 
 """
-Given SAM files from multiple alignment tools, iterate through alignments
-(assuming same order in each SAM), and if all the tools align the read, ask
-how many.
+Ultimately, this tool helps us compare MAPQ assignments for real-word reads
+and for many tools by asking how well the MAPQs reflect a proxy for the
+"truth."  The proxy is the degree to which the various tools agree on the
+reported alignment.
 
-Imagine 3 tools and 3 separate boxplots.  For a given tool, the boxplots show
-(a) the distribution of MAPQs for alignments where this tool agrees with the
-other 2, (b) the same for when the tool agrees with only 1 of the other 2, (c)
-the same for when the tool disagrees with both.
+We consider the aligners/SAM files to be in "tiers."  E.g. maybe the SAMs
+correspond to various levels of sensitivity for the same tool, so we care more
+about whether an alignment is in agreement with the "higher sensitivity" tiers
+than with the other tiers.
 
-How would I quibble with plots like these?  Maybe by saying that disagreement
-is a poor proxy for incorrectness.  Could we build confidence by also doing a
-simulation?
+Given SAM files from multiple alignment tools, sort them by read id, iterate
+through all in tandem and, for each read:
 
-Could we build confidence by taking a given tool, running it with strictly
-more stringent sensitivity settings and seeing a more pronounced mean shift
-for the predicted MAPQs than for the
-
-Another idea is to "tier" SAM files in some way.  Maybe the SAMs correspond to
-various levels of sensitivity for the same tool, so we care more about whether
-an alignment is in agreement with the "higher sensitivity" tiers than with the
-other tiers.
-
-Maybe we should output something generic and rely on the caller to think about
-the SAMs in a "tiered" fashion.
+(a) if any of the tools failed to alignment the read, in which case, skip
+(b) form a matrix of which tools agree with each other
+(c) for each row (aligner), ask how many times the aligner agrees with a
+    higher-tier aligner and how many times it agrees with a same-tier aligner
 
 For every alignment we have information like this
 
@@ -44,17 +37,9 @@ bt2_s     2     10   True,  True, False, False       1             1            
 bt2_f     3     30  False, False,  True, False       0             1             1
 bt2_v     4     30  False, False, False,  True       0             1             1
 
-Other MAPQs too: original, precise.
-
-So maybe the output needs a header row that
-
-Maybe this script should output ROC tables?
-- Tool
-- "Correct" = (a) same as alignment found in all better tiers, or (b) same as
-  alignment found in all better and equal tiers
-- MAPQ used is (a) predicted integer, (b) predicted decimal, (c) orig integer
-
-So total number of tables = 6 * # tools
+We then output several ROC tables = 6 * # tools.  6 because we produce 1 for
+both "strict" and "loose" definitions of correctness and using (a) old, (b)
+new, and (c) new, rounded MAPQ values.
 
 """
 
@@ -88,7 +73,7 @@ def parse_sam_loc_mapq(st):
     toks = st.split('\t')
     flags = int(toks[1])
     if (flags & 4) != 0:
-        return None
+        return None  # failed to align
     rname = toks[2]
     rpos = int(toks[3])
     clist = cigar_to_list(toks[5])
@@ -289,11 +274,12 @@ def go(args):
             print("Warning: read names don't match: %s" % str(rdnames), file=sys.stderr)
         assert len(lns) == len(sams)
         if all(map(lambda x: x is None, lns)):
-            break
+            break  # reached end of all the files
+        # if we reach end of one, should reach end of all
         assert not any(map(lambda x: x is None, lns))
         parsed_sam = map(parse_sam_loc_mapq, lns)
         if any(map(lambda x: x is None, parsed_sam)):
-            continue  # skippy
+            continue  # at least one tool failed to align the read
         sim = same_alns_tiered(parsed_sam, better_tiers, equal_tiers, args['wiggle'])
         for i, tup in enumerate(zip(parsed_sam, names)):
             ps, nm = tup
