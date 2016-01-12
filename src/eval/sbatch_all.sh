@@ -24,7 +24,8 @@ echo "sbatch .${dat}.${ext}"
 done
 done
 
-cat >.${dat}.${ext} <<EOF
+cat >.${dat}.${pe} <<EOF
+#!/bin/sh
 #SBATCH --partition=shared
 #SBATCH --time=12:00:00
 #SBATCH --mem=4G
