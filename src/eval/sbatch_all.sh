@@ -1,7 +1,8 @@
 #!/bin/sh
 
 for dat in ERR050082_1 ERR050083_1 ; do
-for ext in bt2vs.pair.sam bt2vsl.pair.sam bwa.pair.sam bt2.pair.sam ; do
+for pe in unp pair ; do
+for ext in bt2vs.${pe}.sam bt2vsl.${pe}.sam bwa.${pe}.sam bt2.${pe}.sam ; do
 cat >.${dat}.${ext} <<EOF
 #!/bin/sh
 #SBATCH --partition=shared
@@ -11,7 +12,7 @@ time -v make ${dat}.${ext}
 EOF
 echo "sbatch .${dat}.${ext}"
 done
-for ext in snap.pair.sam ; do
+for ext in snap.${pe}.sam ; do
 cat >.${dat}.${ext} <<EOF
 #!/bin/sh
 #SBATCH --partition=shared
@@ -21,6 +22,7 @@ time -v make ${dat}.${ext}
 EOF
 echo "sbatch .${dat}.${ext}"
 done
+done
 
 cat >.${dat}.${ext} <<EOF
 #SBATCH --partition=shared
@@ -28,6 +30,6 @@ cat >.${dat}.${ext} <<EOF
 #SBATCH --mem=4G
 make ${dat}.unp.csv
 EOF
-echo "sbatch .${dat}.${ext}"
+echo "sbatch .${dat}.${pe}"
 done
 
