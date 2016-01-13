@@ -29,3 +29,6 @@ Maize
 -----
 
 http://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR1592709
+
+ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR159/009/SRR1592709/SRR1592709_1.fastq.gz
+ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR159/009/SRR1592709/SRR1592709_2.fastq.gz
