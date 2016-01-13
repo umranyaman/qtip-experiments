@@ -22,7 +22,6 @@ cat >.${dat}.${ext} <<EOF
 EOF
 echo "sbatch .${dat}.${ext}"
 done
-done
 
 cat >.${dat}.${pe} <<EOF
 #!/bin/sh
@@ -32,5 +31,6 @@ cat >.${dat}.${pe} <<EOF
 /usr/bin/time -v make ${dat}.unp.csv
 EOF
 echo "sbatch .${dat}.${pe}"
+done
 done
 
