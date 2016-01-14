@@ -69,6 +69,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		$(TS_INDEXES)/hg19.fa \
 		$< $(<:_1.fastq=_2.fastq) \
 		> $@
+	touch $@
 
 # BWA-MEM unpaired overall
 %.bwa.unp.sam: %.fastq
@@ -85,6 +86,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		$(TS_INDEXES)/hg19.fa \
 		$< \
 		> $@
+	touch $@
 
 # #######
 # Bowtie2
@@ -105,6 +107,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		-S /dev/null
+	touch $@
 
 # Bowtie2 unpaired overall
 %.bt2.unp.sam: %.fastq
@@ -120,6 +123,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS) \
 		-U $< \
 		-S /dev/null
+	touch $@
 
 # #######
 # SNAP
@@ -142,6 +146,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-o -sam /dev/null \
 		-t $(NTHREADS) \
 		-=
+	touch $@
 
 # SNAP unpaired overall
 %.snap.unp.sam: %.fastq
@@ -159,6 +164,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-o -sam /dev/null \
 		-t $(NTHREADS) \
 		-=
+	touch $@
 
 # ###############
 # Extra sensitive
@@ -178,6 +184,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive \
 		-S /dev/null
+	touch $@
 
 %.bt2vs.pair.sam: %.fastq
 	python ../ts.py \
@@ -193,6 +200,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive \
 		-S /dev/null
+	touch $@
 
 %.bt2vsl.unp.sam: %.fastq
 	python ../ts.py \
@@ -208,6 +216,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-U $< \
 		--very-sensitive-local \
 		-S /dev/null
+	touch $@
 
 %.bt2vsl.pair.sam: %.fastq
 	python ../ts.py \
@@ -224,6 +233,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive-local \
 		-S /dev/null
+	touch $@
 
 .PHONY: clean
 clean:
