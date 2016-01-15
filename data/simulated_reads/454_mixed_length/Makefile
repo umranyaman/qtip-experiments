@@ -57,19 +57,19 @@ outs: outs_bt2
 
 .PHONY: outs_bt2
 outs_bt2: \
-    r0_bt2s_mason_fff_50to500_100k.out \
-    r0_bt2sl_mason_fff_50to500_100k.out
+    r0_bt2s_mason_fff_50to500_1M.out \
+    r0_bt2sl_mason_fff_50to500_1M.out
 
 .PHONY: reads
 reads: \
-    r0_mason_fff_50to500_100k.fq.gz
+    r0_mason_fff_50to500_1M.fq.gz
 
 SUBSAMPLING_ARGS=--subsampling-series 0.05,0.1,0.2,0.3,0.4,0.5,1.0 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,100000,100000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl,100000,100000,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call mason_fff_unp_reads,fff_50to500_100k,$(HG_FASTA),275,225,100000,7724))
+$(eval $(call mason_fff_unp_reads,fff_50to500_1M,$(HG_FASTA),275,225,1000000,7724))

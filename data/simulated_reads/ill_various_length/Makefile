@@ -60,70 +60,70 @@ outs: outs_unpaired outs_paired
 
 .PHONY: outs_unpaired
 outs_unpaired: \
-    r0_bt2s_mason_ill_50_100k.out  \
-    r0_bt2s_mason_ill_100_100k.out \
-    r0_bt2s_mason_ill_150_100k.out \
-    r0_bt2s_mason_ill_250_100k.out \
-    r0_bt2s_mason_ill_500_100k.out \
-    r0_bt2sl_mason_ill_50_100k.out  \
-    r0_bt2sl_mason_ill_100_100k.out \
-    r0_bt2sl_mason_ill_150_100k.out \
-    r0_bt2sl_mason_ill_250_100k.out \
-    r0_bt2sl_mason_ill_500_100k.out
+    r0_bt2s_mason_ill_50_1M.out  \
+    r0_bt2s_mason_ill_100_1M.out \
+    r0_bt2s_mason_ill_150_1M.out \
+    r0_bt2s_mason_ill_250_1M.out \
+    r0_bt2s_mason_ill_500_1M.out \
+    r0_bt2sl_mason_ill_50_1M.out  \
+    r0_bt2sl_mason_ill_100_1M.out \
+    r0_bt2sl_mason_ill_150_1M.out \
+    r0_bt2sl_mason_ill_250_1M.out \
+    r0_bt2sl_mason_ill_500_1M.out
 
 .PHONY: outs_paired
 outs_paired: \
-    r12_bt2s50_mason_ill_50_100k.out  \
-    r12_bt2s100_mason_ill_100_100k.out \
-    r12_bt2s150_mason_ill_150_100k.out \
-    r12_bt2s250_mason_ill_250_100k.out \
-    r12_bt2s500_mason_ill_500_100k.out \
-    r12_bt2sl50_mason_ill_50_100k.out  \
-    r12_bt2sl100_mason_ill_100_100k.out \
-    r12_bt2sl150_mason_ill_150_100k.out \
-    r12_bt2sl250_mason_ill_250_100k.out \
-    r12_bt2sl500_mason_ill_500_100k.out
+    r12_bt2s50_mason_ill_50_1M.out  \
+    r12_bt2s100_mason_ill_100_1M.out \
+    r12_bt2s150_mason_ill_150_1M.out \
+    r12_bt2s250_mason_ill_250_1M.out \
+    r12_bt2s500_mason_ill_500_1M.out \
+    r12_bt2sl50_mason_ill_50_1M.out  \
+    r12_bt2sl100_mason_ill_100_1M.out \
+    r12_bt2sl150_mason_ill_150_1M.out \
+    r12_bt2sl250_mason_ill_250_1M.out \
+    r12_bt2sl500_mason_ill_500_1M.out
 
 .PHONY: reads
 reads: \
-    r0_mason_ill_50_100k.fq.gz  \
-    r0_mason_ill_100_100k.fq.gz \
-    r0_mason_ill_150_100k.fq.gz \
-    r0_mason_ill_250_100k.fq.gz \
-    r0_mason_ill_500_100k.fq.gz \
-    r1_mason_ill_50_100k.fq.gz  \
-    r1_mason_ill_100_100k.fq.gz \
-    r1_mason_ill_150_100k.fq.gz \
-    r1_mason_ill_250_100k.fq.gz \
-    r1_mason_ill_500_100k.fq.gz
+    r0_mason_ill_50_1M.fq.gz  \
+    r0_mason_ill_100_1M.fq.gz \
+    r0_mason_ill_150_1M.fq.gz \
+    r0_mason_ill_250_1M.fq.gz \
+    r0_mason_ill_500_1M.fq.gz \
+    r1_mason_ill_50_1M.fq.gz  \
+    r1_mason_ill_100_1M.fq.gz \
+    r1_mason_ill_150_1M.fq.gz \
+    r1_mason_ill_250_1M.fq.gz \
+    r1_mason_ill_500_1M.fq.gz
 
-SUBSAMPLING_ARGS=--subsampling-series 0.05,0.1,0.2,0.3,0.4,0.5,1.0 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
+SUBSAMPLING_ARGS=--subsampling-series 0.01,0.03,0.05,0.1 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,100000,100000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl,100000,100000,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call bt2ts,bt2s50,100000,100000,$(SUBSAMPLING_ARGS),-I 100 -X 200 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl50,100000,100000,$(SUBSAMPLING_ARGS),-I 100 -X 200 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s100,100000,100000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl100,100000,100000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s150,100000,100000,$(SUBSAMPLING_ARGS),-I 300 -X 600 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl150,100000,100000,$(SUBSAMPLING_ARGS),-I 300 -X 600 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s250,100000,100000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl250,100000,100000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s500,100000,100000,$(SUBSAMPLING_ARGS),-I 1000 -X 2000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2sl500,100000,100000,$(SUBSAMPLING_ARGS),-I 1000 -X 2000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s50,1000000,1000000,$(SUBSAMPLING_ARGS),-I 100 -X 200 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl50,1000000,1000000,$(SUBSAMPLING_ARGS),-I 100 -X 200 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl100,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s150,1000000,1000000,$(SUBSAMPLING_ARGS),-I 300 -X 600 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl150,1000000,1000000,$(SUBSAMPLING_ARGS),-I 300 -X 600 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s250,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl250,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s500,1000000,1000000,$(SUBSAMPLING_ARGS),-I 1000 -X 2000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2sl500,1000000,1000000,$(SUBSAMPLING_ARGS),-I 1000 -X 2000 --sensitive --local,$(HG_FASTA),$(HG_INDEX)))
 
-$(eval $(call mason_ill_unp_reads,ill_50_100k,$(HG_FASTA),50,100000,7724))
-$(eval $(call mason_ill_unp_reads,ill_100_100k,$(HG_FASTA),100,100000,7724))
-$(eval $(call mason_ill_unp_reads,ill_150_100k,$(HG_FASTA),150,100000,7724))
-$(eval $(call mason_ill_unp_reads,ill_250_100k,$(HG_FASTA),250,100000,7724))
-$(eval $(call mason_ill_unp_reads,ill_500_100k,$(HG_FASTA),500,100000,7724))
+$(eval $(call mason_ill_unp_reads,ill_50_1M,$(HG_FASTA),50,1000000,7724))
+$(eval $(call mason_ill_unp_reads,ill_100_1M,$(HG_FASTA),100,1000000,7724))
+$(eval $(call mason_ill_unp_reads,ill_150_1M,$(HG_FASTA),150,1000000,7724))
+$(eval $(call mason_ill_unp_reads,ill_250_1M,$(HG_FASTA),250,1000000,7724))
+$(eval $(call mason_ill_unp_reads,ill_500_1M,$(HG_FASTA),500,1000000,7724))
 
-$(eval $(call mason_ill_pair_reads,ill_50_100k,$(HG_FASTA),50,100000,150,50,7724))
-$(eval $(call mason_ill_pair_reads,ill_100_100k,$(HG_FASTA),100,100000,300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_150_100k,$(HG_FASTA),150,100000,450,150,7724))
-$(eval $(call mason_ill_pair_reads,ill_250_100k,$(HG_FASTA),250,100000,750,250,7724))
-$(eval $(call mason_ill_pair_reads,ill_500_100k,$(HG_FASTA),500,100000,1500,500,7724))
+$(eval $(call mason_ill_pair_reads,ill_50_1M,$(HG_FASTA),50,1000000,150,50,7724))
+$(eval $(call mason_ill_pair_reads,ill_100_1M,$(HG_FASTA),100,1000000,300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_150_1M,$(HG_FASTA),150,1000000,450,150,7724))
+$(eval $(call mason_ill_pair_reads,ill_250_1M,$(HG_FASTA),250,1000000,750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_500_1M,$(HG_FASTA),500,1000000,1500,500,7724))

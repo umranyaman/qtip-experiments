@@ -61,72 +61,72 @@ outs: outs_unpaired outs_paired
 
 .PHONY: outs_unpaired
 outs_unpaired: \
-    r0_bt2s_mason_ill_hg_100_100k.out \
-    r0_bt2s_mason_ill_hg_250_100k.out \
-    r0_bt2s_wgsim_ill_hg_100_100k.out \
-    r0_bt2s_wgsim_ill_hg_250_100k.out \
-    r0_bt2s_art_ill_hg_100_100k.out \
-    r0_bt2s_art_ill_hg_250_100k.out
+    r0_bt2s_mason_ill_hg_100_1M.out \
+    r0_bt2s_mason_ill_hg_250_1M.out \
+    r0_bt2s_wgsim_ill_hg_100_1M.out \
+    r0_bt2s_wgsim_ill_hg_250_1M.out \
+    r0_bt2s_art_ill_hg_100_1M.out \
+    r0_bt2s_art_ill_hg_250_1M.out
 
 .PHONY: outs_paired
 outs_paired: \
-    r12_bt2s100_mason_ill_hg_100_100k.out \
-    r12_bt2s250_mason_ill_hg_250_100k.out \
-    r12_bt2s100_wgsim_ill_hg_100_100k.out \
-    r12_bt2s250_wgsim_ill_hg_250_100k.out \
-    r12_bt2s100_art_ill_hg_100_100k.out \
-    r12_bt2s250_art_ill_hg_250_100k.out
+    r12_bt2s100_mason_ill_hg_100_1M.out \
+    r12_bt2s250_mason_ill_hg_250_1M.out \
+    r12_bt2s100_wgsim_ill_hg_100_1M.out \
+    r12_bt2s250_wgsim_ill_hg_250_1M.out \
+    r12_bt2s100_art_ill_hg_100_1M.out \
+    r12_bt2s250_art_ill_hg_250_1M.out
 
 .PHONY: reads
 reads: \
-    r0_mason_ill_hg_100_100k.fq.gz \
-    r0_mason_ill_hg_250_100k.fq.gz \
-    r0_wgsim_ill_hg_100_100k.fq.gz \
-    r0_wgsim_ill_hg_250_100k.fq.gz \
-    r0_art_ill_hg_100_100k.fq.gz \
-    r0_art_ill_hg_250_100k.fq.gz \
-    r1_mason_ill_hg_100_100k.fq.gz \
-    r1_mason_ill_hg_250_100k.fq.gz \
-    r1_wgsim_ill_hg_100_100k.fq.gz \
-    r1_wgsim_ill_hg_250_100k.fq.gz \
-    r1_art_ill_hg_100_100k.fq.gz \
-    r1_art_ill_hg_250_100k.fq.gz
+    r0_mason_ill_hg_100_1M.fq.gz \
+    r0_mason_ill_hg_250_1M.fq.gz \
+    r0_wgsim_ill_hg_100_1M.fq.gz \
+    r0_wgsim_ill_hg_250_1M.fq.gz \
+    r0_art_ill_hg_100_1M.fq.gz \
+    r0_art_ill_hg_250_1M.fq.gz \
+    r1_mason_ill_hg_100_1M.fq.gz \
+    r1_mason_ill_hg_250_1M.fq.gz \
+    r1_wgsim_ill_hg_100_1M.fq.gz \
+    r1_wgsim_ill_hg_250_1M.fq.gz \
+    r1_art_ill_hg_100_1M.fq.gz \
+    r1_art_ill_hg_250_1M.fq.gz
 
 SUBSAMPLING_ARGS=--subsampling-series 0.05,0.1,0.2,0.3,0.4,0.5,1.0 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,100000,100000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s100,100000,100000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s250,100000,100000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s100,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s250,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX)))
 
 #
 # Make the read rules
 #
-$(eval $(call mason_ill_unp_reads,ill_hg_100_100k,$(HG_FASTA),100,100000,7724))
-$(eval $(call mason_ill_unp_reads,ill_hg_250_100k,$(HG_FASTA),250,100000,7724))
-$(eval $(call wgsim_ill_unp_reads,ill_hg_100_100k,$(HG_FASTA),100,100000,7724))
-$(eval $(call wgsim_ill_unp_reads,ill_hg_250_100k,$(HG_FASTA),250,100000,7724))
+$(eval $(call mason_ill_unp_reads,ill_hg_100_1M,$(HG_FASTA),100,1000000,7724))
+$(eval $(call mason_ill_unp_reads,ill_hg_250_1M,$(HG_FASTA),250,1000000,7724))
+$(eval $(call wgsim_ill_unp_reads,ill_hg_100_1M,$(HG_FASTA),100,1000000,7724))
+$(eval $(call wgsim_ill_unp_reads,ill_hg_250_1M,$(HG_FASTA),250,1000000,7724))
 
-$(eval $(call mason_ill_pair_reads,ill_hg_100_100k,$(HG_FASTA),100,100000,300,25,7724))
-$(eval $(call mason_ill_pair_reads,ill_hg_250_100k,$(HG_FASTA),250,100000,750,75,7724))
-$(eval $(call wgsim_ill_pair_reads,ill_hg_100_100k,$(HG_FASTA),100,100000,300,25,7724))
-$(eval $(call wgsim_ill_pair_reads,ill_hg_250_100k,$(HG_FASTA),250,100000,750,75,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg_100_1M,$(HG_FASTA),100,1000000,300,25,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg_250_1M,$(HG_FASTA),250,1000000,750,75,7724))
+$(eval $(call wgsim_ill_pair_reads,ill_hg_100_1M,$(HG_FASTA),100,1000000,300,25,7724))
+$(eval $(call wgsim_ill_pair_reads,ill_hg_250_1M,$(HG_FASTA),250,1000000,750,75,7724))
 
 # For Art, we have to convert desired # reads to a fold coverage.
 # Note: for paired-end, we're specifying *fragment* coverage.
 
-# >>> 100000 * 100 / 3.1e9
-# 0.0032258064516129032
-$(eval $(call art_ill_unp_reads,ill_hg_100_100k,$(HG_FASTA),100,0.0033,7724))
-# >>> 100000 * 250 / 3.1e9
-# 0.008064516129032258
-$(eval $(call art_ill_unp_reads,ill_hg_250_100k,$(HG_FASTA),250,0.0081,7724))
+# >>> 1000000 * 100 / 3.1e9
+# 0.032258064516129032
+$(eval $(call art_ill_unp_reads,ill_hg_100_1M,$(HG_FASTA),100,0.033,7724))
+# >>> 1000000 * 250 / 3.1e9
+# 0.08064516129032258
+$(eval $(call art_ill_unp_reads,ill_hg_250_1M,$(HG_FASTA),250,0.081,7724))
 
-# >>> 100000 * 300 / 3.1e9
-# 0.00967741935483871
-$(eval $(call art_ill_pair_reads,ill_hg_100_100k,$(HG_FASTA),100,0.01,300,25,7724))
-# >>> 100000 * 750 / 3.1e9
-# 0.024193548387096774
-$(eval $(call art_ill_pair_reads,ill_hg_250_100k,$(HG_FASTA),250,0.025,750,75,7724))
+# >>> 1000000 * 300 / 3.1e9
+# 0.0967741935483871
+$(eval $(call art_ill_pair_reads,ill_hg_100_1M,$(HG_FASTA),100,0.1,300,25,7724))
+# >>> 1000000 * 750 / 3.1e9
+# 0.24193548387096774
+$(eval $(call art_ill_pair_reads,ill_hg_250_1M,$(HG_FASTA),250,0.25,750,75,7724))
