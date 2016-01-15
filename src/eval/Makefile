@@ -69,7 +69,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		$(TS_INDEXES)/hg19.fa \
 		$< $(<:_1.fastq=_2.fastq) \
 		> $@
-	touch $@
 
 # BWA-MEM unpaired overall
 %.bwa.unp.sam: %.fastq
@@ -86,7 +85,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		$(TS_INDEXES)/hg19.fa \
 		$< \
 		> $@
-	touch $@
 
 # #######
 # Bowtie2
@@ -106,8 +104,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-x $(TS_INDEXES)/hg19.fa \
 		-p $(NTHREADS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
-		-S /dev/null
-	touch $@
+		-S $@
 
 # Bowtie2 unpaired overall
 %.bt2.unp.sam: %.fastq
@@ -122,8 +119,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-x $(TS_INDEXES)/hg19.fa \
 		-p $(NTHREADS) \
 		-U $< \
-		-S /dev/null
-	touch $@
+		-S $@
 
 # #######
 # SNAP
@@ -143,10 +139,9 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		paired \
 		$(TS_INDEXES)/hg19.fa.snap \
 		-fastq $< $(<:_1.fastq=_2.fastq) \
-		-o -sam /dev/null \
+		-o -sam $@ \
 		-t $(NTHREADS) \
 		-=
-	touch $@
 
 # SNAP unpaired overall
 %.snap.unp.sam: %.fastq
@@ -161,10 +156,9 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		single \
 		$(TS_INDEXES)/hg19.fa.snap \
 		-fastq $< \
-		-o -sam /dev/null \
+		-o -sam $@ \
 		-t $(NTHREADS) \
 		-=
-	touch $@
 
 # ###############
 # Extra sensitive
@@ -183,8 +177,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive \
-		-S /dev/null
-	touch $@
+		-S $@
 
 %.bt2vs.pair.sam: %.fastq
 	python ../ts.py \
@@ -199,8 +192,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive \
-		-S /dev/null
-	touch $@
+		-S $@
 
 # #####################
 # Extra sensitive local
@@ -219,8 +211,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS) \
 		-U $< \
 		--very-sensitive-local \
-		-S /dev/null
-	touch $@
+		-S $@
 
 %.bt2vsl.pair.sam: %.fastq
 	python ../ts.py \
@@ -236,8 +227,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive-local \
-		-S /dev/null
-	touch $@
+		-S $@
 
 .PHONY: clean
 clean:
