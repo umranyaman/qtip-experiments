@@ -103,7 +103,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bt2.pair.sam.plain: %.fastq
 	$(TS_BT2_HOME)/bowtie2 \
-		$(TS_INDEXES)/hg19.fa \
+		-x $(TS_INDEXES)/hg19.fa \
 		-p $(NTHREADS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		-S /dev/null
@@ -119,7 +119,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bt2.unp.sam.plain: %.fastq
 	$(TS_BT2_HOME)/bowtie2 \
-		$(TS_INDEXES)/hg19.fa \
+		-x $(TS_INDEXES)/hg19.fa \
 		-p $(NTHREADS) \
 		-U $< \
 		-S /dev/null
@@ -179,7 +179,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bt2vs.unp.sam.plain: %.fastq
 	$(TS_BT2_HOME)/bowtie2 \
-		$(TS_INDEXES)/hg19.fa \
+		-x $(TS_INDEXES)/hg19.fa \
 		-p $(NTHREADS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive \
@@ -195,7 +195,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bt2vs.pair.sam.plain: %.fastq
 	$(TS_BT2_HOME)/bowtie2 \
-		$(TS_INDEXES)/hg19.fa \
+		-x $(TS_INDEXES)/hg19.fa \
 		-p $(NTHREADS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive \
@@ -215,7 +215,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bt2vsl.unp.sam.plain: %.fastq
 	$(TS_BT2_HOME)/bowtie2 \
-		$(TS_INDEXES)/hg19.fa \
+		-x $(TS_INDEXES)/hg19.fa \
 		-p $(NTHREADS) \
 		-U $< \
 		--very-sensitive-local \
@@ -232,7 +232,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bt2vsl.pair.sam.plain: %.fastq
 	$(TS_BT2_HOME)/bowtie2 \
-		$(TS_INDEXES)/hg19.fa \
+		-x $(TS_INDEXES)/hg19.fa \
 		-p $(NTHREADS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive-local \
