@@ -189,7 +189,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 %.bt2vs.pair.sam: %.fastq
 	python ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
-		-U $< \
+		--U $< \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS) --very-sensitive
 
@@ -201,6 +201,10 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--very-sensitive \
 		-S /dev/null
 	touch $@
+
+# #####################
+# Extra sensitive local
+# #####################
 
 %.bt2vsl.unp.sam: %.fastq
 	python ../ts.py \
