@@ -8,6 +8,8 @@ sam_names = defaultdict(int)
 plain_names = defaultdict(int)
 tab_plain = defaultdict(lambda: defaultdict(int))
 tab_wrapped = defaultdict(lambda: defaultdict(int))
+to_slurm_wrapped = {}
+to_slurm_plain = {}
 
 for fn in glob.glob('slurm-*.out'):
     with open(fn) as fh:
@@ -29,6 +31,7 @@ for fn in glob.glob('slurm-*.out'):
             sam_names[name] += 1
             #assert maxmss > 0
             tab_wrapped[name]['maxmss'] = maxmss
+            to_slurm_wrapped[name] = fn
 
         else:
             nplain += 1
@@ -48,6 +51,7 @@ for fn in glob.glob('slurm-*.out'):
             plain_names[name] += 1
             #assert maxmss > 0
             tab_plain[name]['maxmss'] = maxmss
+            to_slurm_plain[name] = fn
 
     nslurm += 1
 
@@ -65,4 +69,4 @@ for k in sorted(sam_names.keys()):
     diff = maxmss - maxmss_plain
     diff_pct = 0 if maxmss_plain == 0 else (100.0 * float(diff) / maxmss_plain)
     diff_pct = ('+' if diff_pct >= 0 else '') + ('%0.2f' % diff_pct)
-    print('%s: %d %d %s' % (k, maxmss_plain, maxmss, diff_pct))
+    print('%s: %d %d %s %s %s' % (k, maxmss_plain, maxmss, diff_pct, to_slurm_plain[k], to_slurm_wrapped[k]))
