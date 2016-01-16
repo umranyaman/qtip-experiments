@@ -8,7 +8,7 @@ cat >.${dat}.${ext} <<EOF
 #!/bin/sh
 #SBATCH --partition=shared
 #SBATCH --time=48:00:00
-#SBATCH --mem=32G
+#SBATCH --mem=12G
 /usr/bin/time -v make ${dat}.${ext}
 EOF
 echo "sbatch .${dat}.${ext}"
@@ -17,7 +17,7 @@ cat >.${dat}.${ext}.plain <<EOF
 #!/bin/sh
 #SBATCH --partition=shared
 #SBATCH --time=48:00:00
-#SBATCH --mem=32G
+#SBATCH --mem=12G
 /usr/bin/time -v make ${dat}.${ext}.plain
 EOF
 echo "sbatch .${dat}.${ext}.plain"
@@ -29,7 +29,7 @@ cat >.${dat}.${ext} <<EOF
 #!/bin/sh
 #SBATCH --partition=shared
 #SBATCH --time=48:00:00
-#SBATCH --mem=64G
+#SBATCH --mem=32G
 /usr/bin/time -v make ${dat}.${ext}
 EOF
 echo "sbatch .${dat}.${ext}"
@@ -38,7 +38,7 @@ cat >.${dat}.${ext}.plain <<EOF
 #!/bin/sh
 #SBATCH --partition=shared
 #SBATCH --time=48:00:00
-#SBATCH --mem=64G
+#SBATCH --mem=32G
 /usr/bin/time -v make ${dat}.${ext}.plain
 EOF
 echo "sbatch .${dat}.${ext}.plain"
