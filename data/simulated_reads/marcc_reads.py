@@ -18,6 +18,7 @@ import time
 
 idx = 0
 mem_gb = 64
+hours = 8
 
 
 def mkdir_quiet(dr):
@@ -50,6 +51,7 @@ def handle_dir(dirname, dry_run=True):
                     if os.path.exists(target_full):
                         print('  Skipping target %s because target exists' % target, file=sys.stderr)
                         continue
+                    my_mem_gb, my_hours = mem_gb, hours
                     qsub_basename = '.' + target + '.sh'
                     pbs_lns = list()
                     pbs_lns.append('#!/bin/bash -l')
