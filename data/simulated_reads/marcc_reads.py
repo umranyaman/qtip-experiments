@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
+"""
+python marcc_reads.py dry
+
+for dry run: write scripts but doesn't sbatch them
+
+python marcc_reads.py wet
+
+for normal run: write scripts and also sbatch them
+"""
 
 import os
 import sys
@@ -6,7 +17,7 @@ import time
 
 
 idx = 0
-mem_gb = 60
+mem_gb = 64
 
 
 def mkdir_quiet(dr):
@@ -25,6 +36,8 @@ def handle_dir(dirname, dry_run=True):
     with open(os.path.join(dirname, 'Makefile')) as fh:
         in_reads = False
         for ln in fh:
+            if ln[0] == '#':
+                continue
             if ln.startswith('reads:'):
                 in_reads = True
             elif in_reads:
@@ -32,35 +45,34 @@ def handle_dir(dirname, dry_run=True):
                     in_reads = False
                 else:
                     target = ln.split()[0]
-                    print >> sys.stderr, '  Found a read file: %s' % target
+                    print('  Found a read target: %s' % target, file=sys.stderr)
                     target_full = os.path.join(dirname, target)
                     if os.path.exists(target_full):
-                        print >> sys.stderr, '  Skipping target %s because target exists' % target
+                        print('  Skipping target %s because target exists' % target, file=sys.stderr)
                         continue
+                    qsub_basename = '.' + target + '.sh'
                     pbs_lns = list()
-                    pbs_lns.append('#PBS -q batch')
-                    pbs_lns.append('#PBS -l walltime=120:00')
-                    pbs_lns.append('#PBS -j n')
-                    for mem_arg in ['pmem', 'vmem', 'pvmem', 'mem']:
-                        pbs_lns.append('#PBS -l %s=%dgb' % (mem_arg, mem_gb))
+                    pbs_lns.append('#!/bin/bash -l')
+                    pbs_lns.append('#SBATCH')
+                    pbs_lns.append('#SBATCH --nodes=1')
+                    pbs_lns.append('#SBATCH --mem=%dG' % my_mem_gb)
+                    pbs_lns.append('#SBATCH --partition=shared')
+                    pbs_lns.append('#SBATCH --time=%d:00:00' % my_hours)
+                    pbs_lns.append('#SBATCH --output=' + qsub_basename + '.o')
+                    pbs_lns.append('#SBATCH --error=' + qsub_basename + '.e')
                     pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
                     pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
                     pbs_lns.append('make %s' % target)
-                    qsub_dir = '.read_qsubs'
-                    mkdir_quiet(qsub_dir)
-                    cur_dir = os.getcwd()
-                    os.chdir(qsub_dir)
-                    qsub_fn = '.%s.%d.sh' % (target, idx)
-                    with open(qsub_fn, 'w') as ofh:
+                    qsub_fullname = os.path.join(dirname, qsub_basename)
+                    with open(qsub_fullname, 'w') as ofh:
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1
-                    print 'qsub %s' % qsub_fn
+                    print('pushd %s && sbatch %s && popd' % (dirname, qsub_basename))
                     if not dry_run:
-                        os.system('qsub %s' % qsub_fn)
-                        time.sleep(0.2)
-                    os.chdir(cur_dir)
+                        os.system('cd %s && sbatch %s' % (dirname, qsub_basename))
+                        time.sleep(0.5)
 
 
 def go():
@@ -72,7 +84,10 @@ def go():
         raise RuntimeError('Must have TS_INDEXES set')
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
-            print >> sys.stderr, 'Found a Makefile: %s' % (os.path.join(dirname, 'Makefile'))
-            handle_dir(dirname, dry_run=(len(sys.argv) > 1))
+            print('Found a Makefile: %s' % (os.path.join(dirname, 'Makefile')), file=sys.stderr)
+            handle_dir(dirname, dry_run=sys.argv[1] == 'dry')
 
-go()
+if len(sys.argv) == 1:
+    print("pass argument 'dry' for dry run, or 'wet' for normal run")
+else:
+    go()

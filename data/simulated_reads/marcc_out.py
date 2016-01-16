@@ -4,11 +4,11 @@ from __future__ import print_function
 """
 python marcc_out.py dry
 
-for dry run: write scripts but doesn't qsub them
+for dry run: write scripts but doesn't sbatch them
 
 python marcc_out.py wet
 
-for normal run: write scripts and also qsub them
+for normal run: write scripts and also sbatch them
 """
 
 import os

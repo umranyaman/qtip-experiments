@@ -109,8 +109,6 @@ def copyfiles(fglob, dest, prefix=''):
 
 
 def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first):
-    # TODO: parse name and write some other relevant variables, like whether
-    # we're doing local alignment or whether we're aligning pairs
     name, target = parse_name_and_target(combined_target_name)
     aligner, local = parse_aligner_local(target)
     paired = parse_paired(target)
@@ -174,6 +172,8 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                             os.system('cp -f %s %s' % (join(target_full_st, 'params.csv'), params_fn))
 
                             for tt in ['test', 'training']:
+
+                                # TODO: we're just clobbering in here
 
                                 target_full_stt = join(target_full_st, tt)
                                 if not os.path.isdir(target_full_stt):
