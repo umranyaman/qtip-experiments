@@ -20,7 +20,7 @@ import re
 idx = 0
 re_out = re.compile('^outs_[_a-zA-Z01-9]*:.*')
 mem_gb = 8
-hours = 6
+hours = 24
 
 def handle_dir(dirname, dry_run=True):
     global idx
@@ -50,10 +50,10 @@ def handle_dir(dirname, dry_run=True):
                     if '_bwamem' in target_full:
                         my_mem_gb = int(round(1.5*my_mem_gb))
                     if '_snap' in target_full:
-                        my_mem_gb = int(round(4.0*my_mem_gb))
-                    if '_50M.' in target_full:
-                        my_mem_gb = int(my_mem_gb * 1.5)
-                        my_hours *= 10
+                        my_mem_gb = int(round(6.0*my_mem_gb))
+                    #if '_50M.' in target_full:
+                    #    my_mem_gb = int(my_mem_gb * 1.5)
+                    #    my_hours *= 10
                     if 'r12' in target_full and 'ill_various_length' in target_full:
                         my_hours *= 3
                         my_hours /= 2
