@@ -14,6 +14,8 @@ to_slurm_plain = {}
 for fn in glob.glob('slurm-*.out'):
     with open(fn) as fh:
         ln = fh.readline()
+        if 'is up to date' in ln:
+            continue  # skip trivial job target was already up to date
         if ln.split()[0] == 'python':
             nsam += 1
             name, maxmss, wallcl, tandal, tandpa = None, 0, 0, 0, 0
