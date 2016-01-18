@@ -2,18 +2,14 @@ TS_BWA_HOME=$(TS_HOME)/software/bwa
 TS_SNAP_HOME=$(TS_HOME)/software/snap
 TS_BT2_HOME=$(TS_HOME)/software/bowtie2
 
-#
-# Note: all default arguments being given to alignment tools
-#
-
 BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 --index $(TS_INDEXES)/hg19.fa
 BWA_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(TS_INDEXES)/hg19.fa
 SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap/snap-aligner --index $(TS_INDEXES)/hg19.fa.snap
 
 ARGS=--ref $(TS_REFS)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346
-ARGS_SAMP=--keep-intermediates --predict-for-training
 
 NTHREADS=1
+NTHREADS_VS=16
 
 #
 # These CSV files contain the ultimate output from multi_aligner.py when
@@ -150,75 +146,68 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # Extra sensitive
 # ###############
 
+#%.bt2vs.unp.sam: %.fastq
+#	python ../ts.py \
+#		$(BT2_ARGS) $(ARGS) \
+#		--U $< \
+#		--vanilla-output $@ \
+#		-- -p $(NTHREADS) --very-sensitive
+
+#%.bt2vs.pair.sam: %.fastq
+#	python ../ts.py \
+#		$(BT2_ARGS) $(ARGS) \
+#		--m1 $< \
+#		--m2 $(<:_1.fastq=_2.fastq) \
+#		--vanilla-output $@ \
+#		-- -p $(NTHREADS) --very-sensitive
+
 %.bt2vs.unp.sam: %.fastq
-	python ../ts.py \
-		$(BT2_ARGS) $(ARGS) \
-		--U $< \
-		--vanilla-output $@ \
-		-- -p $(NTHREADS) --very-sensitive
+	$(TS_BT2_HOME)/bowtie2 \
+		-x $(TS_INDEXES)/hg19.fa \
+		-p $(NTHREADS_VS) \
+		-U $< \
+		--very-sensitive \
+		-S $@
 
 %.bt2vs.pair.sam: %.fastq
-	python ../ts.py \
-		$(BT2_ARGS) $(ARGS) \
-		--m1 $< \
-		--m2 $(<:_1.fastq=_2.fastq) \
-		--vanilla-output $@ \
-		-- -p $(NTHREADS) --very-sensitive
-
-#%.bt2vs.unp.sam.plain: %.fastq
-#	$(TS_BT2_HOME)/bowtie2 \
-#		-x $(TS_INDEXES)/hg19.fa \
-#		-p $(NTHREADS) \
-#		-U $< \
-#		--very-sensitive \
-#		-S $@
-
-#%.bt2vs.pair.sam.plain: %.fastq
-#	$(TS_BT2_HOME)/bowtie2 \
-#		-x $(TS_INDEXES)/hg19.fa \
-#		-p $(NTHREADS) \
-#		-1 $< -2 $(<:_1.fastq=_2.fastq) \
-#		--very-sensitive \
-#		-S $@
+	$(TS_BT2_HOME)/bowtie2 \
+		-x $(TS_INDEXES)/hg19.fa \
+		-p $(NTHREADS_VS) \
+		-1 $< -2 $(<:_1.fastq=_2.fastq) \
+		--very-sensitive \
+		-S $@
 
 # #####################
 # Extra sensitive local
 # #####################
 
+#%.bt2vsl.unp.sam: %.fastq
+#	python ../ts.py \
+#		$(BT2_ARGS) $(ARGS) \
+#		--U $< \
+#		--vanilla-output $@ \
+#		-- -p $(NTHREADS) --very-sensitive-local
+
+#%.bt2vsl.pair.sam: %.fastq
+#	python ../ts.py \
+#		$(BT2_ARGS) $(ARGS) \
+#		--m1 $< \
+#		--m2 $(<:_1.fastq=_2.fastq) \
+#		--vanilla-output $@ \
+#		-- -p $(NTHREADS) --very-sensitive-local
+
 %.bt2vsl.unp.sam: %.fastq
-	python ../ts.py \
-		$(BT2_ARGS) $(ARGS) \
-		--U $< \
-		--vanilla-output $@ \
-		-- -p $(NTHREADS) --very-sensitive-local
+	$(TS_BT2_HOME)/bowtie2 \
+		-x $(TS_INDEXES)/hg19.fa \
+		-p $(NTHREADS_VS) \
+		-U $< \
+		--very-sensitive-local \
+		-S $@
 
 %.bt2vsl.pair.sam: %.fastq
-	python ../ts.py \
-		$(BT2_ARGS) $(ARGS) \
-		--m1 $< \
-		--m2 $(<:_1.fastq=_2.fastq) \
-		--vanilla-output $@ \
-		-- -p $(NTHREADS) --very-sensitive-local
-
-#%.bt2vsl.unp.sam.plain: %.fastq
-#	$(TS_BT2_HOME)/bowtie2 \
-#		-x $(TS_INDEXES)/hg19.fa \
-#		-p $(NTHREADS) \
-#		-U $< \
-#		--very-sensitive-local \
-#		-S $@
-
-#%.bt2vsl.pair.sam.plain: %.fastq
-#	$(TS_BT2_HOME)/bowtie2 \
-#		-x $(TS_INDEXES)/hg19.fa \
-#		-p $(NTHREADS) \
-#		-1 $< -2 $(<:_1.fastq=_2.fastq) \
-#		--very-sensitive-local \
-#		-S $@
-
-.PHONY: clean
-clean:
-	rm -f *.unp.sam *.pair.sam
-	rm -f *_roc.csv *_summ.csv
-	rm -f *.unp.csv *.pair.csv
-	rm -rf bt2_unpaired bwamem_paired bwamem_unpaired
+	$(TS_BT2_HOME)/bowtie2 \
+		-x $(TS_INDEXES)/hg19.fa \
+		-p $(NTHREADS_VS) \
+		-1 $< -2 $(<:_1.fastq=_2.fastq) \
+		--very-sensitive-local \
+		-S $@
