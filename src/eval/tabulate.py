@@ -26,9 +26,9 @@ for fn in glob.glob('slurm-*.out'):
             if '--vanilla-out' in ln:
                 assert name is None
                 name = ln.split()[1]
-            if 'INFO:Overall':
+            if 'INFO:Overall' in ln:
                 t_overall = float(ln.split()[-1])
-            if 'INFO:Aligning tandem reads':
+            if 'INFO:Aligning tandem reads' in ln:
                 t_inp = float(ln.split()[-1])
             if 'INFO:Aligning tandem reads' in ln and 'paired' not in ln:
                 t_tandal = float(ln.split()[-1])
