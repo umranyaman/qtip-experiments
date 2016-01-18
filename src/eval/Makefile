@@ -1,6 +1,7 @@
 TS_BWA_HOME=$(TS_HOME)/software/bwa
 TS_SNAP_HOME=$(TS_HOME)/software/snap
 TS_BT2_HOME=$(TS_HOME)/software/bowtie2
+PYTHON=python -O
 
 BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 --index $(TS_INDEXES)/hg19.fa
 BWA_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(TS_INDEXES)/hg19.fa
@@ -42,14 +43,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #######
 
 %.bwa.unp.sam: %.fastq
-	python ../ts.py \
+	$(PYTHON) ../ts.py \
 		$(BWA_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
 %.bwa.pair.sam: %.fastq
-	python ../ts.py \
+	$(PYTHON) ../ts.py \
 		$(BWA_ARGS) $(ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
@@ -77,14 +78,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #######
 
 %.bt2.unp.sam: %.fastq
-	python ../ts.py \
+	$(PYTHON) ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS)
 
 %.bt2.pair.sam: %.fastq
-	python ../ts.py \
+	$(PYTHON) ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
@@ -110,14 +111,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #######
 
 %.snap.unp.sam: %.fastq
-	python ../ts.py \
+	$(PYTHON) ../ts.py \
 		$(SNAP_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
 %.snap.pair.sam: %.fastq
-	python ../ts.py \
+	$(PYTHON) ../ts.py \
 		$(SNAP_ARGS) $(ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
@@ -147,14 +148,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # ###############
 
 #%.bt2vs.unp.sam: %.fastq
-#	python ../ts.py \
+#	$(PYTHON) ../ts.py \
 #		$(BT2_ARGS) $(ARGS) \
 #		--U $< \
 #		--vanilla-output $@ \
 #		-- -p $(NTHREADS) --very-sensitive
 
 #%.bt2vs.pair.sam: %.fastq
-#	python ../ts.py \
+#	$(PYTHON) ../ts.py \
 #		$(BT2_ARGS) $(ARGS) \
 #		--m1 $< \
 #		--m2 $(<:_1.fastq=_2.fastq) \
@@ -182,14 +183,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #####################
 
 #%.bt2vsl.unp.sam: %.fastq
-#	python ../ts.py \
+#	$(PYTHON) ../ts.py \
 #		$(BT2_ARGS) $(ARGS) \
 #		--U $< \
 #		--vanilla-output $@ \
 #		-- -p $(NTHREADS) --very-sensitive-local
 
 #%.bt2vsl.pair.sam: %.fastq
-#	python ../ts.py \
+#	$(PYTHON) ../ts.py \
 #		$(BT2_ARGS) $(ARGS) \
 #		--m1 $< \
 #		--m2 $(<:_1.fastq=_2.fastq) \
