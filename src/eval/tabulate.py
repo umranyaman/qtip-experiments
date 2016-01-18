@@ -60,11 +60,11 @@ for k, v in sorted(sam_names.items()):
     print('  %s: %d' % (k, v))
 
 for k in sorted(sam_names.keys()):
-    wrappeak = tab_wrapped[name]['wrappeak']
-    childpeak = tab_wrapped[name]['childpeak']
+    wrappeak = tab_wrapped[k]['wrappeak']
+    childpeak = tab_wrapped[k]['childpeak']
     wrappct = 0 if childpeak == 0 else (wrappeak * 100.0 / childpeak)
     wrappct = ('+' if wrappct >= 0 else '') + ('%0.3f' % wrappct)
-    t_o, t_a = tab_wrapped[name]['t_overall'], tab_wrapped[name]['t_inp']
+    t_o, t_a = tab_wrapped[k]['t_overall'], tab_wrapped[k]['t_inp']
     t_pct = 0 if t_a == 0 else ((t_o - t_a) * 100.0/t_a)
     t_pct = ('+' if t_pct >= 0 else '') + ('%0.3f' % t_pct)
     print('%s: %.0f,%.0f,%s %.0f,%.0f,%s %s' % (k, t_a, t_o, t_pct, wrappeak, childpeak, wrappct, to_slurm_wrapped[k]))
