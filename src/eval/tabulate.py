@@ -17,7 +17,7 @@ for fn in glob.glob('slurm-*.out'):
             continue
 
         nsam += 1
-        name, t_tandal, t_tandpa, wrappeak, childpeak = None, 0, 0, 0, 0
+        name, t_tandal, t_tandpa, wrappeak, childpeak, t_overall, t_inp = None, 0, 0, 0, 0, 0, 0
         while True:
             ln = fh.readline()
             if len(ln) == 0:
