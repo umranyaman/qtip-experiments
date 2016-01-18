@@ -13,6 +13,7 @@ cat >.${dat}.${ext} <<EOF
 EOF
 echo "sbatch .${dat}.${ext}"
 
+: <<'END'
 cat >.${dat}.${ext}.plain <<EOF
 #!/bin/sh
 #SBATCH --partition=shared
@@ -21,6 +22,7 @@ cat >.${dat}.${ext}.plain <<EOF
 /usr/bin/time -v make ${dat}.${ext}.plain
 EOF
 echo "sbatch .${dat}.${ext}.plain"
+END
 
 done
 for ext in snap.${pe}.sam ; do
@@ -34,6 +36,7 @@ cat >.${dat}.${ext} <<EOF
 EOF
 echo "sbatch .${dat}.${ext}"
 
+: <<'END'
 cat >.${dat}.${ext}.plain <<EOF
 #!/bin/sh
 #SBATCH --partition=shared
@@ -42,6 +45,7 @@ cat >.${dat}.${ext}.plain <<EOF
 /usr/bin/time -v make ${dat}.${ext}.plain
 EOF
 echo "sbatch .${dat}.${ext}.plain"
+END
 
 done
 

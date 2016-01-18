@@ -41,19 +41,17 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	    --name bt2vs bt2vsl bwamem bt2 snap \
 	    --tier 1 1 2 2 2 > $@
 
-#
-# Is it easy for me to record everything I'd need to make a table of
-# overheads?  I guess one issue I have is that these experiments use many
-# threads and, for the overhead calcs, I'd rather use one.
-#
-#
-#
-
 # #######
 # BWA-MEM
 # #######
 
-# BWA-MEM paired-end overall
+%.bwa.unp.sam: %.fastq
+	python ../ts.py \
+		$(BWA_ARGS) $(ARGS) \
+		--U $< \
+		--vanilla-output $@ \
+		-- -t $(NTHREADS)
+
 %.bwa.pair.sam: %.fastq
 	python ../ts.py \
 		$(BWA_ARGS) $(ARGS) \
@@ -62,35 +60,33 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
-%.bwa.pair.sam.plain: %.fastq
-	$(TS_BWA_HOME)/bwa \
-		mem \
-		-t $(NTHREADS) \
-		$(TS_INDEXES)/hg19.fa \
-		$< $(<:_1.fastq=_2.fastq) \
-		> $@
+#%.bwa.pair.sam.plain: %.fastq
+#	$(TS_BWA_HOME)/bwa \
+#		mem \
+#		-t $(NTHREADS) \
+#		$(TS_INDEXES)/hg19.fa \
+#		$< $(<:_1.fastq=_2.fastq) \
+#		> $@
 
-# BWA-MEM unpaired overall
-%.bwa.unp.sam: %.fastq
-	python ../ts.py \
-		$(BWA_ARGS) $(ARGS) \
-		--U $< \
-		--vanilla-output $@ \
-		-- -t $(NTHREADS)
-
-%.bwa.unp.sam.plain: %.fastq
-	$(TS_BWA_HOME)/bwa \
-		mem \
-		-t $(NTHREADS) \
-		$(TS_INDEXES)/hg19.fa \
-		$< \
-		> $@
+#%.bwa.unp.sam.plain: %.fastq
+#	$(TS_BWA_HOME)/bwa \
+#		mem \
+#		-t $(NTHREADS) \
+#		$(TS_INDEXES)/hg19.fa \
+#		$< \
+#		> $@
 
 # #######
 # Bowtie2
 # #######
 
-# Bowtie2 paired-end overall
+%.bt2.unp.sam: %.fastq
+	python ../ts.py \
+		$(BT2_ARGS) $(ARGS) \
+		--U $< \
+		--vanilla-output $@ \
+		-- -p $(NTHREADS)
+
 %.bt2.pair.sam: %.fastq
 	python ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
@@ -99,33 +95,31 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS)
 
-%.bt2.pair.sam.plain: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg19.fa \
-		-p $(NTHREADS) \
-		-1 $< -2 $(<:_1.fastq=_2.fastq) \
-		-S $@
+#%.bt2.pair.sam.plain: %.fastq
+#	$(TS_BT2_HOME)/bowtie2 \
+#		-x $(TS_INDEXES)/hg19.fa \
+#		-p $(NTHREADS) \
+#		-1 $< -2 $(<:_1.fastq=_2.fastq) \
+#		-S $@
 
-# Bowtie2 unpaired overall
-%.bt2.unp.sam: %.fastq
-	python ../ts.py \
-		$(BT2_ARGS) $(ARGS) \
-		--U $< \
-		--vanilla-output $@ \
-		-- -p $(NTHREADS)
-
-%.bt2.unp.sam.plain: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg19.fa \
-		-p $(NTHREADS) \
-		-U $< \
-		-S $@
+#%.bt2.unp.sam.plain: %.fastq
+#	$(TS_BT2_HOME)/bowtie2 \
+#		-x $(TS_INDEXES)/hg19.fa \
+#		-p $(NTHREADS) \
+#		-U $< \
+#		-S $@
 
 # #######
 # SNAP
 # #######
 
-# SNAP paired-end overall
+%.snap.unp.sam: %.fastq
+	python ../ts.py \
+		$(SNAP_ARGS) $(ARGS) \
+		--U $< \
+		--vanilla-output $@ \
+		-- -t $(NTHREADS)
+
 %.snap.pair.sam: %.fastq
 	python ../ts.py \
 		$(SNAP_ARGS) $(ARGS) \
@@ -134,31 +128,23 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
-%.snap.pair.sam.plain: %.fastq
-	$(TS_SNAP_HOME)/snap/snap-aligner \
-		paired \
-		$(TS_INDEXES)/hg19.fa.snap \
-		-fastq $< $(<:_1.fastq=_2.fastq) \
-		-o -sam $@ \
-		-t $(NTHREADS) \
-		-=
+#%.snap.pair.sam.plain: %.fastq
+#	$(TS_SNAP_HOME)/snap/snap-aligner \
+#		paired \
+#		$(TS_INDEXES)/hg19.fa.snap \
+#		-fastq $< $(<:_1.fastq=_2.fastq) \
+#		-o -sam $@ \
+#		-t $(NTHREADS) \
+#		-=
 
-# SNAP unpaired overall
-%.snap.unp.sam: %.fastq
-	python ../ts.py \
-		$(SNAP_ARGS) $(ARGS) \
-		--U $< \
-		--vanilla-output $@ \
-		-- -t $(NTHREADS)
-
-%.snap.unp.sam.plain: %.fastq
-	$(TS_SNAP_HOME)/snap/snap-aligner \
-		single \
-		$(TS_INDEXES)/hg19.fa.snap \
-		-fastq $< \
-		-o -sam $@ \
-		-t $(NTHREADS) \
-		-=
+#%.snap.unp.sam.plain: %.fastq
+#	$(TS_SNAP_HOME)/snap/snap-aligner \
+#		single \
+#		$(TS_INDEXES)/hg19.fa.snap \
+#		-fastq $< \
+#		-o -sam $@ \
+#		-t $(NTHREADS) \
+#		-=
 
 # ###############
 # Extra sensitive
@@ -171,28 +157,29 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS) --very-sensitive
 
-%.bt2vs.unp.sam.plain: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg19.fa \
-		-p $(NTHREADS) \
-		-1 $< -2 $(<:_1.fastq=_2.fastq) \
-		--very-sensitive \
-		-S $@
-
 %.bt2vs.pair.sam: %.fastq
 	python ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
-		--U $< \
+		--m1 $< \
+		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS) --very-sensitive
 
-%.bt2vs.pair.sam.plain: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg19.fa \
-		-p $(NTHREADS) \
-		-1 $< -2 $(<:_1.fastq=_2.fastq) \
-		--very-sensitive \
-		-S $@
+#%.bt2vs.unp.sam.plain: %.fastq
+#	$(TS_BT2_HOME)/bowtie2 \
+#		-x $(TS_INDEXES)/hg19.fa \
+#		-p $(NTHREADS) \
+#		-U $< \
+#		--very-sensitive \
+#		-S $@
+
+#%.bt2vs.pair.sam.plain: %.fastq
+#	$(TS_BT2_HOME)/bowtie2 \
+#		-x $(TS_INDEXES)/hg19.fa \
+#		-p $(NTHREADS) \
+#		-1 $< -2 $(<:_1.fastq=_2.fastq) \
+#		--very-sensitive \
+#		-S $@
 
 # #####################
 # Extra sensitive local
@@ -205,14 +192,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS) --very-sensitive-local
 
-%.bt2vsl.unp.sam.plain: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg19.fa \
-		-p $(NTHREADS) \
-		-U $< \
-		--very-sensitive-local \
-		-S $@
-
 %.bt2vsl.pair.sam: %.fastq
 	python ../ts.py \
 		$(BT2_ARGS) $(ARGS) \
@@ -221,13 +200,21 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS) --very-sensitive-local
 
-%.bt2vsl.pair.sam.plain: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg19.fa \
-		-p $(NTHREADS) \
-		-1 $< -2 $(<:_1.fastq=_2.fastq) \
-		--very-sensitive-local \
-		-S $@
+#%.bt2vsl.unp.sam.plain: %.fastq
+#	$(TS_BT2_HOME)/bowtie2 \
+#		-x $(TS_INDEXES)/hg19.fa \
+#		-p $(NTHREADS) \
+#		-U $< \
+#		--very-sensitive-local \
+#		-S $@
+
+#%.bt2vsl.pair.sam.plain: %.fastq
+#	$(TS_BT2_HOME)/bowtie2 \
+#		-x $(TS_INDEXES)/hg19.fa \
+#		-p $(NTHREADS) \
+#		-1 $< -2 $(<:_1.fastq=_2.fastq) \
+#		--very-sensitive-local \
+#		-S $@
 
 .PHONY: clean
 clean:
