@@ -92,7 +92,7 @@ reads: \
     r1_art_ill_hg_100_1M.fq.gz \
     r1_art_ill_hg_250_1M.fq.gz
 
-SUBSAMPLING_ARGS=--subsampling-series 0.01,0.03,0.05,0.1 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
+SUBSAMPLING_ARGS=--subsampling-series 0.01,0.03,0.05 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
