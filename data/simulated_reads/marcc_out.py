@@ -64,6 +64,7 @@ def handle_dir(dirname, dry_run=True):
                     pbs_lns.append('#SBATCH --nodes=1')
                     pbs_lns.append('#SBATCH --mem=%dG' % my_mem_gb)
                     pbs_lns.append('#SBATCH --partition=shared')
+                    pbs_lns.append('#SBATCH --cpus-per-task=8')
                     pbs_lns.append('#SBATCH --time=%d:00:00' % my_hours)
                     pbs_lns.append('#SBATCH --output=' + qsub_basename + '.o')
                     pbs_lns.append('#SBATCH --error=' + qsub_basename + '.e')

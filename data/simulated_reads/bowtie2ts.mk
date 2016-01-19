@@ -13,7 +13,7 @@ r0_$1_%.out: r0_%.fq.gz
 	       $$(BT2_TS_ARGS) $$(TS_ARGS) $4 \
 	       --output-directory $$@ \
 	       --U $$< \
-	       -- $5 $$(BT2_ARGS)
+	       -- $5 $$(BT2_ARGS) -p 8
 	-$$(BOWTIE2) --version > $$@/bt2_version
 	-$$(TS) --version > $$@/ts_version
 
@@ -25,7 +25,7 @@ r12_$1_%.out: r1_%.fq.gz
 	       $$(BT2_TS_ARGS) $$(TS_ARGS) $4 \
 	       --output-directory $$@ \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
-	       -- $5 $$(BT2_ARGS)
+	       -- $5 $$(BT2_ARGS) -p 8
 	-$$(BOWTIE2) --version > $$@/bt2_version
 	-$$(TS) --version > $$@/ts_version
 

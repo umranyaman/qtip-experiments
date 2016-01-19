@@ -12,7 +12,7 @@
 # 9. Index to use
 
 TS=python $(TS_HOME)/src/ts.py
-SNAP_ARGS+=-t 1 -=
+SNAP_ARGS+=-=
 SNAP_TS_ARGS=--write-orig-mapq
 
 define snapts
@@ -25,7 +25,7 @@ r0_$1_%.out: r0_%.fq.gz
 	       $$(SNAP_TS_ARGS) $$(TS_ARGS) $4 \
 	       --output-directory $$@ \
 	       --U $$< \
-	       -- $5 $$(SNAP_ARGS) -- $6 -- $7
+	       -- $5 $$(SNAP_ARGS) -t 8 -- $6 -- $7
 	-$$(SNAP) 2> $$@/snap_version
 	-$$(TS) --version > $$@/ts_version
 
@@ -37,7 +37,7 @@ r12_$1_%.out: r1_%.fq.gz
 	       $$(SNAP_TS_ARGS) $$(TS_ARGS) $4 \
 	       --output-directory $$@ \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
-	       -- $5 $$(SNAP_ARGS) -- $6 -- $7
+	       -- $5 $$(SNAP_ARGS) -t 8 -- $6 -- $7
 	-$$(SNAP) 2> $$@/snap_version
 	-$$(TS) --version > $$@/ts_version
 
