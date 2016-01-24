@@ -43,14 +43,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #######
 
 %.bwa.unp.sam: %.fastq
-	$(PYTHON) ../ts.py \
+	$(PYTHON) ../qsim \
 		$(BWA_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
 %.bwa.pair.sam: %.fastq
-	$(PYTHON) ../ts.py \
+	$(PYTHON) ../qsim \
 		$(BWA_ARGS) $(ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
@@ -78,14 +78,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #######
 
 %.bt2.unp.sam: %.fastq
-	$(PYTHON) ../ts.py \
+	$(PYTHON) ../qsim \
 		$(BT2_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS)
 
 %.bt2.pair.sam: %.fastq
-	$(PYTHON) ../ts.py \
+	$(PYTHON) ../qsim \
 		$(BT2_ARGS) $(ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
@@ -111,14 +111,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #######
 
 %.snap.unp.sam: %.fastq
-	$(PYTHON) ../ts.py \
+	$(PYTHON) ../qsim \
 		$(SNAP_ARGS) $(ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
 %.snap.pair.sam: %.fastq
-	$(PYTHON) ../ts.py \
+	$(PYTHON) ../qsim \
 		$(SNAP_ARGS) $(ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
@@ -148,14 +148,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # ###############
 
 #%.bt2vs.unp.sam: %.fastq
-#	$(PYTHON) ../ts.py \
+#	$(PYTHON) ../qsim \
 #		$(BT2_ARGS) $(ARGS) \
 #		--U $< \
 #		--vanilla-output $@ \
 #		-- -p $(NTHREADS) --very-sensitive
 
 #%.bt2vs.pair.sam: %.fastq
-#	$(PYTHON) ../ts.py \
+#	$(PYTHON) ../qsim \
 #		$(BT2_ARGS) $(ARGS) \
 #		--m1 $< \
 #		--m2 $(<:_1.fastq=_2.fastq) \
@@ -183,14 +183,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #####################
 
 #%.bt2vsl.unp.sam: %.fastq
-#	$(PYTHON) ../ts.py \
+#	$(PYTHON) ../qsim \
 #		$(BT2_ARGS) $(ARGS) \
 #		--U $< \
 #		--vanilla-output $@ \
 #		-- -p $(NTHREADS) --very-sensitive-local
 
 #%.bt2vsl.pair.sam: %.fastq
-#	$(PYTHON) ../ts.py \
+#	$(PYTHON) ../qsim \
 #		$(BT2_ARGS) $(ARGS) \
 #		--m1 $< \
 #		--m2 $(<:_1.fastq=_2.fastq) \
