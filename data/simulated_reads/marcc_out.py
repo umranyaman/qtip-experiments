@@ -20,9 +20,10 @@ import re
 idx = 0
 re_out = re.compile('^outs_[_a-zA-Z01-9]*:.*')
 mem_gb = 8
-hours = 24
+hours = 4
 
-def handle_dir(dirname, dry_run=True):
+
+def handle_dir(dirname, dry_run=True, use_scavenger=False):
     global idx
     with open(os.path.join(dirname, 'Makefile')) as fh:
         in_out = False
@@ -51,9 +52,6 @@ def handle_dir(dirname, dry_run=True):
                         my_mem_gb = int(round(1.5*my_mem_gb))
                     if '_snap' in target_full:
                         my_mem_gb = int(round(6.0*my_mem_gb))
-                    #if '_50M.' in target_full:
-                    #    my_mem_gb = int(my_mem_gb * 1.5)
-                    #    my_hours *= 10
                     if 'r12' in target_full and 'ill_various_length' in target_full:
                         my_hours *= 3
                         my_hours /= 2
@@ -63,7 +61,11 @@ def handle_dir(dirname, dry_run=True):
                     pbs_lns.append('#SBATCH')
                     pbs_lns.append('#SBATCH --nodes=1')
                     pbs_lns.append('#SBATCH --mem=%dG' % my_mem_gb)
-                    pbs_lns.append('#SBATCH --partition=shared')
+                    if use_scavenger:
+                        pbs_lns.append('#SBATCH --partition=shared')
+                    else:
+                        pbs_lns.append('#SBATCH --partition=scavenger')
+                        pbs_lns.append('#SBATCH --qos=scavenger')
                     pbs_lns.append('#SBATCH --cpus-per-task=8')
                     pbs_lns.append('#SBATCH --time=%d:00:00' % my_hours)
                     pbs_lns.append('#SBATCH --output=' + qsub_basename + '.o')
@@ -93,7 +95,8 @@ def go():
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
             print('Found a Makefile: %s' % (os.path.join(dirname, 'Makefile')), file=sys.stderr)
-            handle_dir(dirname, dry_run=sys.argv[1] == 'dry')
+            handle_dir(dirname, dry_run=sys.argv[1] == 'dry',
+                       use_scavenger=len(sys.argv) > 2 and sys.argv[2] == 'scavenger')
 
 if len(sys.argv) == 1:
     print("pass argument 'dry' for dry run, or 'wet' for normal run")
