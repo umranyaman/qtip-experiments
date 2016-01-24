@@ -1,6 +1,6 @@
 # Must already have a Bowtie 2 index of the FASTA reference somewhere
 
-TS=python $(TS_HOME)/src/ts.py
+TS=python $(TS_HOME)/src/qsim
 BT2_TS_ARGS=--write-orig-mapq
 
 define bt2ts

@@ -4,14 +4,14 @@
 # 1. Experiment name
 # 2. Minimum # unpaired reads to simulate
 # 3. Minimum # discordant and bad-end reads to simulate
-# 4. Arguments to ts.py script
+# 4. Arguments to qsim script
 # 5. Arguments for SNAP (in either single or paired mode)
 # 6. Arguments for SNAP in single mode
 # 7. Arguments for SNAP in paired mode
 # 8. Reference to use
 # 9. Index to use
 
-TS=python $(TS_HOME)/src/ts.py
+TS=python $(TS_HOME)/src/qsim
 SNAP_ARGS+=-=
 SNAP_TS_ARGS=--write-orig-mapq
 
