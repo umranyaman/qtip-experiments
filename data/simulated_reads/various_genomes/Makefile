@@ -88,7 +88,6 @@ include ../snapts.mk
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
-	rm -f *.mkb
 	rm -rf *.out
 
 .PHONY: outs
@@ -123,6 +122,21 @@ outs_bwamem: \
     r12_bwamem250_mm_mason_ill_mm_250_1M.out \
     r12_bwamem100_zm_mason_ill_zm_100_1M.out \
     r12_bwamem250_zm_mason_ill_zm_250_1M.out
+
+.PHONY: reads
+reads: \
+    r0_mason_ill_hg_100_1M.fq.gz \
+    r0_mason_ill_hg_250_1M.fq.gz \
+    r0_mason_ill_mm_100_1M.fq.gz \
+    r0_mason_ill_mm_250_1M.fq.gz \
+    r0_mason_ill_zm_100_1M.fq.gz \
+    r0_mason_ill_zm_250_1M.fq.gz \
+    r1_mason_ill_hg_100_1M.fq.gz \
+    r1_mason_ill_hg_250_1M.fq.gz \
+    r1_mason_ill_mm_100_1M.fq.gz \
+    r1_mason_ill_mm_250_1M.fq.gz \
+    r1_mason_ill_zm_100_1M.fq.gz \
+    r1_mason_ill_zm_250_1M.fq.gz
 
 SUBSAMPLING_ARGS=--subsampling-series 0.01,0.03,0.05 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
