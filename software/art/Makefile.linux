@@ -4,6 +4,7 @@
 # 454 version: 2.5.8
 
 AR=artbinvanillaicecream031114linux64tgz.tgz
+DR=art_bin_VanillaIceCream
 URL=http://www.niehs.nih.gov/research/resources/assets/docs/$(AR)
 ARCH=Linux64
 
@@ -18,6 +19,7 @@ art_454: $(ARCH)/art_454
 
 $(ARCH)/art_illumina $(ARCH)/art_454: $(AR)
 	gzip -dc $< | tar xvf -
+	mv $(DR) $(ARCH)
 
 $(AR):
 	wget $(URL)
