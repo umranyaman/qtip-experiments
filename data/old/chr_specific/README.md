@@ -1,0 +1,1 @@
+One idea for evaluating the tool was to take sequencing reads that were "flow sorted" or where an attempt was made to isolate reads from a particular chromosome.  These could then be aligned to the whole genome and we could call the alignments to other chromosomes "incorrect."  This is a bit like the "decoy" idea explored in other papers.
