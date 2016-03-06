@@ -1,6 +1,0 @@
-*.sam
-*.csv
-qsim-*
-*.dSYM
-Xcode
-*.pyc
