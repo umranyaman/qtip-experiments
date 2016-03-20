@@ -24,6 +24,10 @@ TS_REFS=/scratch/groups/blangme2/references
 
 TODO: we should rename these to `QSIM_*`.
 
+## Build the software
+
+There are several tools in the `software` directory that you will have to build in order to run the simulation and other experiments.  Each subdirectory of `software` has a `Makefile` that should automate the process of downloading and building each tool.  I think you can ignore the `art_illumina` subdirectory and use the `art` subdirectory instead.
+
 ## Simulated reads
 
 Several of the MAPQ estimation accuracy results come from simulation experiments.  These experiments span a range of read lengths, aligners, simulators, reference genomes, etc.  All these experiments are driven by the `gmake` `Makefile`s in the `experiments/simulated_reads` subdirectory here.
