@@ -1,7 +1,23 @@
 #!/usr/bin/env python
 
 """
-Gather together all the results from all the various simulation experiments.
+Gathers results from simulation experiments.  Run this from the
+simulated_reads subdirectory of the qsim-experiments repo.  It descends into
+
+Outputs:
+ - "overall.csv" with one big table of summary measures
+ - "summary" subdirectory with lots of raw results compiled into a directory
+   structure
+   + Subdirectories correspond to simulation experiments and contain:
+     - for each sampling rate:
+       + for each trial:
+         - featimport_*.csv -- feature importances for each alignment type
+         - params.csv -- feature importances for each model
+         - Subdirectories for training/test, each with:
+           + cid.csv -- cumulative incorrect difference (CID) vector
+           + cse.csv -- cumulative squared error (CSE) vector
+           + roc.csv -- ROC table
+           + summary.csv -- summarizes data, model fit
 """
 
 import os
@@ -10,16 +26,19 @@ import glob
 import logging
 from os.path import join
 
-
+# We identify the experiments by fishing through the Makefiles for output
+# targets.  When this regex matches a line of a Makefile, we know the
+# following lines are giving us the names of targets.
 target_re = re.compile('^outs_[_a-zA-Z01-9]*:.*')
-fraction = '0.300'
-replicate = '1'
-sampling_rates = ['0.05', '0.1', '0.2', '0.3', '0.4', '0.5', '1.0']
+
+# TODO: should we infer these rather than having them be hard-coded here,
+# possibly mismatched with what's in the Makefiles?
+sampling_rates = ['0.01', '0.03', '0.05']
 trials = ['1', '2', '3', '4', '5']
 
 
 def parse_aligner_local(target):
-    # Parsing aligner info
+    """ Based on Makefile target name, parse which aligner is involved """
     toks = target.split('_')
     aligner, local = 'bt2', False
     if 'bwamem' in toks[1]:
@@ -35,6 +54,7 @@ def parse_aligner_local(target):
 
 
 def parse_species(target):
+    """ Based on Makefile target name, parse which species is involved """
     genome = 'hg'
     toks = target.split('_')
     # Parsing reference species info
@@ -46,6 +66,7 @@ def parse_species(target):
 
 
 def parse_sim(target):
+    """ Based on Makefile target name, parse which read simulator is involved """
     sim = 'mason'
     toks = target.split('_')
     # Parsing simulator info:
@@ -57,6 +78,7 @@ def parse_sim(target):
 
 
 def parse_sensitivity(target, aligner):
+    """ Based on Makefile target name, parse which sensitivity level is involved """
     toks = target.split('_')
     sensitivity = 's'
     if aligner == 'bt2':
@@ -65,18 +87,18 @@ def parse_sensitivity(target, aligner):
 
 
 def parse_paired(target):
+    """ Based on Makefile target name, parse whether the data is paired-end """
     return target.startswith('r12')
 
 
 def parse_readlen(target):
-    toks = target.split('_')
-    readlen = int(toks[-2])
-    if readlen == '50to500':
-        readlen = 500
-    return readlen
+    """ Based on Makefile target name, parse the read length """
+    readlen = target.split('_')[-2]
+    return 500 if readlen == '50to500' else int(readlen)
 
 
 def parse_name_and_target(combined):
+    """ Based on Makefile target name, parse the read length """
     toks = combined.split('_')
     roff = 3
     if toks[2] == 'r0' or toks[2] == 'r12':
@@ -86,7 +108,7 @@ def parse_name_and_target(combined):
 
 
 def mkdir_quiet(dr):
-    # Create output directory if needed
+    """ Create directories if needed, quietly """
     import errno
     if not os.path.isdir(dr):
         try:
@@ -97,18 +119,23 @@ def mkdir_quiet(dr):
 
 
 def has_done(dr):
+    """ Return true if directory contains DONE file, indicating qsim finished
+        running. """
     done_fn = join(dr, 'DONE')
     if not os.path.exists(done_fn):
         raise RuntimeError('Directory "%s" does not contain DONE file' % dr)
 
 
 def copyfiles(fglob, dest, prefix=''):
+    """ Copy files (indicated by the file glob fglob) to the destination
+        directory (indicated by dest). """
     assert os.path.isdir(dest) and os.path.exists(dest)
     for fn in glob.glob(fglob):
         os.system('cp -f %s %s' % (fn, join(dest, prefix + os.path.basename(fn))))
 
 
 def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first):
+    """ Put together one line of output and write to ofh (overall.csv) """
     name, target = parse_name_and_target(combined_target_name)
     aligner, local = parse_aligner_local(target)
     paired = parse_paired(target)
@@ -132,7 +159,13 @@ def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first
     ofh.write(','.join(map(str, values)) + '\n')
 
 
+def get_immediate_subdirectories(a_dir):
+    return [name for name in os.listdir(a_dir)
+            if os.path.isdir(os.path.join(a_dir, name))]
+
+
 def handle_dir(dirname, dest_dirname, ofh, first):
+    # ofh is a writable file for overall.csv
     name = os.path.basename(dirname)
     with open(join(dirname, 'Makefile')) as fh:
 
@@ -144,65 +177,76 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                 if len(ln.rstrip()) == 0:
                     in_target = False
                 else:
+                    # Parsing a target from the list of targets in the Makefile
                     target = ln.split()[0]
                     target_full = join(dirname, target)
                     has_done(target_full)
 
                     combined_target_name = name + '_' + target[:-4]
+                    logging.info('  Found target: %s' % combined_target_name)
                     odir = join(dest_dirname, combined_target_name)
 
-                    # Parse some things from the target
+                    for dir_samp in get_immediate_subdirectories(target_full):
 
-                    for rate in sampling_rates:
-
+                        assert dir_samp.startswith('sample')
+                        rate = dir_samp[6:]
+                        odir_r = join(odir, 'sample' + rate)
+                        logging.info('    Found sampling rate: %s' % rate)
                         target_full_s = join(target_full, 'sample' + rate)
                         if not os.path.isdir(target_full_s):
                             raise RuntimeError('Directory "%s" does not exist' % target_full_s)
 
-                        for trial in trials:
+                        for dir_trial in get_immediate_subdirectories(target_full_s):
 
+                            assert dir_trial.startswith('trial')
+                            trial = dir_trial[5:]
+                            odir_rt = join(odir_r, 'trial' + trial)
+                            logging.info('      Found trial: %s' % trial)
                             target_full_st = join(target_full_s, 'trial' + trial)
                             if not os.path.isdir(target_full_st):
                                 raise RuntimeError('Directory "%s" does not exist' % target_full_st)
 
-                            mkdir_quiet(odir)
+                            mkdir_quiet(odir_rt)
 
-                            os.system('cp -f %s %s' % (join(target_full_st, 'featimport_*.csv'), odir))
-                            params_fn = join(odir, 'params.csv')
+                            os.system('cp -f %s %s' % (join(target_full_st, 'featimport_*.csv'), odir_rt))
+                            params_fn = join(odir_rt, 'params.csv')
                             os.system('cp -f %s %s' % (join(target_full_st, 'params.csv'), params_fn))
 
                             for tt in ['test', 'training']:
-
-                                # TODO: we're just clobbering in here
 
                                 target_full_stt = join(target_full_st, tt)
                                 if not os.path.isdir(target_full_stt):
                                     raise RuntimeError('Directory "%s" does not exist' % target_full_stt)
 
-                                copyfiles(join(target_full_stt, 'cid*.csv'), odir, tt + '_')
-                                copyfiles(join(target_full_stt, 'cse*.csv'), odir, tt + '_')
-                                copyfiles(join(target_full_stt, 'roc*.csv'), odir, tt + '_')
-                                summ_fn = join(odir, tt + '_summary.csv')
+                                copyfiles(join(target_full_stt, 'cid*.csv'), odir_rt, tt + '_')
+                                copyfiles(join(target_full_stt, 'cse*.csv'), odir_rt, tt + '_')
+                                copyfiles(join(target_full_stt, 'roc*.csv'), odir_rt, tt + '_')
+                                summ_fn = join(odir_rt, tt + '_summary.csv')
                                 os.system('cp -f %s %s' % (join(target_full_stt, 'summary.csv'), summ_fn))
-                                compile_line(ofh, name, combined_target_name, tt, trial, params_fn, summ_fn, first)
+                                compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first)
                                 first = False
 
-
 def go():
+
     # Set up logger
     logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',
                         datefmt='%m/%d/%y-%H:%M:%S', level=logging.DEBUG)
 
+    # Set up output directory
     odir = 'summary'
-    first = True
     mkdir_quiet(odir)
+
+    # Open output overall.csv file
+    first = True
     with open(join(odir, 'overall.csv'), 'w') as fh:
+        # Descend into subdirectories looking for Makefiles
         for dirname, dirs, files in os.walk('.'):
             if 'Makefile' in files:
                 logging.info('Found a Makefile: %s' % join(dirname, 'Makefile'))
                 handle_dir(dirname, odir, fh, first)
                 first = False
 
+    # Compress the output directory, which is large because of the CID and CSE curves
     os.system('tar -cvzf summary.tar.gz summary')
 
 go()
