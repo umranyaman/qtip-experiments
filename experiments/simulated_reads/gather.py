@@ -31,11 +31,6 @@ from os.path import join
 # following lines are giving us the names of targets.
 target_re = re.compile('^outs_[_a-zA-Z01-9]*:.*')
 
-# TODO: should we infer these rather than having them be hard-coded here,
-# possibly mismatched with what's in the Makefiles?
-sampling_rates = ['0.01', '0.03', '0.05']
-trials = ['1', '2', '3', '4', '5']
-
 
 def parse_aligner_local(target):
     """ Based on Makefile target name, parse which aligner is involved """
