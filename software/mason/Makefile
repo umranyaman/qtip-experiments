@@ -1,17 +1,12 @@
-#
-# Mason simulator - assumues cmake & gcc tools are already installed
-#
-
-SVN=$(shell which svn)
 MASON_SRC=seqan-trunk/build/Release/bin/mason
-SITE=http://svn.seqan.de
+RELEASE=seqan-v1.4.2
 
 mason: $(MASON_SRC)
 	ln -s -f seqan-trunk/build/Release/bin/mason
 
 $(MASON_SRC): seqan-trunk/build
-	cd seqan-trunk/build && mkdir -p Release && cd Release && cmake -DCMAKE_BUILD_TYPE=Release ../.. && $(MAKE) mason
+	cd seqan-trunk/build && mkdir -p Release && cd Release && cmake -DBoost_NO_BOOST_CMAKE=BOOL:ON -DCMAKE_BUILD_TYPE=Release ../.. && $(MAKE) mason
 
 seqan-trunk/build: $(SVN)
-	$(SVN) co $(SITE)/seqan/trunk seqan-trunk
+	git clone --branch $(RELEASE) git@github.com:seqan/seqan.git seqan-trunk
 	mkdir -p $@
