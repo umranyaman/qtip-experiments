@@ -6,6 +6,9 @@ URL=https://github.com/amplab/snap/archive/$(AR)
 NM=snap
 NM_VER=snap-$(VER)
 
+snap-aligner: $(NM)/snap-aligner
+	ln -s -f $< $@
+
 $(NM)/snap-aligner: $(NM)
 	make -C $(NM) # CXX=g++-5
 
@@ -23,5 +26,4 @@ $(AR):
 .PHONY: clean
 clean:
 	rm -fr snap snap-$(VER)
-	rm -f *.tar.gz
-
+	rm -f *.tar.gz snap-aligner
