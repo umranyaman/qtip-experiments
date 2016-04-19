@@ -71,8 +71,6 @@ def handle_dir(dirname, dry_run=True, use_scavenger=False):
                     pbs_lns.append('#SBATCH --output=' + qsub_basename + '.o')
                     pbs_lns.append('#SBATCH --error=' + qsub_basename + '.e')
                     pbs_lns.append('export QSIM_EXPERIMENTS_HOME=%s' % os.environ['QSIM_EXPERIMENTS_HOME'])
-                    pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
-                    pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
                     pbs_lns.append('if make %s ; then touch %s/DONE ; fi' % (target, target))
                     qsub_fullname = os.path.join(dirname, qsub_basename)
@@ -88,10 +86,6 @@ def handle_dir(dirname, dry_run=True, use_scavenger=False):
 def go():
     if 'QSIM_EXPERIMENTS_HOME' not in os.environ:
         raise RuntimeError('Must have QSIM_EXPERIMENTS_HOME set')
-    if 'TS_REFS' not in os.environ:
-        raise RuntimeError('Must have TS_REFS set')
-    if 'TS_INDEXES' not in os.environ:
-        raise RuntimeError('Must have TS_INDEXES set')
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files:
             print('Found a Makefile: %s' % (os.path.join(dirname, 'Makefile')), file=sys.stderr)
