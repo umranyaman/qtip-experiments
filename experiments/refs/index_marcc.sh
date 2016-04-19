@@ -16,7 +16,7 @@ cat > .hg19.bt2.sh <<EOF
 #SBATCH --error=.hg19.bt2.sh.e
 $TS_HOME/software/bowtie2/bowtie2-build --bmax 537647674 --dcv 1024 $TS_REFS/hg19.fa hg19.fa
 EOF
-echo qsub .hg19.bt2.sh
+echo sbatch .hg19.bt2.sh
 
 cat > .hg19.bwa.sh <<EOF
 #!/bin/bash -l
@@ -29,7 +29,7 @@ cat > .hg19.bwa.sh <<EOF
 $TS_HOME/software/bwa/bwa index $TS_REFS/hg19.fa
 mv $TS_REFS/hg19.fa.* .
 EOF
-echo qsub .hg19.bwa.sh
+echo sbatch .hg19.bwa.sh
 
 cat > .hg19.snap.sh <<EOF
 #!/bin/bash -l
@@ -41,7 +41,7 @@ cat > .hg19.snap.sh <<EOF
 #SBATCH --error=.hg19.snap.sh.e
 $TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/hg19.fa hg19.fa.snap -bSpace
 EOF
-echo qsub .hg19.snap.sh
+echo sbatch .hg19.snap.sh
 
 #
 # mm10
@@ -57,7 +57,7 @@ cat > .mm10.bt2.sh <<EOF
 #SBATCH --error=.mm10.bt2.sh.e
 $TS_HOME/software/bowtie2/bowtie2-build --bmax 537647674 --dcv 1024 $TS_REFS/mm10.fa mm10.fa
 EOF
-echo qsub .mm10.bt2.sh
+echo sbatch .mm10.bt2.sh
 
 cat > .mm10.bwa.sh <<EOF
 #!/bin/bash -l
@@ -70,7 +70,7 @@ cat > .mm10.bwa.sh <<EOF
 $TS_HOME/software/bwa/bwa index $TS_REFS/mm10.fa
 mv $TS_REFS/mm10.fa.* .
 EOF
-echo qsub .mm10.bwa.sh
+echo sbatch .mm10.bwa.sh
 
 cat > .mm10.snap.sh <<EOF
 #!/bin/bash -l
@@ -82,7 +82,7 @@ cat > .mm10.snap.sh <<EOF
 #SBATCH --error=.mm10.snap.sh.e
 $TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/mm10.fa mm10.fa.snap -bSpace
 EOF
-echo qsub .mm10.snap.sh
+echo sbatch .mm10.snap.sh
 
 #
 # zm_AGPv3
@@ -98,7 +98,7 @@ cat > .zm_AGPv3.bt2.sh <<EOF
 #SBATCH --error=.zm_AGPv3.bt2.sh.e
 $TS_HOME/software/bowtie2/bowtie2-build --bmax 537647674 --dcv 1024 $TS_REFS/zm_AGPv3.fa zm_AGPv3.fa
 EOF
-echo qsub .zm_AGPv3.bt2.sh
+echo sbatch .zm_AGPv3.bt2.sh
 
 cat > .zm_AGPv3.bwa.sh <<EOF
 #!/bin/bash -l
@@ -111,7 +111,7 @@ cat > .zm_AGPv3.bwa.sh <<EOF
 $TS_HOME/software/bwa/bwa index $TS_REFS/zm_AGPv3.fa
 mv $TS_REFS/zm_AGPv3.fa.* .
 EOF
-echo qsub .zm_AGPv3.bwa.sh
+echo sbatch .zm_AGPv3.bwa.sh
 
 cat > .zm_AGPv3.snap.sh <<EOF
 #!/bin/bash -l
@@ -123,4 +123,4 @@ cat > .zm_AGPv3.snap.sh <<EOF
 #SBATCH --error=.zm_AGPv3.snap.sh.e
 $TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/zm_AGPv3.fa zm_AGPv3.fa.snap -bSpace
 EOF
-echo qsub .zm_AGPv3.snap.sh
+echo sbatch .zm_AGPv3.snap.sh
