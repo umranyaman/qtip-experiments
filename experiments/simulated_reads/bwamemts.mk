@@ -1,6 +1,6 @@
 # Must already have a BWA index of the FASTA reference somewhere
 
-TS=python $(TS_HOME)/src/qsim
+TS=python $(QSIM_EXPERIMENTS_HOME)/src/qsim
 BWA_TS_ARGS=--write-orig-mapq
 
 define bwamemts

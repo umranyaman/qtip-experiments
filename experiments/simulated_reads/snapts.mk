@@ -11,7 +11,7 @@
 # 8. Reference to use
 # 9. Index to use
 
-TS=python $(TS_HOME)/src/qsim
+TS=python $(QSIM_EXPERIMENTS_HOME)/src/qsim
 SNAP_ARGS+=-=
 SNAP_TS_ARGS=--write-orig-mapq
 

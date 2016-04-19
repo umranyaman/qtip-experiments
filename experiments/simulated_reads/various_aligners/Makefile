@@ -6,23 +6,18 @@
 # simulator.
 
 # Prerequisites:
-# 1. TS_HOME (root of repo) must be set
-# 2. TS_REFS (containing hg19.fa) must be set
-# 3. TS_INDEXES (containing hg19.fa.*.bt2) must be set
-# 4. $TS_HOME/software/mason/mason must have been built
+# 1. QSIM_EXPERIMENTS_HOME (root of repo) must be set
+# 2. $QSIM_EXPERIMENTS_HOME/experiments/refs must have relevant references and indexes
+# 3. $QSIM_EXPERIMENTS_HOME/software/mason/mason must have been built
 
 HG_FASTA_NAME=hg19.fa
 HG_INDEX_BASE=$(HG_FASTA_NAME)
 
-ifeq (,$(TS_HOME))
-$(error "Set TS_HOME, where ts repo root is located")
+ifeq (,$(QSIM_EXPERIMENTS_HOME))
+$(error "Set QSIM_EXPERIMENTS_HOME, where qsim-experiments working copy is located")
 endif
-ifeq (,$(TS_REFS))
-$(error "Set TS_REFS, where $(REF_FASTA) is located")
-endif
-ifeq (,$(TS_INDEXES))
-$(error "Set TS_INDEXES, where ts repo root is located")
-endif
+TS_REFS=$(QSIM_EXPERIMENTS_HOME)/experiments/refs
+TS_INDEXES=$(QSIM_EXPERIMENTS_HOME)/experiments/refs
 
 HG_FASTA=$(TS_REFS)/$(HG_FASTA_NAME)
 HG_INDEX=$(TS_INDEXES)/$(HG_INDEX_BASE)
@@ -43,15 +38,15 @@ endif
 .PHONY: all
 all: outs
 
-BOWTIE2_HOME=$(TS_HOME)/software/bowtie2
+BOWTIE2_HOME=$(QSIM_EXPERIMENTS_HOME)/software/bowtie2
 BOWTIE2=$(BOWTIE2_HOME)/bowtie2
 BT2_ARGS=
 
-BWA_HOME=$(TS_HOME)/software/bwa
+BWA_HOME=$(QSIM_EXPERIMENTS_HOME)/software/bwa
 BWA=$(BWA_HOME)/bwa
 BWA_ARGS=
 
-SNAP_HOME=$(TS_HOME)/software/snap
+SNAP_HOME=$(QSIM_EXPERIMENTS_HOME)/software/snap
 SNAP=$(SNAP_HOME)/snap/snap-aligner
 SNAP_ARGS=
 

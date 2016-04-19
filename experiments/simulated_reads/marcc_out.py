@@ -70,7 +70,7 @@ def handle_dir(dirname, dry_run=True, use_scavenger=False):
                     pbs_lns.append('#SBATCH --time=%d:00:00' % my_hours)
                     pbs_lns.append('#SBATCH --output=' + qsub_basename + '.o')
                     pbs_lns.append('#SBATCH --error=' + qsub_basename + '.e')
-                    pbs_lns.append('export TS_HOME=%s' % os.environ['TS_HOME'])
+                    pbs_lns.append('export QSIM_EXPERIMENTS_HOME=%s' % os.environ['QSIM_EXPERIMENTS_HOME'])
                     pbs_lns.append('export TS_INDEXES=%s' % os.environ['TS_INDEXES'])
                     pbs_lns.append('export TS_REFS=%s' % os.environ['TS_REFS'])
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
@@ -86,8 +86,8 @@ def handle_dir(dirname, dry_run=True, use_scavenger=False):
 
 
 def go():
-    if 'TS_HOME' not in os.environ:
-        raise RuntimeError('Must have TS_HOME set')
+    if 'QSIM_EXPERIMENTS_HOME' not in os.environ:
+        raise RuntimeError('Must have QSIM_EXPERIMENTS_HOME set')
     if 'TS_REFS' not in os.environ:
         raise RuntimeError('Must have TS_REFS set')
     if 'TS_INDEXES' not in os.environ:
