@@ -17,11 +17,12 @@ $(NM)/Makefile: $(AR)
 	mv $(NM_VER) $(NM)
 #	cd $@ && patch -p1 < ../snap_patch.diff
 	cd $(NM) && patch -p1 < ../snap_features_patch.diff
+	touch $@
 
 $(AR):
 	wget -O $(AR) $(URL)
 
 .PHONY: clean
 clean:
-	rm -fr snap snap-$(VER)
-	rm -f *.tar.gz snap-aligner
+	rm -rf $(NM)
+	rm -f $(AR) snap-aligner
