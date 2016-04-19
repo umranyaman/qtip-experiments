@@ -9,15 +9,15 @@ NM_VER=snap-$(VER)
 snap-aligner: $(NM)/snap-aligner
 	ln -s -f $< $@
 
-$(NM)/snap-aligner: $(NM)
+$(NM)/snap-aligner: $(NM)/Makefile
 	make -C $(NM) # CXX=g++-5
 
-$(NM): $(NM_VER)
-	mv $< $@
+$(NM)/Makefile: $(NM_VER)/Makefile
+	mv $(NM_VER) $(NM)
 #	cd $@ && patch -p1 < ../snap_patch.diff
-	cd $@ && patch -p1 < ../snap_features_patch.diff
+	cd $(NM) && patch -p1 < ../snap_features_patch.diff
 
-$(NM_VER): $(AR)
+$(NM_VER)/Makefile: $(AR)
 	tar xvfz $<
 
 $(AR):
