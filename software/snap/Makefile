@@ -12,13 +12,11 @@ snap-aligner: $(NM)/snap-aligner
 $(NM)/snap-aligner: $(NM)/Makefile
 	make -C $(NM) # CXX=g++-5
 
-$(NM)/Makefile: $(NM_VER)/Makefile
+$(NM)/Makefile: $(AR)
+	tar xvfz $<
 	mv $(NM_VER) $(NM)
 #	cd $@ && patch -p1 < ../snap_patch.diff
 	cd $(NM) && patch -p1 < ../snap_features_patch.diff
-
-$(NM_VER)/Makefile: $(AR)
-	tar xvfz $<
 
 $(AR):
 	wget -O $(AR) $(URL)
