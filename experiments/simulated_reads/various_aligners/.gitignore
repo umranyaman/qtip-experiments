@@ -1,3 +1,5 @@
 *.fq.gz
-*.ts
-*.sam
+*.out
+.*.sh
+.*.e
+.*.o

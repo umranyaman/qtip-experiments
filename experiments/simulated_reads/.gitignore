@@ -1,4 +1,6 @@
 .*.sh
+.*.e
+.*.o
 .tss_qsubs
 .read_qsubs
 summary
