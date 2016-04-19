@@ -1,12 +1,12 @@
 # Must already have a Bowtie 2 index of the FASTA reference somewhere
 
-TS=python $(QSIM_EXPERIMENTS_HOME)/src/qsim
-BT2_TS_ARGS=--write-orig-mapq
+QSIM=python $(QSIM_HOME)/src/qsim
+BT2_QSIM_ARGS=--write-orig-mapq
 
 define bt2ts
 
 r0_$1_%.out: r0_%.fq.gz
-	$$(TS) --ref $6 \
+	$$(QSIM) --ref $6 \
 	       --bt2-exe $$(BOWTIE2) \
 	       --index $7 \
 	       --sim-unp-min $2 \
@@ -15,10 +15,10 @@ r0_$1_%.out: r0_%.fq.gz
 	       --U $$< \
 	       -- $5 $$(BT2_ARGS) -p 8
 	-$$(BOWTIE2) --version > $$@/bt2_version
-	-$$(TS) --version > $$@/ts_version
+	-$$(QSIM) --version > $$@/qsim_version
 
 r12_$1_%.out: r1_%.fq.gz
-	$$(TS) --ref $6 \
+	$$(QSIM) --ref $6 \
 	       --bt2-exe $$(BOWTIE2) \
 	       --index $7 \
 	       --sim-conc-min $2 --sim-disc-min $3 --sim-bad-end-min $3 \
@@ -27,6 +27,6 @@ r12_$1_%.out: r1_%.fq.gz
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
 	       -- $5 $$(BT2_ARGS) -p 8
 	-$$(BOWTIE2) --version > $$@/bt2_version
-	-$$(TS) --version > $$@/ts_version
+	-$$(QSIM) --version > $$@/qsim_version
 
 endef

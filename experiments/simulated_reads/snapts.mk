@@ -11,14 +11,14 @@
 # 8. Reference to use
 # 9. Index to use
 
-TS=python $(QSIM_EXPERIMENTS_HOME)/src/qsim
+QSIM=python $(QSIM_HOME)/src/qsim
 SNAP_ARGS+=-=
 SNAP_TS_ARGS=--write-orig-mapq
 
 define snapts
 
 r0_$1_%.out: r0_%.fq.gz
-	$$(TS) --ref $8 \
+	$$(QSIM) --ref $8 \
 	       --snap-exe $$(SNAP) --aligner snap \
 	       --index $9.snap \
 	       --sim-unp-min $2 \
@@ -27,10 +27,10 @@ r0_$1_%.out: r0_%.fq.gz
 	       --U $$< \
 	       -- $5 $$(SNAP_ARGS) -t 8 -- $6 -- $7
 	-$$(SNAP) 2> $$@/snap_version
-	-$$(TS) --version > $$@/ts_version
+	-$$(QSIM) --version > $$@/qsim_version
 
 r12_$1_%.out: r1_%.fq.gz
-	$$(TS) --ref $8 \
+	$$(QSIM) --ref $8 \
 	       --snap-exe $$(SNAP) --aligner snap \
 	       --index $9.snap \
 	       --sim-conc-min $2 --sim-disc-min $3 --sim-bad-end-min $3 \
@@ -39,6 +39,6 @@ r12_$1_%.out: r1_%.fq.gz
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
 	       -- $5 $$(SNAP_ARGS) -t 8 -- $6 -- $7
 	-$$(SNAP) 2> $$@/snap_version
-	-$$(TS) --version > $$@/ts_version
+	-$$(QSIM) --version > $$@/qsim_version
 
 endef
