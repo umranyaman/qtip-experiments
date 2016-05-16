@@ -1,21 +1,16 @@
 #!/bin/sh
 
-# 24 jobs in here
-
 # all of the following have unpaired/paired and ERR050082/ERR050083 versions
 # hence the "4 x"
 
-# Alignment jobs:
 # 4 x bowtie 2 --very-sensitive
 # 4 x bowtie 2 --very-sensitive-local
 # 4 x bowtie 2
 # 4 x bwa-mem
 # 4 x SNAP
+# (20 jobs total)
 
-# Other:
-# 4 x multi_aligner.py csv file
-
-# multi_aligner.py jobs should only be run once all alignment jobs are done
+# run sbatch_multialign.sh after this
 
 if [ "$1" = "scavenger" ] ; then
 PART1="#SBATCH --partition=scavenger"
@@ -71,15 +66,6 @@ echo "sbatch .${dat}.${ext}"
 
 done
 
-cat >.${dat}.${pe} <<EOF
-#!/bin/sh
-${PART1}
-${PART2}
-#SBATCH --time=12:00:00
-#SBATCH --mem=4G
-/usr/bin/time -v make ${dat}.unp.csv
-EOF
-echo "sbatch .${dat}.${pe}"
 done
 done
 

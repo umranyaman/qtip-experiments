@@ -1,3 +1,8 @@
+"""
+Creates a table with efficiency metrics (running time, peak memory
+footprint) from SLURM output generated from sbatch_align.sh.
+"""
+
 from __future__ import print_function
 
 import glob
