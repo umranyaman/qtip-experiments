@@ -1,3 +1,4 @@
 *.sam
 *.out
 *.plain
+*.fastq
