@@ -1,40 +1,101 @@
 # qsim-experiments
 
-The manuscript describing `qsim` describes several experiments.  This repo contains scripts for driving all these experiments.
+Scripts for driving all experiments described in the `qsim` manuscript.
 
-## Reference genomes and indexes
-
-To run these experiments, the necessary reference genomes (`hg19`, `mm10` and `zm_AGPv3`) and indexes (`bowtie2`, `bwa mem` and `snap`) must be available.
-
-The `experiments/refs/get_refs.sh` script downloads all the relevant reference genomes.  It also runs the `/experiments/refs/remove_short.py` script on some of them, which removes some short contigs that cause issues for certain read simulators.
-
-The `experiments/refs/submit_index.sh` script submits nine index-building jobs, one for each aligner/genome combination.  The script was written for the HHPC cluster at JHU.
-
-TODO: we should break out a script that does the indexing locally.  Perhaps also add a script for submitting MARCC jobs.
-
-## Environment variables
-
-For me, the path to my clone of the `qsim` GitHub repo is at `/scratch/users/blangme2@jhu.edu/git/mapq`, my genome indexes are in: `/scratch/groups/blangme2/indexes`, and my reference genomes are in: `/scratch/groups/blangme2/references`.  So I set up my `TS_*` environment variables like this:
+### Clone repos
 
 ```
-TS_HOME=/scratch/users/blangme2@jhu.edu/git/mapq
-TS_INDEXES=/scratch/groups/blangme2/indexes
-TS_REFS=/scratch/groups/blangme2/references
+cd $US/git  # substitute appropriately; this is "user scratch" on MARCC cluster
+git clone git@github.com:BenLangmead/qsim.git
+git clone git@github.com:BenLangmead/qsim-experiments.git
 ```
 
-TODO: we should rename these to `QSIM_*`.
+### Set up environment
 
-## Build the software
+```
+export QSIM_HOME=`pwd`/qsim
+export QSIM_EXPERIMENTS_HOME=`pwd`/qsim-experiments
+```
 
-There are several tools in the `software` directory that you will have to build in order to run the simulation and other experiments.  Each subdirectory of `software` has a `Makefile` that should automate the process of downloading and building each tool.  I think you can ignore the `art_illumina` subdirectory and use the `art` subdirectory instead.
+Consider adding corresponding commands to `.bashrc` or the like.
 
-## Simulated reads
+### Build software in `qsim`
 
-Several of the MAPQ estimation accuracy results come from simulation experiments.  These experiments span a range of read lengths, aligners, simulators, reference genomes, etc.  All these experiments are driven by the `gmake` `Makefile`s in the `experiments/simulated_reads` subdirectory here.
+```
+make -C $QSIM_HOME/src
+$QSIM_HOME/src/qsim --version
+```
 
-To minimize overall time required, we ran many of these jobs in parallel on [MARCC](https://www.marcc.jhu.edu).  The scripts that drive the parallel jobs are described in the `experiments/simulated_reads/README.md` file.
+`make` is required because, although most of `qsim` is in Python, some helper programs are C++.
 
-## Real reads
+### Build software in `qsim-experiments`
 
-We use real data to explore some aspects of qsim performance.  See the `experiments/real_data/README.md` file for details.
+```
+make -f Makefile.src_linux -C qsim-experiments/software/art
+make -C qsim-experiments/software/mason
+make -C qsim-experiments/software/wgsim
+make -C qsim-experiments/software/bowtie2
+make -C qsim-experiments/software/bwa
+make -C qsim-experiments/software/snap
+```
 
+MARCC note: making mason doesn’t work with `vtune` module loaded.
+
+### Obtain reference genomes and build indexes
+
+Reference genomes (`hg19`, `mm10` and `zm_AGPv3`) and indexes (`bowtie2`, `bwa mem` and `snap`) must be available for these experiments.
+
+```
+pushd qsim-experiments/experiments/refs
+sh get_refs.sh
+```
+
+Note: `get_refs.sh` both downloads the relevant reference genomes and runs the `/experiments/refs/remove_short.py` script on some of them, removing short contigs that cause issues for certain read simulators.
+
+The `submit_index.sh` script submits nine index-building jobs, one for each aligner/genome combination.  The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
+
+```
+sh index_marcc.sh
+# copy and paste the printed sbatch commands to actually submit them
+# these jobs will take a few hours
+popd
+```
+
+### Simulate reads in `qsim-experiments`
+
+```
+pushd qsim-experiments/experiments/simulated_reads
+python marcc_reads.py wet
+# substitute "dry" for "wet" to just print the job-submission commands
+popd
+```
+
+Many jobs are submitted here.  The longest job takes about 2 hours.
+
+The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
+
+### Run `qsim` on simulated datasets in `qsim-experiments`
+
+These scripts are described in more detail in the `qsim-experiments/experiments/simulated_reads/README.md` file.
+
+```
+pushd qsim-experiments/experiments/simulated_reads
+python marcc_out.py wet
+# substitute "dry" for "wet" to just print the job-submission commands
+popd
+```
+
+Many jobs are submitted here.  All told, this takes about 4 hours for me on MARCC.
+
+The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
+
+### Run qsim on real datasets in “qsim-experiments”
+
+See `qsim-experiments/experiments/real_data/README.md` file for details.
+
+```
+pushd qsim-experiments/experiments/real_data
+sh get_real_reads.sh
+sh sbatch_all.sh
+popd
+```
