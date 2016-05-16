@@ -1,13 +1,14 @@
-TS_BWA_HOME=$(TS_HOME)/software/bwa
-TS_SNAP_HOME=$(TS_HOME)/software/snap
-TS_BT2_HOME=$(TS_HOME)/software/bowtie2
+TS_BWA_HOME=$(QSIM_EXPERIMENTS_HOME)/software/bwa
+TS_SNAP_HOME=$(QSIM_EXPERIMENTS_HOME)/software/snap
+TS_BT2_HOME=$(QSIM_EXPERIMENTS_HOME)/software/bowtie2
+INDEXES=$(QSIM_EXPERIMENTS_HOME)/experiments/refs
 PYTHON=python -O
 
-BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 --index $(TS_INDEXES)/hg19.fa
-BWA_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(TS_INDEXES)/hg19.fa
-SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap/snap-aligner --index $(TS_INDEXES)/hg19.fa.snap
+BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 --index $(INDEXES)/hg19.fa
+BWA_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(INDEXES)/hg19.fa
+SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap/snap-aligner --index $(INDEXES)/hg19.fa.snap
 
-ARGS=--ref $(TS_REFS)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346
+ARGS=--ref $(INDEXES)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346
 
 NTHREADS=1
 NTHREADS_VS=16
