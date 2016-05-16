@@ -97,17 +97,21 @@ Many jobs are submitted here.  All told, this takes about 4 hours for me on MARC
 
 The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
 
-### Run qsim on real datasets in “qsim-experiments”
+### Run `qsim` on real datasets in `qsim-experiments`
 
 See `qsim-experiments/experiments/real_data/README.md` file for more details.
 
-Note that the user has to issue the commands to the distributed resource manager.  The `sbatch_all.sh` script generates the scripts for the jobs and prints out appropriate submission commands assuming the SLURM DRM, as exists on MARCC.  But you may have to modify for your cluster.
+The user has to issue the commands to the distributed resource manager.  The `sbatch_align.sh` and `sbatch_multialign.sh` scripts generate the jobs and print appropriate submission commands without running them.
+
+The `sbatch_*` scripts are intended for the SLURM DRM, which we use on the MARCC cluster.  You may have to modify the scripts for your cluster.
 
 ```
 pushd qsim-experiments/experiments/real_data
 sh get_real_reads.sh  # might want to submit to your DRM
-sh sbatch_all.sh
+sh sbatch_align.sh
 # copy and paste all the alignment jobs to submit them
-# ...when those are done, copy and paste all the multi_aligner.py jobs
+# ...when those are done, proceed
+sh sbatch_multialign.sh
+# copy and paste all the alignment jobs to submit them
 popd
 ```
