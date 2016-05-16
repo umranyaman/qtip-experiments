@@ -3,6 +3,7 @@
 """
 Gathers results from simulation experiments.  Run this from the
 simulated_reads subdirectory of the qsim-experiments repo.  It descends into
+the various experimental subdirectories and parses the Makefiles it finds.
 
 Outputs:
  - "overall.csv" with one big table of summary measures
@@ -20,6 +21,8 @@ Outputs:
            + summary.csv -- summarizes data, model fit
 """
 
+from __future__ import print_function
+import sys
 import os
 import re
 import glob
@@ -221,6 +224,7 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                                 compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first)
                                 first = False
 
+
 def go():
 
     # Set up logger
@@ -244,4 +248,22 @@ def go():
     # Compress the output directory, which is large because of the CID and CSE curves
     os.system('tar -cvzf summary.tar.gz summary')
 
-go()
+if '--slurm' in sys.argv:
+    my_hours = 24
+    with open('.gather.sh', 'w') as ofh:
+        print("#!/bin/bash -l", file=ofh)
+        print("#SBATCH", file=ofh)
+        print("#SBATCH --nodes=1", file=ofh)
+        print("#SBATCH --mem=4G", file=ofh)
+        if '--scavenger' in sys.argv:
+            print('#SBATCH --partition=scavenger', file=ofh)
+            print('#SBATCH --qos=scavenger', file=ofh)
+        else:
+            print('#SBATCH --partition=shared', file=ofh)
+        print('--time=%d:00:00' % my_hours, file=ofh)
+        print('#SBATCH --output=.gather.sh.o', file=ofh)
+        print('#SBATCH --error=.gather.sh.e', file=ofh)
+        print('python gather.py', file=ofh)
+    print('sbatch .gather.sh')
+else:
+    go()
