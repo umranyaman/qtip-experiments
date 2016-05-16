@@ -260,7 +260,7 @@ if '--slurm' in sys.argv:
             print('#SBATCH --qos=scavenger', file=ofh)
         else:
             print('#SBATCH --partition=shared', file=ofh)
-        print('--time=%d:00:00' % my_hours, file=ofh)
+        print('#SBATCH --time=%d:00:00' % my_hours, file=ofh)
         print('#SBATCH --output=.gather.sh.o', file=ofh)
         print('#SBATCH --error=.gather.sh.e', file=ofh)
         print('python gather.py', file=ofh)
