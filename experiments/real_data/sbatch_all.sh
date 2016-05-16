@@ -1,5 +1,22 @@
 #!/bin/sh
 
+# 24 jobs in here
+
+# all of the following have unpaired/paired and ERR050082/ERR050083 versions
+# hence the "4 x"
+
+# Alignment jobs:
+# 4 x bowtie 2 --very-sensitive
+# 4 x bowtie 2 --very-sensitive-local
+# 4 x bowtie 2
+# 4 x bwa-mem
+# 4 x SNAP
+
+# Other:
+# 4 x multi_aligner.py csv file
+
+# multi_aligner.py jobs should only be run once all alignment jobs are done
+
 if [ "$1" = "scavenger" ] ; then
 PART1="#SBATCH --partition=scavenger"
 PART2="#SBATCH --qos=scavenger"
