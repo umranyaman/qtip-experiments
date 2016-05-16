@@ -55,6 +55,11 @@ def handle_dir(dirname, dry_run=True, use_scavenger=False):
                     if 'r12' in target_full and 'ill_various_length' in target_full:
                         my_hours *= 3
                         my_hours /= 2
+                    if 'r12' in target_full and '250_mason' in target_full:
+                        my_hours *= 3
+                        my_hours /= 2
+                    if 'r12' in target_full and '500_mason' in target_full:
+                        my_hours *= 2
                     qsub_basename = '.' + target + '.sh'
                     pbs_lns = list()
                     pbs_lns.append('#!/bin/bash -l')
