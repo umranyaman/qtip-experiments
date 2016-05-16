@@ -4,9 +4,9 @@ TS_BT2_HOME=$(QSIM_EXPERIMENTS_HOME)/software/bowtie2
 INDEXES=$(QSIM_EXPERIMENTS_HOME)/experiments/refs
 PYTHON=python -O
 
-BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2-git/bowtie2 --index $(INDEXES)/hg19.fa
+BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2 --index $(INDEXES)/hg19.fa
 BWA_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(INDEXES)/hg19.fa
-SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap/snap-aligner --index $(INDEXES)/hg19.fa.snap
+SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap-aligner --index $(INDEXES)/hg19.fa.snap
 
 ARGS=--ref $(INDEXES)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346
 
