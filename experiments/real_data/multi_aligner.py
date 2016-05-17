@@ -158,20 +158,26 @@ def preprocess_tiers(tiers):
     return better_tiers, equal_tiers
 
 
+def run(cmd):
+    print(cmd, file=sys.stderr)
+    return os.system(cmd)
+
+
 def preprocess_sm(fn):
     print("Preprocessing %s..." % fn, file=sys.stderr)
+    run("which samtools")
     if not os.path.exists(fn + '.bam'):
-        ret = os.system("samtools view -b %s > %s" % (fn, fn + '.bam'))
+        ret = run("samtools view -b %s > %s" % (fn, fn + '.bam'))
         if ret != 0:
             raise RuntimeError('samtools view-to-bam failed')
         os.remove(fn)
     if not os.path.exists(fn + '.sorted.bam'):
-        ret = os.system("samtools sort -n %s %s" % (fn + '.bam', fn + '.sorted'))
+        ret = run("samtools sort -n %s %s" % (fn + '.bam', fn + '.sorted'))
         if ret != 0:
             raise RuntimeError('samtools sort failed')
         os.remove(fn + '.bam')
     if not os.path.exists(fn + '.sorted.sam'):
-        ret = os.system("samtools view %s > %s" % (fn + '.sorted.bam', fn + '.sorted.sam'))
+        ret = run("samtools view %s > %s" % (fn + '.sorted.bam', fn + '.sorted.sam'))
         if ret != 0:
             raise RuntimeError('samtools view-to-sam failed')
         os.remove(fn + '.sorted.bam')
