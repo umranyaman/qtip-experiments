@@ -165,14 +165,14 @@ def run(cmd):
 
 def preprocess_sm(fn):
     print("Preprocessing %s..." % fn, file=sys.stderr)
-    run("which samtools")
+    run("which samtools >&2")
     if not os.path.exists(fn + '.bam'):
         ret = run("samtools view -b %s > %s" % (fn, fn + '.bam'))
         if ret != 0:
             raise RuntimeError('samtools view-to-bam failed')
         os.remove(fn)
     if not os.path.exists(fn + '.sorted.bam'):
-        ret = run("samtools sort -n %s > %s" % (fn + '.bam', fn + '.sorted'))
+        ret = run("samtools sort -n %s > %s" % (fn + '.bam', fn + '.sorted.bam'))
         if ret != 0:
             raise RuntimeError('samtools sort failed')
         os.remove(fn + '.bam')
