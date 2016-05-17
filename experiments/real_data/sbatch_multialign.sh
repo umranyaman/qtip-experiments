@@ -21,7 +21,7 @@ ${PART1}
 ${PART2}
 #SBATCH --time=12:00:00
 #SBATCH --mem=4G
-/usr/bin/time -v make ${dat}.unp.csv
+/usr/bin/time -v make ${dat}.${pe}.csv
 EOF
 
 echo "sbatch .${dat}.${pe}"
