@@ -90,12 +90,16 @@ These scripts are described in more detail in the `qsim-experiments/experiments/
 pushd qsim-experiments/experiments/simulated_reads
 python marcc_out.py wet
 # substitute "dry" for "wet" to just print the job-submission commands
+python gather.py --slurm
+sbatch .gather.sh  # or edit as appropriate for your cluster
 popd
 ```
 
 Many jobs are submitted here.  All told, this takes about 4 hours for me on MARCC.
 
 The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
+
+TODO: those steps do everything but the gathering of CID and CSED curves into a file that gets loaded into R.  Need at add that.
 
 ### Run `qsim` on real datasets in `qsim-experiments`
 
