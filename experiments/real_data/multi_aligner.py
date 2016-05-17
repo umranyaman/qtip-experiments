@@ -170,17 +170,17 @@ def preprocess_sm(fn):
         ret = run("samtools view -b %s > %s" % (fn, fn + '.bam'))
         if ret != 0:
             raise RuntimeError('samtools view-to-bam failed')
-        os.remove(fn)
+        #os.remove(fn)
     if not os.path.exists(fn + '.sorted.bam'):
         ret = run("samtools sort -n %s > %s" % (fn + '.bam', fn + '.sorted.bam'))
         if ret != 0:
             raise RuntimeError('samtools sort failed')
-        os.remove(fn + '.bam')
+        #os.remove(fn + '.bam')
     if not os.path.exists(fn + '.sorted.sam'):
         ret = run("samtools view %s > %s" % (fn + '.sorted.bam', fn + '.sorted.sam'))
         if ret != 0:
             raise RuntimeError('samtools view-to-sam failed')
-        os.remove(fn + '.sorted.bam')
+        #os.remove(fn + '.sorted.bam')
     print("DONE", file=sys.stderr)
     return fn + '.sorted.sam'
 

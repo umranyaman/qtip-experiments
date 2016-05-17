@@ -23,7 +23,7 @@ NTHREADS_VS=16
 all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
      ERR050083_1.unp.csv ERR050083_1.pair.csv
 
-%.unp.csv:
+%.unp.csv: %.bt2vs.unp.sam %.bt2vsl.unp.sam %.bwa.unp.sam %.bt2.unp.sam %.snap.unp.sam
 	pypy multi_aligner.py \
 	    --sam $^ \
 	    --prefix $(<:bt2vs.unp.sam=) \
@@ -31,7 +31,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	    --name bt2vs bt2vsl bwamem bt2 snap \
 	    --tier 1 1 2 2 2 > $@
 
-%.pair.csv:
+%.pair.csv: %.bt2vs.pair.sam %.bt2vsl.pair.sam %.bwa.pair.sam %.bt2.pair.sam %.snap.pair.sam
 	pypy multi_aligner.py \
 	    --sam $^ \
 	    --prefix $(<:bt2vs.pair.sam=) \
