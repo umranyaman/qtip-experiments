@@ -69,7 +69,7 @@ def cigar_to_list(cigar_string):
     return zip(spl[2::2], map(int, spl[1::2]))
 
 
-def parse_sam_loc_mapq(st):
+def parse_sam_loc_mapq(st, used_qsim=True):
     toks = st.split('\t')
     flags = int(toks[1])
     if (flags & 4) != 0:
@@ -79,15 +79,17 @@ def parse_sam_loc_mapq(st):
     clist = cigar_to_list(toks[5])
     lclip = 0 if clist[0][0] != 'S' else clist[0][1]
     mapq = int(toks[4])  # predicted mapq
-    # now need to go get the original mapq
-    mapq_re_ma = mapq_re.search(st)
-    if mapq_re_ma is None:
-        raise RuntimeError('')
-    mapq_orig = mapq_re_ma.group(1)
-    mapq_pred_re_ma = mapq_prec_re.search(st)
-    if mapq_pred_re_ma is None:
-        raise RuntimeError('')
-    mapq_prec = mapq_pred_re_ma.group(1)
+    mapq_orig, mapq_prec = 0.0, 0.0
+    if used_qsim:
+        # now need to go get the original mapq
+        mapq_re_ma = mapq_re.search(st)
+        if mapq_re_ma is None:
+            raise RuntimeError('')
+        mapq_orig = mapq_re_ma.group(1)
+        mapq_pred_re_ma = mapq_prec_re.search(st)
+        if mapq_pred_re_ma is None:
+            raise RuntimeError('')
+        mapq_prec = mapq_pred_re_ma.group(1)
     return rname, rpos - lclip, int(mapq), int(mapq_orig), float(mapq_prec)
 
 
@@ -283,7 +285,10 @@ def go(args):
             break  # reached end of all the files
         # if we reach end of one, should reach end of all
         assert not any(map(lambda x: x is None, lns))
-        parsed_sam = map(parse_sam_loc_mapq, lns)
+        # note: the vs & vsl files may not have any predicted MAPQ info
+        parsed_sam = []
+        for ln, nm in zip(lns, names):
+            parsed_sam.append(parse_sam_loc_mapq(ln, nm.endswith("-qsim")))
         if any(map(lambda x: x is None, parsed_sam)):
             continue  # at least one tool failed to align the read
         sim = same_alns_tiered(parsed_sam, better_tiers, equal_tiers, args['wiggle'])

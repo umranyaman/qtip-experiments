@@ -28,7 +28,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	    --sam $^ \
 	    --prefix $(<:bt2vs.unp.sam=) \
 	    --suffix ".unp" \
-	    --name bt2vs bt2vsl bwamem bt2 snap \
+	    --name bt2vs bt2vsl bwamem-qsim bt2-qsim snap-qsim \
 	    --tier 1 1 2 2 2 > $@
 
 %.pair.csv: %.bt2vs.pair.sam %.bt2vsl.pair.sam %.bwa.pair.sam %.bt2.pair.sam %.snap.pair.sam
@@ -36,7 +36,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 	    --sam $^ \
 	    --prefix $(<:bt2vs.pair.sam=) \
 	    --suffix ".pair" \
-	    --name bt2vs bt2vsl bwamem bt2 snap \
+	    --name bt2vs bt2vsl bwamem-qsim bt2-qsim snap-qsim \
 	    --tier 1 1 2 2 2 > $@
 
 # #######
