@@ -59,7 +59,7 @@ cat >.${dat}.${ext} <<EOF
 ${PART1}
 ${PART2}
 #SBATCH --time=12:00:00
-#SBATCH --mem=48G
+#SBATCH --mem=60G
 /usr/bin/time -v make ${dat}.${ext}
 EOF
 echo "sbatch .${dat}.${ext}"
