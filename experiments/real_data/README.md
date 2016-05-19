@@ -1,19 +1,46 @@
 Real data
-=========
+---------
 
-We use real data to explore some aspects of qsim performance.  Right now the text refers mainly to two human datasets from the [1000 Genomes project](http://www.1000genomes.org):
+The `qsim` manuscript demonstrates how `qsim`-predicted mapping qualities improve performance when analyzing real data.
+
+### Human
+
+We use real data to demonstrate `qsim` performance.  Primarily we use two human samples from the [1000 Genomes project](http://www.1000genomes.org):
 
 * [ERR050082](http://www.ebi.ac.uk/ena/data/view/ERR050082)
     * 42,245,074 paired-end 100 x 100 nt reads
 * [ERR050083](http://www.ebi.ac.uk/ena/data/view/ERR050083)
     * 66,391,067 paired-end 100 x 100 nt reads
 
-Maize
------
+### Maize
 
-We might also experiment with real data from a much more repetitive genome, like Maize.  If so, the links below might be relevant.
+(Future work)
 
-http://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR1592709
+Might also experiment with real data from a more repetitive genome, like maize.  If so, the links below might be relevant.
 
-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR159/009/SRR1592709/SRR1592709_1.fastq.gz
-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR159/009/SRR1592709/SRR1592709_2.fastq.gz
+* http://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR1592709
+* ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR159/009/SRR1592709/SRR1592709_1.fastq.gz
+* ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR159/009/SRR1592709/SRR1592709_2.fastq.gz
+
+### Steps
+
+Steps:
+
+* Download FASTQ reads (`get_real_reads.sh`)
+* Align FASTQ reads with various tools, producing SAM files (`sbatch_align.sh` / `Makefile`)
+* Sort and compare groups of SAM files, compiling CSV correct/incorrect information & ROC tables (`sbatch_multialign.sh` / `Makefile`)
+* Generate table of `qsim` overhead measurements (`tabulate.py`)
+
+From directory containing the `qsim` and `qsim-experiments` repo clones:
+
+```
+pushd qsim-experiments/experiments/real_data
+sh get_real_reads.sh  # might want to submit to your DRM
+sh sbatch_align.sh
+# copy and paste all the alignment jobs to submit them
+# ...when those are done, proceed
+sh sbatch_multialign.sh
+# copy and paste all the alignment jobs to submit them
+python tabulate.py
+popd
+```
