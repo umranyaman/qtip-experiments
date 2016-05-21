@@ -1,2 +1,4 @@
 *.fna
 *.fna.gz
+*.fa
+*.fq
