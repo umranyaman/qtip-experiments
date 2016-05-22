@@ -142,7 +142,7 @@ def roc_file_to_string(roc_fn, inner_sep=':', outer_sep=';'):
     return outer_sep.join(fields)
 
 
-def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, roc_fn, roc_round_fn, roc_orig_fn, first):
+def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, roc_round_fn, roc_orig_fn, first):
     """ Put together one line of output and write to ofh (overall.csv)
         """
     name, target = parse_name_and_target(combined_target_name)
@@ -164,9 +164,8 @@ def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, roc_f
             body = fh.readline().rstrip()
             values += body.split(',')
     # Add ROCs; these are big long strings
-    headers.extend(['roc', 'roc_round', 'roc_orig'])
-    values.extend([roc_file_to_string(roc_fn),
-                   roc_file_to_string(roc_round_fn),
+    headers.extend(['roc_round', 'roc_orig'])
+    values.extend([roc_file_to_string(roc_round_fn),
                    roc_file_to_string(roc_orig_fn)])
     if first:
         ofh.write(','.join(map(str, headers)) + '\n')
@@ -242,7 +241,7 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                                 os.system('cp -f %s %s' % (join(target_full_stt, 'roc_orig.csv'), roc_orig_fn))
                                 os.system('cp -f %s %s' % (join(target_full_stt, 'roc_round.csv'), roc_round_fn))
                                 compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn,
-                                             roc_fn, roc_round_fn, roc_orig_fn, first)
+                                             roc_round_fn, roc_orig_fn, first)
                                 first = False
 
 
