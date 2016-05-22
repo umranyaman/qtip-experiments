@@ -130,7 +130,7 @@ def copyfiles(fglob, dest, prefix=''):
         os.system('cp -f %s %s' % (fn, join(dest, prefix + os.path.basename(fn))))
 
 
-def roc_file_to_string(roc_fn, inner_sep=';', outer_sep=';'):
+def roc_file_to_string(roc_fn, inner_sep=':', outer_sep=';'):
     """ Convert a file with a ROC table into a string with one line per ROC row """
     fields = []
     with open(roc_fn) as fh:
