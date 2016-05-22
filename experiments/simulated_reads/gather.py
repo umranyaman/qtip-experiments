@@ -43,9 +43,8 @@ def parse_aligner_local(target):
     if 'snap' in toks[1]:
         aligner = 'snap'
         local = True
-    if aligner == 'bt2' and toks[1][-1] == 'l':
-        toks[1] = toks[1][:-1]
-        local = True
+    if aligner == 'bt2':
+        local = 'l' in toks[1]
     return aligner, local
 
 
