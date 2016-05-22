@@ -15,8 +15,6 @@ Outputs:
          - featimport_*.csv -- feature importances for each alignment type
          - params.csv -- feature importances for each model
          - Subdirectories for training/test, each with:
-           + cid.csv -- cumulative incorrect difference (CID) vector
-           + cse.csv -- cumulative squared error (CSE) vector
            + roc.csv -- ROC table
            + summary.csv -- summarizes data, model fit
 """
@@ -132,8 +130,19 @@ def copyfiles(fglob, dest, prefix=''):
         os.system('cp -f %s %s' % (fn, join(dest, prefix + os.path.basename(fn))))
 
 
-def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first):
-    """ Put together one line of output and write to ofh (overall.csv) """
+def roc_file_to_string(roc_fn, inner_sep=';', outer_sep=';'):
+    """ Convert a file with a ROC table into a string with one line per ROC row """
+    fields = []
+    with open(roc_fn) as fh:
+        for ln in fh:
+            cor, _, _, incor, mapq, _, _, _, _, _ = ln.rstrip().split(',')
+            fields.append(inner_sep.join([mapq, cor, incor]))
+    return outer_sep.join(fields)
+
+
+def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, roc_fn, roc_round_fn, roc_orig_fn, first):
+    """ Put together one line of output and write to ofh (overall.csv)
+        """
     name, target = parse_name_and_target(combined_target_name)
     aligner, local = parse_aligner_local(target)
     paired = parse_paired(target)
@@ -152,12 +161,18 @@ def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first
             headers += header.split(',')
             body = fh.readline().rstrip()
             values += body.split(',')
+    # Add ROCs; these are big long strings
+    headers.extend(['roc', 'roc_round', 'roc_orig'])
+    values.extend([roc_file_to_string(roc_fn),
+                   roc_file_to_string(roc_round_fn),
+                   roc_file_to_string(roc_orig_fn)])
     if first:
         ofh.write(','.join(map(str, headers)) + '\n')
     ofh.write(','.join(map(str, values)) + '\n')
 
 
 def get_immediate_subdirectories(a_dir):
+    """ Return list of subdirectories immediately under the given dir """
     return [name for name in os.listdir(a_dir)
             if os.path.isdir(os.path.join(a_dir, name))]
 
@@ -216,12 +231,16 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                                 if not os.path.isdir(target_full_stt):
                                     raise RuntimeError('Directory "%s" does not exist' % target_full_stt)
 
-                                copyfiles(join(target_full_stt, 'cid*.csv'), odir_rt, tt + '_')
-                                copyfiles(join(target_full_stt, 'cse*.csv'), odir_rt, tt + '_')
-                                copyfiles(join(target_full_stt, 'roc*.csv'), odir_rt, tt + '_')
                                 summ_fn = join(odir_rt, tt + '_summary.csv')
+                                roc_fn = join(odir_rt, tt + '_roc.csv')
+                                roc_orig_fn = join(odir_rt, tt + '_roc_orig.csv')
+                                roc_round_fn = join(odir_rt, tt + '_roc_round.csv')
                                 os.system('cp -f %s %s' % (join(target_full_stt, 'summary.csv'), summ_fn))
-                                compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, first)
+                                os.system('cp -f %s %s' % (join(target_full_stt, 'roc.csv'), roc_fn))
+                                os.system('cp -f %s %s' % (join(target_full_stt, 'roc_orig.csv'), roc_orig_fn))
+                                os.system('cp -f %s %s' % (join(target_full_stt, 'roc_round.csv'), roc_round_fn))
+                                compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn,
+                                             roc_fn, roc_round_fn, roc_orig_fn, first)
                                 first = False
 
 
