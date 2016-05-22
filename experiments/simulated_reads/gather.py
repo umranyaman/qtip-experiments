@@ -136,6 +136,8 @@ def roc_file_to_string(roc_fn, inner_sep=':', outer_sep=';'):
     with open(roc_fn) as fh:
         for ln in fh:
             cor, _, _, incor, mapq, _, _, _, _, _ = ln.rstrip().split(',')
+            if mapq == "mapq":
+                continue
             fields.append(inner_sep.join([mapq, cor, incor]))
     return outer_sep.join(fields)
 
