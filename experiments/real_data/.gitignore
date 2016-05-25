@@ -2,3 +2,4 @@
 *.out
 *.plain
 *.fastq
+*.csv
