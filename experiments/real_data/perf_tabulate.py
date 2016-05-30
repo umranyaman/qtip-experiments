@@ -6,6 +6,7 @@ footprint) from SLURM output generated from sbatch_align.sh.
 from __future__ import print_function
 
 import glob
+import sys
 from collections import defaultdict
 
 nslurm, nsam = 0, 0
@@ -59,11 +60,13 @@ for fn in glob.glob('slurm-*.out'):
 
     nslurm += 1
 
-print('# slurm files: %d' % nslurm)
-print('# sam files: %d' % nsam)
+print('# slurm files: %d' % nslurm, file=sys.stderr)
+print('# sam files: %d' % nsam, file=sys.stderr)
 for k, v in sorted(sam_names.items()):
-    print('  %s: %d' % (k, v))
+    print('  %s: %d' % (k, v), file=sys.stderr)
 
+aln_map = {'bt2': 'Bowtie 2', 'bwa': 'BWA-MEM', 'snap': 'SNAP'}
+print('data,aligner,paired,align_time,overall_time,pct_increase_a_to_o,peak,peak2,pct_increase_peak')
 for k in sorted(sam_names.keys()):
     wrappeak = tab_wrapped[k]['wrappeak']
     childpeak = tab_wrapped[k]['childpeak']
@@ -72,4 +75,8 @@ for k in sorted(sam_names.keys()):
     t_o, t_a = tab_wrapped[k]['t_overall'], tab_wrapped[k]['t_inp']
     t_pct = 0 if t_a == 0 else ((t_o - t_a) * 100.0/t_a)
     t_pct = ('+' if t_pct >= 0 else '') + ('%0.3f' % t_pct)
-    print('%s: %.0f,%.0f,%s %.0f,%.0f,%s %s' % (k, t_a, t_o, t_pct, wrappeak, childpeak, wrappct, to_slurm_wrapped[k]))
+    srr, aligner, paired, _ = k.split('.')
+    srr = srr[:-2]  # chop off trailing _1
+    aligner = aln_map[aligner]
+    paired = 'T' if paired == 'pair' else 'F'
+    print('%s,%s,%s,%.0f,%.0f,%s,%.0f,%.0f,%s' % (srr, aligner, paired, t_a, t_o, t_pct, wrappeak, childpeak, wrappct))
