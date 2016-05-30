@@ -66,7 +66,7 @@ for k, v in sorted(sam_names.items()):
     print('  %s: %d' % (k, v), file=sys.stderr)
 
 aln_map = {'bt2': 'Bowtie 2', 'bwa': 'BWA-MEM', 'snap': 'SNAP'}
-print('data,aligner,paired,align_time,overall_time,pct_increase_a_to_o,peak,peak2,pct_increase_peak')
+print('data,aligner,paired,align_time,overall_time,pct_increase_a_to_o,peak_wrapper,peak_children,pct_increase_peak')
 for k in sorted(sam_names.keys()):
     wrappeak = tab_wrapped[k]['wrappeak']
     childpeak = tab_wrapped[k]['childpeak']
