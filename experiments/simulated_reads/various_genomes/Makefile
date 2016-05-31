@@ -133,7 +133,7 @@ reads: \
     r1_mason_ill_zm_100_1M.fq.gz \
     r1_mason_ill_zm_250_1M.fq.gz
 
-SUBSAMPLING_ARGS=--subsampling-series 0.01,0.03,0.05 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
+SUBSAMPLING_ARGS=--subsampling-series 0.01,0.03,0.05 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy --try-exclude-mapq
 
 , := ,
 
