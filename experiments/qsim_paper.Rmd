@@ -1,0 +1,1224 @@
+---
+title: "qsim_paper"
+output:
+  html_document:
+    theme: united
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+This R markdown notebook depends on the existence of certain summary files from the experiments in the [`qsim-experiments` repo](https://github.com/BenLangmead/qsim-experiments).  It is meant to be executed from the `experiments` subdirectory of the `qsim-experiments` working set.  In particular, the notebook expects that these files are already present:
+
+* `simulated_reads/summary/overall.csv`
+* `real_data/overall.csv`
+
+See the `README.md` in the root of the `qsim-experiments` repo for instructions on how to generate those files.
+
+### Load R libraries:
+
+```{r libraries}
+# Might require installation using install.packages()
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(data.table)
+library(grid)
+library(gridExtra)
+library(xtable)
+library(knitr)
+```
+
+### Load/create R object for table
+
+```{r read_table}
+m <- read.table('simulated_reads/summary/overall.csv', sep=',', quote='', comment.char='', header=T)
+m$aligner <- factor(m$aligner)
+m$species <- factor(m$species)
+m$sensitivity <- factor(m$sensitivity)
+m$sim <- factor(m$sim)
+m$aligner2 <- factor(ifelse(m$local,
+                            ifelse(m$aligner == 'bt2', 'bt2 local', as.character(m$aligner)),
+                            ifelse(m$aligner == 'bt2', 'bt2 e2e',   as.character(m$aligner))))
+```
+
+### Log mod scaling
+
+```{r log_scaling}
+logmod <- function(x) {
+  sign(x) * log10(abs(x) + 1)
+}
+
+inv_logmod <- function(x) {
+  sx <- sign(x)
+  return(sx * (10.0 ** (sx * x) - 1))
+}
+
+logmod_breaks <- c(-100000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000, 100000)
+
+logmod_trans <- function() {
+  trans_new(paste0("logmod"), logmod, inv_logmod)
+}
+```
+
+### Multi-plotting
+
+```{r grid_arrange_shared}
+# Borrowed from: https://rpubs.com/sjackman/grid_arrange_shared_legend
+# Thanks to Shaun Jackman
+grid_arrange_shared_legend <- function(...) {
+    plots <- list(...)
+    g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+    legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+    lheight <- sum(legend$height)
+    grid.arrange(
+        do.call(arrangeGrob, lapply(plots, function(x)
+            x + theme(legend.position="none"))),
+        legend,
+        ncol = 1,
+        heights = unit.c(unit(1, "npc") - lheight, lheight))
+}
+```
+
+### Expand ROCs into CID and CSE curves
+
+```{r roc_handling}
+roc_string_to_table <- function(roc_string) {
+  roct <- read.table(textConnection(gsub(';', '\n', roc_string)), sep=':')
+  colnames(roct) <- c('mapq', 'cor', 'incor')
+  stopifnot(!is.unsorted(rev(roct$mapq)))
+  roct$n = roct$cor + roct$incor
+  roct$pcor = 1 - (10 ** (roct$mapq/-10))
+  roct$emp_pcor = roct$cor / roct$n
+  roct
+}
+
+tables_to_cid <- function(rl, rr) {
+  stopifnot(sum(rl$n) == sum(rr$n))
+  stopifnot(sum(rl$incor) == sum(rr$incor))
+  rlci <- rep(rl$incor/rl$n, rl$n) 
+  rrci <- rep(rr$incor/rr$n, rr$n)
+  stopifnot(sum(rlci) - sum(rrci) < (1e-6 * nrow(rl)))
+  cumsum(rlci - rrci)
+}
+
+# relative change in area under CID
+rca <- function(r_predict, r_orig) {
+  tot <- sum(cumsum(rep(r_orig$incor/r_orig$n, r_orig$n)))
+  (sum(cumsum(rep(r_predict$incor/r_predict$n, r_predict$n))) - tot) / tot
+}
+
+tables_to_cse <- function(rl, rr) {
+  stopifnot(sum(rl$n) == sum(rr$n))
+  stopifnot(sum(rl$incor) == sum(rr$incor))
+  incor_se_l <- rl$pcor**2 * rl$incor
+  cor_se_l <- (1 - rl$pcor)**2 * rl$cor
+  incor_se_r <- rr$pcor**2 * rr$incor
+  cor_se_r <- (1 - rr$pcor)**2 * rr$cor
+  cumsum(rep((incor_se_l + cor_se_l)/rl$n, rl$n) -
+         rep((incor_se_r + cor_se_r)/rr$n, rr$n))
+}
+
+# relative change in squared error
+rce <- function(r_predict, r_orig) {
+  # total error attributable to incorrects in each stratum
+  incor_se_orig <- r_orig$pcor**2 * r_orig$incor
+  incor_se_predict <- r_predict$pcor**2 * r_predict$incor
+  # total error attributable to corrects in each stratum
+  cor_se_orig <- (1 - r_orig$pcor)**2 * r_orig$cor
+  cor_se_predict <- (1 - r_predict$pcor)**2 * r_predict$cor
+  # total error
+  err_orig <- sum(incor_se_orig + cor_se_orig)
+  err_predict <- sum(incor_se_predict + cor_se_predict)
+  (err_predict - err_orig) / err_orig
+}
+
+inflection_subsampler <- function(vec, length_out=1000) {
+  pts <- union(1 + which(diff(vec, differences=2) > 1e-6),
+               round(seq(1, length(vec), length.out=length_out)))
+  data.frame(x=pts, y=vec[pts])
+}
+
+explode_curves <- function(tab, cid, length_out=1000) {
+  dfs <- list()
+  tables_to <- if(cid) tables_to_cid else tables_to_cse
+  for(i in 1:nrow(tab)) {
+    rl <- roc_string_to_table(tab$roc_round[i])
+    rr <- roc_string_to_table(tab$roc_orig[i])
+    vec <- inflection_subsampler(tables_to(rl, rr), length_out=length_out)
+    dfs[[i]] <- suppressWarnings(cbind(x=vec$x, y=vec$y, tab[i,]))
+  }
+  rbindlist(dfs)
+}
+```
+
+```{r diagnostic_plots}
+trials_plot <- function(m_filt, want_cid, xlab) {
+  mtmp <- explode_curves(m_filt, want_cid)
+  mx <- max(abs(mtmp$y))
+  ggplot(mtmp, aes(x=x, y=y, color=factor(trial_no))) +
+    geom_abline(intercept = 0, slope = 0) +
+    coord_trans(y = logmod_trans()) +
+    scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+    labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+    geom_line() +
+    theme_bw() +
+    theme(legend.title=element_blank(), axis.title.x = element_text(vjust=-0.4))
+}
+
+subsample_trials_plot <- function(m_filt, want_cid) {
+  f01_te <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.01 & !training), want_cid, "0.01 test")
+  f01_tr <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.01 &  training), want_cid, "0.01 training")
+  f03_te <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.03 & !training), want_cid, "0.03 test")
+  f03_tr <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.03 &  training), want_cid, "0.03 training")
+  f05_te <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.05 & !training), want_cid, "0.05 test")
+  f05_tr <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.05 &  training), want_cid, "0.05 training")
+  grid_arrange_shared_legend(f01_te, f01_tr, f03_te, f03_tr, f05_te, f05_tr)
+}
+```
+
+### Simulated reads
+
+#### Various read lengths:
+
+Start with tables:
+
+```{r tables}
+xtable <- function(x, file = "", ...) {
+  table <- xtable::xtable(x, ...)
+  print(table, floating = F, hline.after = NULL,
+        add.to.row = list(pos = list(-1,0, nrow(x)),
+                          command = c('\\toprule\n ','\\midrule\n  ','\\bottomrule\n')),
+  include.rownames = FALSE, file = file)
+}
+
+oa <- m[m$trial_no == 1,]  # for now
+oa <- oa[oa$subsampling_fraction == 0.03,]  # for now
+
+various_lengths_table <- function(want_training, want_paired, want_local) {
+  oatmp <- oa %>% filter(training == want_training & name == 'ill_various_length' &
+                           paired == want_paired & local == want_local)
+  oatmp <- subset(oatmp, select=c(readlen,
+                                  overall_test_auc_diff_pct_round,
+                                  overall_test_mse_diff_pct_round))
+  colnames(oatmp) <- c('Read length', 'RCA', 'RCE')
+  oatmp$RCA <- paste0(prettyNum(oatmp$RCA, digits=4, format='fg'), '%')
+  oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
+  oatmp$RCE <- paste0(prettyNum(oatmp$RCE, digits=4, format='fg'), '%')
+  oatmp$RCE <- ifelse(oatmp$RCE >= 0.0, paste0('+', oatmp$RCE), oatmp$RCE)
+  xtable(oatmp)
+}
+
+various_lengths_table(F, F, F)
+various_lengths_table(F, F, T)
+various_lengths_table(F, T, F)
+various_lengths_table(F, T, T)
+
+various_sensitivities_table <- function(want_training, want_paired, want_local, want_readlen) {
+  oatmp <- oa %>% filter(training == want_training & name == 'various_sensitivities' &
+                           paired == want_paired & local == want_local &
+                           readlen == want_readlen)
+  oatmp <- subset(oatmp, select=c(sensitivity,
+                                  overall_test_auc_diff_pct_round,
+                                  overall_test_mse_diff_pct_round))
+  levels(oatmp$sensitivity)[levels(oatmp$sensitivity)=="vs"] <- "--very-sensitive"
+  levels(oatmp$sensitivity)[levels(oatmp$sensitivity)=="s"] <- "--sensitive"
+  levels(oatmp$sensitivity)[levels(oatmp$sensitivity)=="f"] <- "--fast"
+  levels(oatmp$sensitivity)[levels(oatmp$sensitivity)=="vf"] <- "--very-fast"
+  colnames(oatmp) <- c('Sensitivity', 'RCA', 'RCE')
+  oatmp$RCA <- paste0(prettyNum(oatmp$RCA, digits=4, format='fg'), '%')
+  oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
+  oatmp$RCE <- paste0(prettyNum(oatmp$RCE, digits=4, format='fg'), '%')
+  oatmp$RCE <- ifelse(oatmp$RCE >= 0.0, paste0('+', oatmp$RCE), oatmp$RCE)
+  xtable(oatmp)
+}
+
+various_sensitivities_table(F, F, F, 100)
+various_sensitivities_table(F, F, T, 100)
+various_sensitivities_table(F, T, F, 100)
+various_sensitivities_table(F, T, T, 100)
+
+various_aligners_table <- function(want_training, want_paired, want_readlen) {
+  oatmp <- oa %>% filter(training == want_training & name == 'various_aligners' &
+                           paired == want_paired & readlen == want_readlen)
+  oatmp <- subset(oatmp, select=c(aligner,
+                                  local,
+                                  overall_test_auc_diff_pct_round,
+                                  overall_test_mse_diff_pct_round))
+  levels(oatmp$aligner)[levels(oatmp$aligner)=="bt2"] <- "Bowtie 2"
+  levels(oatmp$aligner)[levels(oatmp$aligner)=="bwamem"] <- "BWA-MEM"
+  levels(oatmp$aligner)[levels(oatmp$aligner)=="snap"] <- "SNAP"
+  oatmp$local <- ifelse(oatmp$local, 'local', 'end-to-end')
+  colnames(oatmp) <- c('Aligner', 'Local?', 'RCA', 'RCE')
+  oatmp$RCA <- paste0(prettyNum(oatmp$RCA, digits=4, format='fg'), '%')
+  oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
+  oatmp$RCE <- paste0(prettyNum(oatmp$RCE, digits=4, format='fg'), '%')
+  oatmp$RCE <- ifelse(oatmp$RCE >= 0.0, paste0('+', oatmp$RCE), oatmp$RCE)
+  xtable(oatmp)
+}
+
+various_aligners_table(F, F, 100)
+various_aligners_table(F, T, 100)
+various_aligners_table(F, F, 250)
+various_aligners_table(F, T, 250)
+```
+
+Now the plots:
+
+```{r various_lengths_plot}
+various_lengths_plot <- function(
+  want_paired,
+  want_training,
+  want_cid,
+  want_local,
+  want_trial=1,
+  want_subsampling_fraction=0.03)
+{
+  xlab <- paste0(if(want_paired) "Paired " else "Unpaired ",
+                 if(want_local) "local" else "end-to-end")
+  mtmp <- m %>% filter(name == 'ill_various_length' &
+                       paired == want_paired &
+                       local == want_local &
+                       training == want_training &
+                       trial_no == want_trial &
+                       subsampling_fraction == want_subsampling_fraction)
+  mtmp <- explode_curves(mtmp, want_cid)
+  mx <- max(abs(mtmp$y))
+  ggplot(mtmp, aes(x=x, y=y, color=factor(readlen))) +
+    geom_abline(intercept = 0, slope = 0) +
+    coord_trans(y = logmod_trans()) +
+    scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+    labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+    geom_line() +
+    theme_bw() +
+    theme(legend.title=element_blank(), axis.title.x = element_text(vjust=-0.4))
+}
+```
+
+```{r various_lengths_plot_cid_test}
+
+## Test ##
+
+# params: paired, training, cid, local
+p_vl_ueie <- various_lengths_plot(F, F, T, F)
+p_vl_ueil <- various_lengths_plot(F, F, T, T)
+p_vl_peie <- various_lengths_plot(T, F, T, F)
+p_vl_peil <- various_lengths_plot(T, F, T, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vl_ueie,
+                           p_vl_ueil,
+                           p_vl_peie,
+                           p_vl_peil)
+
+# Write to PDF
+pdf(file="various_lengths_cid_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_vl_ueie,
+                           p_vl_ueil,
+                           p_vl_peie,
+                           p_vl_peil)
+dev.off()
+```
+
+```{r various_lengths_plot_cse_test}
+
+## Test ##
+
+# params: paired, training, cid, local
+p_vl_ueee <- various_lengths_plot(F, F, F, F)
+p_vl_ueel <- various_lengths_plot(F, F, F, T)
+p_vl_peee <- various_lengths_plot(T, F, F, F)
+p_vl_peel <- various_lengths_plot(T, F, F, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vl_ueee,
+                           p_vl_ueel,
+                           p_vl_peee,
+                           p_vl_peel)
+
+# Write to PDF
+pdf(file="various_lengths_cse_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_vl_ueee,
+                           p_vl_ueel,
+                           p_vl_peee,
+                           p_vl_peel)
+dev.off()
+```
+
+```{r various_lengths_plot_cid_train}
+
+## Training ##
+
+# params: paired, training, cid, local
+p_vl_urie <- various_lengths_plot(F, T, T, F)
+p_vl_uril <- various_lengths_plot(F, T, T, T)
+p_vl_prie <- various_lengths_plot(T, T, T, F)
+p_vl_pril <- various_lengths_plot(T, T, T, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vl_urie,
+                           p_vl_uril,
+                           p_vl_prie,
+                           p_vl_pril)
+
+# Write to PDF
+pdf(file="various_lengths_cid_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_vl_urie,
+                           p_vl_uril,
+                           p_vl_prie,
+                           p_vl_pril)
+dev.off()
+```
+
+```{r various_lengths_plot_cse_train}
+
+## Training ##
+
+# params: paired, training, cid, local
+p_vl_uree <- various_lengths_plot(F, T, F, F)
+p_vl_urel <- various_lengths_plot(F, T, F, T)
+p_vl_pree <- various_lengths_plot(T, T, F, F)
+p_vl_prel <- various_lengths_plot(T, T, F, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vl_uree,
+                           p_vl_urel,
+                           p_vl_pree,
+                           p_vl_prel)
+
+# Write to PDF
+pdf(file="various_lengths_cse_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_vl_uree,
+                           p_vl_urel,
+                           p_vl_pree,
+                           p_vl_prel)
+dev.off()
+```
+
+##### Diagnostics
+
+Zooming in on BT2 50 bp end-to-end CID:
+
+```{r various_lengths_plot_bt2_50_ee}
+subsample_trials_plot(m %>% filter(name == 'ill_various_length' & !local & !paired & readlen == 50), T)
+```
+
+And local:
+
+```{r various_lengths_plot_bt2_50_loc}
+subsample_trials_plot(m %>% filter(name == 'ill_various_length' & local & !paired & readlen == 50), T)
+```
+
+#### Aligners
+
+```{r various_aligners_plot}
+various_aligners_plot <- function(
+  want_paired,
+  want_readlen,
+  want_training,
+  want_cid,
+  want_trial=1,
+  want_subsampling_fraction=0.03)
+{
+  xlab <- paste0(want_readlen, " bp ",
+                 if(want_paired) "paired " else "unpaired ")
+  mtmp <- m %>% filter(name == 'various_aligners' &
+                      paired == want_paired &
+                      readlen == want_readlen &
+                      training == want_training &
+                      trial_no == want_trial &
+                      subsampling_fraction == want_subsampling_fraction)
+  mtmp <- explode_curves(mtmp, want_cid)
+  mx <- max(abs(mtmp$y))
+  ggplot(mtmp, aes(x=x, y=y, color=aligner2)) +
+    geom_abline(intercept = 0, slope = 0) +
+    coord_trans(y = logmod_trans()) +
+    scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+    labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+    geom_line() +
+    theme_bw() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_text(vjust=-0.4))
+}
+```
+
+```{r various_aligners_plot_cid_test}
+
+## Test ##
+
+# params: paired, readlen, training, cid
+p_va_u100ei <- various_aligners_plot(F, 100, F, T)
+p_va_u250ei <- various_aligners_plot(F, 250, F, T)
+p_va_p100ei <- various_aligners_plot(T, 100, F, T)
+p_va_p250ei <- various_aligners_plot(T, 250, F, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_va_u100ei,
+                           p_va_u250ei,
+                           p_va_p100ei,
+                           p_va_p250ei)
+
+# Write to PDF
+pdf(file="various_aligners_cse_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_va_u100ei,
+                           p_va_u250ei,
+                           p_va_p100ei,
+                           p_va_p250ei)
+dev.off()
+```
+
+```{r various_aligners_plot_cid_train}
+
+## Training ##
+
+# params: paired, readlen, training, cid
+p_va_u100ri <- various_aligners_plot(F, 100, T, T)
+p_va_u250ri <- various_aligners_plot(F, 250, T, T)
+p_va_p100ri <- various_aligners_plot(T, 100, T, T)
+p_va_p250ri <- various_aligners_plot(T, 250, T, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_va_u100ri,
+                           p_va_u250ri,
+                           p_va_p100ri,
+                           p_va_p250ri)
+
+# Write to PDF
+pdf(file="various_aligners_cid_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_va_u100ri,
+                           p_va_u250ri,
+                           p_va_p100ri,
+                           p_va_p250ri)
+dev.off()
+```
+
+```{r various_aligners_plot_cse_test}
+
+## Test ##
+
+# params: paired, readlen, training, cid
+p_va_u100ee <- various_aligners_plot(F, 100, F, F)
+p_va_u250ee <- various_aligners_plot(F, 250, F, F)
+p_va_p100ee <- various_aligners_plot(T, 100, F, F)
+p_va_p250ee <- various_aligners_plot(T, 250, F, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_va_u100ee,
+                           p_va_u250ee,
+                           p_va_p100ee,
+                           p_va_p250ee)
+
+# Write to PDF
+pdf(file="various_aligners_cse_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_va_u100ee,
+                           p_va_u250ee,
+                           p_va_p100ee,
+                           p_va_p250ee)
+dev.off()
+```
+
+```{r various_aligners_plot_cse_train}
+
+## Training ##
+
+# params: paired, readlen, training, cid
+p_va_u100re <- various_aligners_plot(F, 100, T, F)
+p_va_u250re <- various_aligners_plot(F, 250, T, F)
+p_va_p100re <- various_aligners_plot(T, 100, T, F)
+p_va_p250re <- various_aligners_plot(T, 250, T, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_va_u100re,
+                           p_va_u250re,
+                           p_va_p100re,
+                           p_va_p250re)
+
+# Write to PDF
+pdf(file="various_aligners_cse_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_va_u100re,
+                           p_va_u250re,
+                           p_va_p100re,
+                           p_va_p250re)
+dev.off()
+```
+
+##### Diagnostics
+
+Zooming in on SNAP 250 x 250 CID unpaired:
+
+```{r various_lengths_plot_snap_250_unp}
+subsample_trials_plot(m %>% filter(name == 'various_aligners' & !paired & readlen == 250 & aligner == 'snap'), T)
+```
+
+And paired:
+
+```{r various_lengths_plot_snap_250_pe}
+subsample_trials_plot(m %>% filter(name == 'various_aligners' & paired & readlen == 250 & aligner == 'snap'), T)
+```
+
+#### Genomes
+
+```{r various_genomes_plot}
+various_genomes_plot <- function(
+  want_paired,
+  want_readlen,
+  want_training,
+  want_cid,
+  want_trial=1,
+  want_subsampling_fraction=0.03)
+{
+    xlab <- paste0(want_readlen, " bp ",
+                   if(want_paired) "paired " else "unpaired ")
+    mtmp <- m %>% filter(name == 'various_genomes' &
+                         paired == want_paired &
+                         readlen == want_readlen &
+                         training == want_training &
+                         trial_no == want_trial &
+                         subsampling_fraction == want_subsampling_fraction)
+    mtmp <- explode_curves(mtmp, want_cid)
+    mx <- max(abs(mtmp$y))
+    ggplot(mtmp, aes(x=x, y=y, color=species, linetype=aligner)) +
+      geom_abline(intercept = 0, slope = 0) +
+      coord_trans(y = logmod_trans()) +
+      scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+      labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+      geom_line() +
+      theme_bw() +
+      theme(legend.title=element_blank(),
+            axis.title.x = element_text(vjust=-0.4))
+}
+```
+
+```{r various_genomes_plot_cid_test}
+
+## Test ##
+
+# params: paired, readlen, training, cid
+p_vg_u100ei <- various_genomes_plot(F, 100, F, T)
+p_vg_u250ei <- various_genomes_plot(F, 250, F, T)
+p_vg_p100ei <- various_genomes_plot(T, 100, F, T)
+p_vg_p250ei <- various_genomes_plot(T, 250, F, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vg_u100ei,
+                           p_vg_u250ei,
+                           p_vg_p100ei,
+                           p_vg_p250ei)
+
+# Write to PDF
+pdf(file="various_genomes_cid_test.pdf")
+grid_arrange_shared_legend(p_vg_u100ei,
+                           p_vg_u250ei,
+                           p_vg_p100ei,
+                           p_vg_p250ei)
+dev.off()
+```
+
+```{r various_genomes_plot_cid_train}
+
+## Training ##
+
+# params: paired, readlen, training, cid
+p_vg_u100ri <- various_genomes_plot(F, 100, T, T)
+p_vg_u250ri <- various_genomes_plot(F, 250, T, T)
+p_vg_p100ri <- various_genomes_plot(T, 100, T, T)
+p_vg_p250ri <- various_genomes_plot(T, 250, T, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vg_u100ri,
+                           p_vg_u250ri,
+                           p_vg_p100ri,
+                           p_vg_p250ri)
+
+# Write to PDF
+pdf(file="various_genomes_cid_training.pdf")
+grid_arrange_shared_legend(p_vg_u100ri,
+                           p_vg_u250ri,
+                           p_vg_p100ri,
+                           p_vg_p250ri)
+dev.off()
+```
+
+```{r various_genomes_plot_cse_test}
+
+## Test ##
+
+# params: paired, readlen, training, cid
+p_vg_u100ee <- various_genomes_plot(F, 100, F, F)
+p_vg_u250ee <- various_genomes_plot(F, 250, F, F)
+p_vg_p100ee <- various_genomes_plot(T, 100, F, F)
+p_vg_p250ee <- various_genomes_plot(T, 250, F, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vg_u100ee,
+                           p_vg_u250ee,
+                           p_vg_p100ee,
+                           p_vg_p250ee)
+
+# Write to PDF
+pdf(file="various_genomes_cse_test.pdf")
+grid_arrange_shared_legend(p_vg_u100ee,
+                           p_vg_u250ee,
+                           p_vg_p100ee,
+                           p_vg_p250ee)
+dev.off()
+```
+
+```{r various_genomes_plot_cse_train}
+
+## Training ##
+
+# params: paired, readlen, training, cid
+p_vg_u100re <- various_genomes_plot(F, 100, T, F)
+p_vg_u250re <- various_genomes_plot(F, 250, T, F)
+p_vg_p100re <- various_genomes_plot(T, 100, T, F)
+p_vg_p250re <- various_genomes_plot(T, 250, T, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vg_u100re,
+                           p_vg_u250re,
+                           p_vg_p100re,
+                           p_vg_p250re)
+
+# Write to PDF
+pdf(file="various_genomes_cse_training.pdf")
+grid_arrange_shared_legend(p_vg_u100re,
+                           p_vg_u250re,
+                           p_vg_p100re,
+                           p_vg_p250re)
+dev.off()
+```
+
+##### Diagnostics
+
+Zooming in on BWA-MEM 100 x 100 human CID:
+
+```{r various_genomes_plot_bwa_100_pe_hg}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & paired & readlen == 100 & aligner == 'bwamem'), T)
+```
+
+Now mouse:
+
+```{r various_genomes_plot_bwa_100_pe_mm}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'mm' & paired & readlen == 100 & aligner == 'bwamem'), T)
+```
+
+Now corn:
+
+```{r various_genomes_plot_bwa_100_pe_zm}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'zm' & paired & readlen == 100 & aligner == 'bwamem'), T)
+```
+
+And 250 x 250 human:
+
+```{r various_genomes_plot_bwa_250_pe_hg}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & paired & readlen == 250 & aligner == 'bwamem'), T)
+```
+
+Now mouse:
+
+```{r various_genomes_plot_bwa_250_pe_mm}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'mm' & paired & readlen == 250 & aligner == 'bwamem'), T)
+```
+
+Now corn:
+
+```{r various_genomes_plot_bwa_250_pe_zm}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'zm' & paired & readlen == 250 & aligner == 'bwamem'), T)
+```
+
+#### Various sensitivities:
+
+```{r various_sensitivities_plot}
+various_sensitivities_plot <- function(
+  want_paired,
+  want_local,
+  want_readlen,
+  want_training,
+  want_cid,
+  want_trial=1,
+  want_subsampling_fraction=0.03)
+{
+  xlab <- paste0(want_readlen, " bp ",
+                 if(want_paired) "paired " else "unpaired ",
+                 if(want_local) "local" else "end-to-end")
+  mtmp <- m %>% filter(name == 'various_sensitivities' &
+                      paired == want_paired &
+                      local == want_local &
+                      readlen == want_readlen &
+                      training == want_training &
+                      trial_no == want_trial &
+                      subsampling_fraction == want_subsampling_fraction)
+  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="vs"] <- "--very-sensitive"
+  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="s"] <- "--sensitive"
+  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="f"] <- "--fast"
+  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="vf"] <- "--very-fast"
+  mtmp$sensitivity <- relevel(mtmp$sensitivity, "--sensitive")
+  mtmp$sensitivity <- relevel(mtmp$sensitivity, "--fast")
+  mtmp$sensitivity <- relevel(mtmp$sensitivity, "--very-fast")
+  mtmp <- explode_curves(mtmp, want_cid)
+  mx <- max(abs(mtmp$y))
+  ggplot(mtmp, aes(x=x, y=y, color=sensitivity)) +
+    geom_abline(intercept = 0, slope = 0) +
+    coord_trans(y = logmod_trans()) +
+    scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+    labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+    geom_line() +
+    theme_bw() +
+    theme(legend.title=element_blank(), axis.title.x = element_text(vjust=-0.4))
+}
+```
+
+```{r various_sensitivities_plot_cid_test}
+
+## Test ##
+
+# params: paired, local, readlen, training, cid
+p_vs_u100ei <- various_sensitivities_plot(F, F, 100, F, T)
+p_vs_u250ei <- various_sensitivities_plot(F, T, 100, F, T)
+p_vs_p100ei <- various_sensitivities_plot(T, F, 100, F, T)
+p_vs_p250ei <- various_sensitivities_plot(T, T, 100, F, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vs_u100ei,
+                           p_vs_u250ei,
+                           p_vs_p100ei,
+                           p_vs_p250ei)
+
+# Write to PDF
+pdf(file="various_sensitivities_cid_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_vs_u100ei,
+                           p_vs_u250ei,
+                           p_vs_p100ei,
+                           p_vs_p250ei)
+dev.off()
+```
+
+```{r various_sensitivities_plot_cid_train}
+
+## Training ##
+
+# params: paired, local, readlen, training, cid
+p_vs_u100ri <- various_sensitivities_plot(F, F, 100, T, T)
+p_vs_u250ri <- various_sensitivities_plot(F, T, 100, T, T)
+p_vs_p100ri <- various_sensitivities_plot(T, F, 100, T, T)
+p_vs_p250ri <- various_sensitivities_plot(T, T, 100, T, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vs_u100ri,
+                           p_vs_u250ri,
+                           p_vs_p100ri,
+                           p_vs_p250ri)
+
+# Write to PDF
+pdf(file="various_sensitivities_cid_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_vs_u100ri,
+                           p_vs_u250ri,
+                           p_vs_p100ri,
+                           p_vs_p250ri)
+dev.off()
+```
+
+```{r various_sensitivities_plot_cse_test}
+
+## Test ##
+
+# params: paired, local, readlen, training, cid
+p_vs_u100ee <- various_sensitivities_plot(F, F, 100, F, F)
+p_vs_u250ee <- various_sensitivities_plot(F, T, 100, F, F)
+p_vs_p100ee <- various_sensitivities_plot(T, F, 100, F, F)
+p_vs_p250ee <- various_sensitivities_plot(T, T, 100, F, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vs_u100ee,
+                           p_vs_u250ee,
+                           p_vs_p100ee,
+                           p_vs_p250ee)
+
+# Write to PDF
+pdf(file="various_sensitivities_cse_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_vs_u100ee,
+                           p_vs_u250ee,
+                           p_vs_p100ee,
+                           p_vs_p250ee)
+dev.off()
+```
+
+```{r various_sensitivities_plot_cse_train}
+
+## Training ##
+
+# params: paired, local, readlen, training, cid
+p_vs_u100re <- various_sensitivities_plot(F, F, 100, T, F)
+p_vs_u250re <- various_sensitivities_plot(F, T, 100, T, F)
+p_vs_p100re <- various_sensitivities_plot(T, F, 100, T, F)
+p_vs_p250re <- various_sensitivities_plot(T, T, 100, T, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vs_u100re,
+                           p_vs_u250re,
+                           p_vs_p100re,
+                           p_vs_p250re)
+
+# Write to PDF
+pdf(file="various_sensitivities_cse_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_vs_u100re,
+                           p_vs_u250re,
+                           p_vs_p100re,
+                           p_vs_p250re)
+dev.off()
+```
+
+#### Simulators
+
+```{r various_simulators_plot}
+various_simulators_plot <- function(
+  want_paired,
+  want_readlen,
+  want_training,
+  want_cid,
+  want_trial=1,
+  want_subsampling_fraction=0.03)
+{
+    xlab <- paste0(want_readlen, " bp ",
+                   if(want_paired) "paired " else "unpaired ")
+    mtmp <- m %>% filter(name == 'various_simulators' &
+                         paired == want_paired &
+                         readlen == want_readlen &
+                         training == want_training &
+                         trial_no == want_trial &
+                         subsampling_fraction == want_subsampling_fraction)
+    stopifnot(nrow(mtmp) == 3)
+    mtmp <- explode_curves(mtmp, want_cid)
+    mx <- max(abs(mtmp$y))
+    ggplot(mtmp, aes(x=x, y=y, color=sim)) +
+      geom_abline(intercept = 0, slope = 0) +
+      coord_trans(y = logmod_trans()) +
+      scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+      labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+      geom_line() +
+      theme_bw() +
+      theme(legend.title=element_blank(),
+            axis.title.x = element_text(vjust=-0.4))
+}
+```
+
+```{r various_simulators_plot_cid_test}
+
+## Test ##
+
+# params: paired, local, readlen, training, cid
+p_vi_u100ei <- various_simulators_plot(F, 100, F, T)
+p_vi_u250ei <- various_simulators_plot(F, 250, F, T)
+p_vi_p100ei <- various_simulators_plot(T, 100, F, T)
+p_vi_p250ei <- various_simulators_plot(T, 250, F, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vi_u100ei,
+                           p_vi_u250ei,
+                           p_vi_p100ei,
+                           p_vi_p250ei)
+
+# Write to PDF
+pdf(file="various_simulators_cid_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_vi_u100ei,
+                           p_vi_u250ei,
+                           p_vi_p100ei,
+                           p_vi_p250ei)
+dev.off()
+```
+
+```{r various_simulators_plot_cse_test}
+
+## Test ##
+
+# params: paired, local, readlen, training, cid
+p_vi_u100ee <- various_simulators_plot(F, 100, F, F)
+p_vi_u250ee <- various_simulators_plot(F, 250, F, F)
+p_vi_p100ee <- various_simulators_plot(T, 100, F, F)
+p_vi_p250ee <- various_simulators_plot(T, 250, F, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vi_u100ee,
+                           p_vi_u250ee,
+                           p_vi_p100ee,
+                           p_vi_p250ee)
+
+# Write to PDF
+pdf(file="various_simulators_cse_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_vi_u100ee,
+                           p_vi_u250ee,
+                           p_vi_p100ee,
+                           p_vi_p250ee)
+dev.off()
+```
+
+```{r various_simulators_plot_cid_train}
+
+## Training ##
+
+# params: paired, local, readlen, training, cid
+p_vi_u100ri <- various_simulators_plot(F, 100, T, T)
+p_vi_u250ri <- various_simulators_plot(F, 250, T, T)
+p_vi_p100ri <- various_simulators_plot(T, 100, T, T)
+p_vi_p250ri <- various_simulators_plot(T, 250, T, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vi_u100ri,
+                           p_vi_u250ri,
+                           p_vi_p100ri,
+                           p_vi_p250ri)
+
+# Write to PDF
+pdf(file="various_simulators_cid_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_vi_u100ri,
+                           p_vi_u250ri,
+                           p_vi_p100ri,
+                           p_vi_p250ri)
+dev.off()
+```
+
+```{r various_simulators_plot_cse_train}
+
+## Training ##
+
+# params: paired, local, readlen, training, cid
+p_vi_u100re <- various_simulators_plot(F, 100, T, F)
+p_vi_u250re <- various_simulators_plot(F, 250, T, F)
+p_vi_p100re <- various_simulators_plot(T, 100, T, F)
+p_vi_p250re <- various_simulators_plot(T, 250, T, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vi_u100re,
+                           p_vi_u250re,
+                           p_vi_p100re,
+                           p_vi_p250re)
+
+# Write to PDF
+pdf(file="various_simulators_cse_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_vi_u100re,
+                           p_vi_u250re,
+                           p_vi_p100re,
+                           p_vi_p250re)
+dev.off()
+```
+
+##### Diagnostics
+
+Zooming in on BT2 100 Art:
+
+```{r various_simulators_plot_bt2_100_unp_art}
+subsample_trials_plot(m %>% filter(name == 'various_simulators' & !paired & readlen == 100 & sim == 'art'), T)
+```
+
+And now 100 x 100 paired-end:
+
+```{r various_simulators_plot_bt2_100_pe_art}
+subsample_trials_plot(m %>% filter(name == 'various_simulators' & paired & readlen == 100 & sim == 'art'), T)
+```
+
+#### Mixed length
+
+```{r mixed_length_plot}
+mixed_length_plot <- function(
+  want_training,
+  want_cid,
+  want_trial=1,
+  want_subsampling_fraction=0.03)
+{
+    mtmp <- m %>% filter(name == '454_mixed_length' &
+                         training == want_training &
+                         trial_no == want_trial &
+                         subsampling_fraction == want_subsampling_fraction)
+    stopifnot(nrow(mtmp) == 2)  # local and end-to-end
+    mtmp <- explode_curves(mtmp, want_cid)
+    mx <- max(abs(mtmp$y))
+    ggplot(mtmp, aes(x=x, y=y, color=local)) +
+      geom_abline(intercept = 0, slope = 0) +
+      coord_trans(y = logmod_trans()) +
+      scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+      labs(y=if(want_cid) "CID" else "CSED") +
+      geom_line() +
+      theme_bw() +
+      theme(legend.title=element_blank(),
+            axis.title.x = element_text(vjust=-0.4))
+}
+```
+
+```{r mixed_length_cid_test}
+
+## Test ##
+
+# Write to notebook
+mixed_length_plot(F, T)
+
+# Write to PDF
+pdf(file="mixed_length_cid_test.pdf", onefile=F)
+mixed_length_plot(F, T)
+dev.off()
+```
+
+```{r mixed_length_cse_test}
+
+## Test ##
+
+# Write to notebook
+mixed_length_plot(F, F)
+
+# Write to PDF
+pdf(file="mixed_length_cse_test.pdf", onefile=F)
+mixed_length_plot(F, F)
+dev.off()
+```
+
+```{r mixed_length_cid_training}
+
+## Training ##
+
+# Write to notebook
+mixed_length_plot(T, T)
+
+# Write to PDF
+pdf(file="mixed_length_cid_training.pdf", onefile=F)
+mixed_length_plot(T, T)
+dev.off()
+```
+
+```{r mixed_length_cse_training}
+
+## Training ##
+
+# Write to notebook
+mixed_length_plot(T, F)
+
+# Write to PDF
+pdf(file="mixed_length_cse_training.pdf", onefile=F)
+mixed_length_plot(T, F)
+dev.off()
+```
+
+### Real reads
+
+```{r}
+real <- read.table('real_data/overall.csv', sep=',', quote='', comment.char='', header=T)
+ls <- list()
+for(i in 1:nrow(real)) {
+  ls[[i]] <- real[i,]
+  roct <- roc_string_to_table(real$roc_round[i])
+  rocto <- roc_string_to_table(real$roc_orig[i])
+  ls[[i]]$RCA <- rca(roct, rocto)
+  ls[[i]]$RCE <- rce(roct, rocto)
+}
+real <- rbindlist(ls)
+```
+
+#### ERR050083 & ERR050082
+
+##### Accuracy
+
+```{r real_data_accuracy_tables}
+# ERR050083 & ERR050082 (columns)
+# Unpaired & paired (rows)
+# Different aligners (chunks of rows)
+
+real_data_accuracy_table <- function(dataset) {
+  real %>% filter(data==dataset) %>%
+           select(data, paired, aligner, loose, RCA) %>%
+           arrange(paired, aligner, loose)
+}
+kable(real_data_accuracy_table("ERR050082"), format="markdown")
+kable(real_data_accuracy_table("ERR050083"), format="markdown")
+kable(real_data_accuracy_table("ERR050082"), format="latex")
+kable(real_data_accuracy_table("ERR050083"), format="latex")
+```
+
+```{r real_data_plot}
+real_data_plot <- function(
+  want_data,
+  want_paired,
+  want_loose,
+  want_cid)
+{
+    xlab <- paste0(if(want_paired) "Paired " else "Unpaired ",
+                   if(want_loose) "loose" else "strict")
+    realtmp <- real %>% filter(data == want_data &
+                               paired == want_paired &
+                               loose == want_loose)
+    realtmp <- explode_curves(realtmp, want_cid)
+    mx <- max(abs(realtmp$y))
+    ggplot(realtmp, aes(x=x, y=y, color=aligner)) +
+      geom_abline(intercept = 0, slope = 0) +
+      coord_trans(y = logmod_trans()) +
+      scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+      labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+      geom_line() +
+      theme_bw() +
+      theme(legend.title=element_blank(),
+            axis.title.x = element_text(vjust=-0.4))
+}
+```
+
+```{r real_data_plot_err050082}
+# data, paired, loose, cid
+p_rl_err050082_ul <- real_data_plot('ERR050082', F, T, T)
+p_rl_err050082_us <- real_data_plot('ERR050082', F, F, T)
+p_rl_err050082_pl <- real_data_plot('ERR050082', T, T, T)
+p_rl_err050082_ps <- real_data_plot('ERR050082', T, F, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_rl_err050082_ul,
+                           p_rl_err050082_pl,
+                           p_rl_err050082_us,
+                           p_rl_err050082_ps)
+
+# Write to PDF
+pdf(file="real_human_err050082_cid.pdf", onefile=F)
+grid_arrange_shared_legend(p_rl_err050082_ul,
+                           p_rl_err050082_pl,
+                           p_rl_err050082_us,
+                           p_rl_err050082_ps)
+dev.off()
+```
+
+```{r real_data_plot_err050083}
+# data, paired, loose, cid
+p_rl_err050083_ul <- real_data_plot('ERR050083', F, T, T)
+p_rl_err050083_us <- real_data_plot('ERR050083', F, F, T)
+p_rl_err050083_pl <- real_data_plot('ERR050083', T, T, T)
+p_rl_err050083_ps <- real_data_plot('ERR050083', T, F, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_rl_err050083_ul,
+                           p_rl_err050083_pl,
+                           p_rl_err050083_us,
+                           p_rl_err050083_ps)
+
+# Write to PDF
+pdf(file="real_human_err050083_cid.pdf", onefile=F)
+grid_arrange_shared_legend(p_rl_err050083_ul,
+                           p_rl_err050083_pl,
+                           p_rl_err050083_us,
+                           p_rl_err050083_ps)
+dev.off()
+```
+
+##### Performance
+
+```{r real_data_perf_tables}
+# from qsim-experiments/experiments/real_data/perf_tabulate.py
+perf <- read.table('real_data/perf.csv', sep=',', quote='', comment.char='', header=T)
+```
+
+```{r}
+real_data_perf_table <- function(dataset) {
+  perf %>% filter(data==dataset) %>%
+           select(data, paired, aligner, align_time, overall_time,
+                  pct_increase_a_to_o,
+                  peak_wrapper, peak_children, pct_increase_peak) %>%
+           arrange(paired, aligner)
+}
+kable(real_data_perf_table("ERR050082"), format="markdown")
+kable(real_data_perf_table("ERR050083"), format="markdown")
+kable(real_data_perf_table("ERR050082"), format="latex")
+kable(real_data_perf_table("ERR050083"), format="latex")
+```
