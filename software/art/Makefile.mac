@@ -1,21 +1,22 @@
 #!gmake
 
-# Illumina version: 2.1.8
-# 454 version: 2.5.8
+# Illumina version: 2.5.8
+# 454 version: 2.6.0
 
-AR=artbinvanillaicecream031114macos64tgz.tgz
+AR=artbinmountrainier20160605macos64tgz.tgz
+DR=art_bin_MountRainier
 URL=http://www.niehs.nih.gov/research/resources/assets/docs/$(AR)
 
 .PHONY: all
 all: art_illumina art_454
 
-art_illumina: MacOS64/art_illumina
+art_illumina: $(DR)/art_illumina
 	ln -s -f $< $@
 
-art_454: MacOS64/art_454
+art_454: $(DR)/art_454
 	ln -s -f $< $@
 
-MacOS64/art_illumina MacOS64/art_454: $(AR)
+$(DR)/art_illumina $(DR)/art_454: $(AR)
 	gzip -c $< | tar xvf -
 
 $(AR):
