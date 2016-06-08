@@ -1,11 +1,11 @@
 #!gmake
 
-# Illumina version: 2.1.8
-# 454 version: 2.5.8
+# Illumina version: 2.5.8
+# 454 version: 2.6.0
 
-AR=artbinmountrainier20160605linux64tgz.tgz
+AR=artsrcmountrainier20160605linuxtgz.tgz
 URL=http://www.niehs.nih.gov/research/resources/assets/docs/$(AR)
-SILLY_NAME=art_bin_MountRainier
+SILLY_NAME=art_src_MountRainier_Linux
 
 .PHONY: all
 all: art_illumina art_454
