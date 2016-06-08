@@ -43,6 +43,7 @@ make -f Makefile.src_linux -C qsim-experiments/software/art
 make -C qsim-experiments/software/mason
 make -C qsim-experiments/software/wgsim
 make -C qsim-experiments/software/bowtie2
+# For now: make -C qsim-experiments/software/bowtie2 -f Makefile.from_github
 make -C qsim-experiments/software/bwa
 make -C qsim-experiments/software/snap
 ```
