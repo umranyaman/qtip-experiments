@@ -3,9 +3,9 @@
 # Illumina version: 2.1.8
 # 454 version: 2.5.8
 
-AR=artsrcvanillaicecream031114linuxtgz.tgz
+AR=artbinmountrainier20160605linux64tgz.tgz
 URL=http://www.niehs.nih.gov/research/resources/assets/docs/$(AR)
-SILLY_NAME=art_src_VanillaIceCream_Linux
+SILLY_NAME=art_bin_MountRainier
 
 .PHONY: all
 all: art_illumina art_454
