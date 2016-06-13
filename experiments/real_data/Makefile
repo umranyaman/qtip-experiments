@@ -8,10 +8,11 @@ BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2 --index $(INDEXES)/h
 BWA_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(INDEXES)/hg19.fa
 SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap-aligner --index $(INDEXES)/hg19.fa.snap
 
-ARGS=--ref $(INDEXES)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346
-
 NTHREADS=1
 NTHREADS_VS=16
+
+$(shell mkdir -p temp)
+ARGS=--ref $(INDEXES)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346 --temp-directory temp
 
 #
 # These CSV files contain the ultimate output from multi_aligner.py when
