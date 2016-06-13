@@ -24,6 +24,7 @@ r0_$1_%.out: r0_%.fq.gz
 	       --sim-unp-min $2 \
 	       $$(SNAP_TS_ARGS) $$(TS_ARGS) $4 \
 	       --output-directory $$@ \
+	       --temp-directory $$@.temp \
 	       --U $$< \
 	       -- $5 $$(SNAP_ARGS) -t 8 -- $6 -- $7
 	-$$(SNAP) 2> $$@/snap_version
@@ -36,6 +37,7 @@ r12_$1_%.out: r1_%.fq.gz
 	       --sim-conc-min $2 --sim-disc-min $3 --sim-bad-end-min $3 \
 	       $$(SNAP_TS_ARGS) $$(TS_ARGS) $4 \
 	       --output-directory $$@ \
+	       --temp-directory $$@.temp \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
 	       -- $5 $$(SNAP_ARGS) -t 8 -- $6 -- $7
 	-$$(SNAP) 2> $$@/snap_version
