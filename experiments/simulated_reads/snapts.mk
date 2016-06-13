@@ -18,6 +18,7 @@ SNAP_TS_ARGS=--write-orig-mapq
 define snapts
 
 r0_$1_%.out: r0_%.fq.gz
+	mkdir -p $$@.temp
 	$$(QSIM) --ref $8 \
 	       --snap-exe $$(SNAP) --aligner snap \
 	       --index $9.snap \
@@ -31,6 +32,7 @@ r0_$1_%.out: r0_%.fq.gz
 	-$$(QSIM) --version > $$@/qsim_version
 
 r12_$1_%.out: r1_%.fq.gz
+	mkdir -p $$@.temp
 	$$(QSIM) --ref $8 \
 	       --snap-exe $$(SNAP) --aligner snap \
 	       --index $9.snap \

@@ -6,6 +6,7 @@ BWA_TS_ARGS=--write-orig-mapq
 define bwamemts
 
 r0_$1_%.out: r0_%.fq.gz
+	mkdir -p $$@.temp
 	$$(QSIM) --ref $6 \
 	       --bwa-exe $$(BWA) --aligner=bwa-mem \
 	       --index $7 \
@@ -19,6 +20,7 @@ r0_$1_%.out: r0_%.fq.gz
 	-$$(QSIM) --version > $$@/qsim_version
 
 r12_$1_%.out: r1_%.fq.gz
+	mkdir -p $$@.temp
 	$$(QSIM) --ref $6 \
 	       --bwa-exe $$(BWA) --aligner=bwa-mem \
 	       --index $7 \

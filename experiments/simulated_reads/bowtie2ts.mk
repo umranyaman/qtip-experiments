@@ -6,6 +6,7 @@ BT2_QSIM_ARGS=--write-orig-mapq
 define bt2ts
 
 r0_$1_%.out: r0_%.fq.gz
+	mkdir -p $$@.temp
 	$$(QSIM) --ref $6 \
 	       --bt2-exe $$(BOWTIE2) \
 	       --index $7 \
@@ -19,6 +20,7 @@ r0_$1_%.out: r0_%.fq.gz
 	-$$(QSIM) --version > $$@/qsim_version
 
 r12_$1_%.out: r1_%.fq.gz
+	mkdir -p $$@.temp
 	$$(QSIM) --ref $6 \
 	       --bt2-exe $$(BOWTIE2) \
 	       --index $7 \
