@@ -216,7 +216,7 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                         for dir_mapq in get_immediate_subdirectories(target_full_s):
 
                             assert dir_mapq in ['mapq_excluded', 'mapq_included']
-                            mapq_included = dir_samp == 'mapq_included'
+                            mapq_included = dir_mapq == 'mapq_included'
                             odir_rm = join(odir_r, dir_mapq)
                             logging.info('      Found %s' % dir_mapq)
                             target_full_sm = join(target_full_s, dir_mapq)
