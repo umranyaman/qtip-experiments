@@ -180,6 +180,10 @@ def get_immediate_subdirectories(a_dir):
 def handle_dir(dirname, dest_dirname, ofh, first):
     # ofh is a writable file for overall.csv
     name = os.path.basename(dirname)
+
+    if os.path.exists(join(name, 'IGNORE')):
+        return
+
     with open(join(dirname, 'Makefile')) as fh:
 
         in_target = False
