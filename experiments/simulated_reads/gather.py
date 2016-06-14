@@ -141,7 +141,7 @@ def roc_file_to_string(roc_fn, inner_sep=':', outer_sep=';'):
     return outer_sep.join(fields)
 
 
-def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, roc_round_fn, roc_orig_fn, first):
+def compile_line(ofh, combined_target_name, mapq_incl, tt, trial, params_fn, summ_fn, roc_round_fn, roc_orig_fn, first):
     """ Put together one line of output and write to ofh (overall.csv)
         """
     name, target = parse_name_and_target(combined_target_name)
@@ -151,10 +151,10 @@ def compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn, roc_r
     readlen = parse_readlen(target)
     sensitivity = parse_sensitivity(target, aligner)
     species = parse_species(target)
-    headers = ['name', 'training', 'trial_no', 'aligner', 'local', 'paired',
-               'sim', 'readlen', 'sensitivity', 'species']
-    values = [name, 'T' if tt == 'training' else 'F', trial, aligner,
-              'T' if local else 'F', 'T' if paired else 'F', sim,
+    headers = ['name', 'mapq_included', 'training', 'trial_no', 'aligner', 'local',
+               'paired', 'sim', 'readlen', 'sensitivity', 'species']
+    values = [name, 'T' if mapq_incl else 'F', 'T' if tt == 'training' else 'F',
+              trial, aligner, 'T' if local else 'F', 'T' if paired else 'F', sim,
               str(readlen), sensitivity, species]
     for fn in [params_fn, summ_fn]:
         with open(fn, 'r') as fh:
@@ -209,39 +209,50 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                         if not os.path.isdir(target_full_s):
                             raise RuntimeError('Directory "%s" does not exist' % target_full_s)
 
-                        for dir_trial in get_immediate_subdirectories(target_full_s):
+                        for dir_mapq in get_immediate_subdirectories(target_full_s):
 
-                            assert dir_trial.startswith('trial')
-                            trial = dir_trial[5:]
-                            odir_rt = join(odir_r, 'trial' + trial)
-                            logging.info('      Found trial: %s' % trial)
-                            target_full_st = join(target_full_s, 'trial' + trial)
-                            if not os.path.isdir(target_full_st):
-                                raise RuntimeError('Directory "%s" does not exist' % target_full_st)
+                            assert dir_mapq in ['mapq_excluded', 'mapq_included']
+                            mapq_included = dir_samp == 'mapq_included'
+                            odir_rm = join(odir_r, dir_mapq)
+                            logging.info('      Found %s' % dir_mapq)
+                            target_full_sm = join(target_full_s, dir_mapq)
+                            if not os.path.isdir(target_full_sm):
+                                raise RuntimeError('Directory "%s" does not exist' % target_full_sm)
 
-                            mkdir_quiet(odir_rt)
+                            for dir_trial in get_immediate_subdirectories(target_full_sm):
 
-                            os.system('cp -f %s %s' % (join(target_full_st, 'featimport_*.csv'), odir_rt))
-                            params_fn = join(odir_rt, 'params.csv')
-                            os.system('cp -f %s %s' % (join(target_full_st, 'params.csv'), params_fn))
+                                assert dir_trial.startswith('trial')
+                                trial = dir_trial[5:]
+                                odir_rmt = join(odir_rm, 'trial' + trial)
+                                logging.info('        Found trial: %s' % trial)
+                                target_full_smt = join(target_full_sm, 'trial' + trial)
+                                if not os.path.isdir(target_full_smt):
+                                    raise RuntimeError('Directory "%s" does not exist' % target_full_smt)
 
-                            for tt in ['test', 'training']:
+                                mkdir_quiet(odir_rmt)
 
-                                target_full_stt = join(target_full_st, tt)
-                                if not os.path.isdir(target_full_stt):
-                                    raise RuntimeError('Directory "%s" does not exist' % target_full_stt)
+                                os.system('cp -f %s %s' % (join(target_full_smt, 'featimport_*.csv'), odir_rt))
+                                params_fn = join(odir_rmt, 'params.csv')
+                                os.system('cp -f %s %s' % (join(target_full_smt, 'params.csv'), params_fn))
 
-                                summ_fn = join(odir_rt, tt + '_summary.csv')
-                                roc_fn = join(odir_rt, tt + '_roc.csv')
-                                roc_orig_fn = join(odir_rt, tt + '_roc_orig.csv')
-                                roc_round_fn = join(odir_rt, tt + '_roc_round.csv')
-                                os.system('cp -f %s %s' % (join(target_full_stt, 'summary.csv'), summ_fn))
-                                os.system('cp -f %s %s' % (join(target_full_stt, 'roc.csv'), roc_fn))
-                                os.system('cp -f %s %s' % (join(target_full_stt, 'roc_orig.csv'), roc_orig_fn))
-                                os.system('cp -f %s %s' % (join(target_full_stt, 'roc_round.csv'), roc_round_fn))
-                                compile_line(ofh, combined_target_name, tt, trial, params_fn, summ_fn,
-                                             roc_round_fn, roc_orig_fn, first)
-                                first = False
+                                for tt in ['test', 'training']:
+
+                                    target_full_smtt = join(target_full_smt, tt)
+                                    if not os.path.isdir(target_full_smtt):
+                                        raise RuntimeError('Directory "%s" does not exist' % target_full_smtt)
+
+                                    mapqst = 'incl' if mapq_included else 'excl'
+                                    summ_fn = join(odir_rmt, tt + '_' + mapqst + '_summary.csv')
+                                    roc_fn = join(odir_rmt, tt + '_' + mapqst + '_roc.csv')
+                                    roc_orig_fn = join(odir_rmt, tt + '_' + mapqst + '_roc_orig.csv')
+                                    roc_round_fn = join(odir_rmt, tt + '_' + mapqst + '_roc_round.csv')
+                                    os.system('cp -f %s %s' % (join(target_full_smtt, 'summary.csv'), summ_fn))
+                                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc.csv'), roc_fn))
+                                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_orig.csv'), roc_orig_fn))
+                                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_round.csv'), roc_round_fn))
+                                    compile_line(ofh, combined_target_name, mapq_included, tt, trial, params_fn,
+                                                 summ_fn, roc_round_fn, roc_orig_fn, first)
+                                    first = False
 
 
 def go():
