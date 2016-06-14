@@ -231,7 +231,7 @@ def handle_dir(dirname, dest_dirname, ofh, first):
 
                                 mkdir_quiet(odir_rmt)
 
-                                os.system('cp -f %s %s' % (join(target_full_smt, 'featimport_*.csv'), odir_rt))
+                                os.system('cp -f %s %s' % (join(target_full_smt, 'featimport_*.csv'), odir_rmt))
                                 params_fn = join(odir_rmt, 'params.csv')
                                 os.system('cp -f %s %s' % (join(target_full_smt, 'params.csv'), params_fn))
 
