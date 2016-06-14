@@ -263,6 +263,8 @@ def go():
 
     # Set up output directory
     odir = 'summary'
+    if os.path.exists(odir):
+        raise RuntimeError('summary directory exists')
     mkdir_quiet(odir)
 
     # Open output overall.csv file
