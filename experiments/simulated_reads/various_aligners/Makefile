@@ -76,28 +76,28 @@ outs: outs_bt2 outs_bwamem outs_snap
 
 .PHONY: outs_bt2
 outs_bt2: \
-    r0_bt2s_mason_ill_100_1M.out \
-    r0_bt2s_mason_ill_250_1M.out \
-    r12_bt2s100_mason_ill_100_1M.out \
-    r12_bt2s250_mason_ill_250_1M.out \
-    r0_bt2sl_mason_ill_100_1M.out \
-    r0_bt2sl_mason_ill_250_1M.out \
-    r12_bt2sl100_mason_ill_100_1M.out \
-    r12_bt2sl250_mason_ill_250_1M.out
+    r0_bt2s_mason_ill_100_1M.out/DONE \
+    r0_bt2s_mason_ill_250_1M.out/DONE \
+    r12_bt2s100_mason_ill_100_1M.out/DONE \
+    r12_bt2s250_mason_ill_250_1M.out/DONE \
+    r0_bt2sl_mason_ill_100_1M.out/DONE \
+    r0_bt2sl_mason_ill_250_1M.out/DONE \
+    r12_bt2sl100_mason_ill_100_1M.out/DONE \
+    r12_bt2sl250_mason_ill_250_1M.out/DONE
 
 .PHONY: outs_bwamem
 outs_bwamem: \
-    r0_bwamem_mason_ill_100_1M.out \
-    r0_bwamem_mason_ill_250_1M.out \
-    r12_bwamem100_mason_ill_100_1M.out \
-    r12_bwamem250_mason_ill_250_1M.out
+    r0_bwamem_mason_ill_100_1M.out/DONE \
+    r0_bwamem_mason_ill_250_1M.out/DONE \
+    r12_bwamem100_mason_ill_100_1M.out/DONE \
+    r12_bwamem250_mason_ill_250_1M.out/DONE
 
 .PHONY: outs_snap
 outs_snap: \
-    r0_snap_mason_ill_100_1M.out \
-    r0_snap_mason_ill_250_1M.out \
-    r12_snap100_mason_ill_100_1M.out \
-    r12_snap250_mason_ill_250_1M.out
+    r0_snap_mason_ill_100_1M.out/DONE \
+    r0_snap_mason_ill_250_1M.out/DONE \
+    r12_snap100_mason_ill_100_1M.out/DONE \
+    r12_snap250_mason_ill_250_1M.out/DONE
 
 .PHONY: reads
 reads: \

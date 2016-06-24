@@ -56,21 +56,21 @@ outs: outs_unpaired outs_paired
 
 .PHONY: outs_unpaired
 outs_unpaired: \
-    r0_bt2s_mason_ill_hg_100_1M.out \
-    r0_bt2s_mason_ill_hg_250_1M.out \
-    r0_bt2s_wgsim_ill_hg_100_1M.out \
-    r0_bt2s_wgsim_ill_hg_250_1M.out \
-    r0_bt2s_art_ill_hg_100_1M.out \
-    r0_bt2s_art_ill_hg_250_1M.out
+    r0_bt2s_mason_ill_hg_100_1M.out/DONE \
+    r0_bt2s_mason_ill_hg_250_1M.out/DONE \
+    r0_bt2s_wgsim_ill_hg_100_1M.out/DONE \
+    r0_bt2s_wgsim_ill_hg_250_1M.out/DONE \
+    r0_bt2s_art_ill_hg_100_1M.out/DONE \
+    r0_bt2s_art_ill_hg_250_1M.out/DONE
 
 .PHONY: outs_paired
 outs_paired: \
-    r12_bt2s100_mason_ill_hg_100_1M.out \
-    r12_bt2s250_mason_ill_hg_250_1M.out \
-    r12_bt2s100_wgsim_ill_hg_100_1M.out \
-    r12_bt2s250_wgsim_ill_hg_250_1M.out \
-    r12_bt2s100_art_ill_hg_100_1M.out \
-    r12_bt2s250_art_ill_hg_250_1M.out
+    r12_bt2s100_mason_ill_hg_100_1M.out/DONE \
+    r12_bt2s250_mason_ill_hg_250_1M.out/DONE \
+    r12_bt2s100_wgsim_ill_hg_100_1M.out/DONE \
+    r12_bt2s250_wgsim_ill_hg_250_1M.out/DONE \
+    r12_bt2s100_art_ill_hg_100_1M.out/DONE \
+    r12_bt2s250_art_ill_hg_250_1M.out/DONE
 
 .PHONY: reads
 reads: \

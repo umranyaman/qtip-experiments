@@ -90,33 +90,33 @@ outs: outs_bt2 outs_bwamem
 
 .PHONY: outs_bt2
 outs_bt2: \
-    r0_bt2s_hg_mason_ill_hg_100_1M.out \
-    r0_bt2s_hg_mason_ill_hg_250_1M.out \
-    r0_bt2s_mm_mason_ill_mm_100_1M.out \
-    r0_bt2s_mm_mason_ill_mm_250_1M.out \
-    r0_bt2s_zm_mason_ill_zm_100_1M.out \
-    r0_bt2s_zm_mason_ill_zm_250_1M.out \
-    r12_bt2s100_hg_mason_ill_hg_100_1M.out \
-    r12_bt2s250_hg_mason_ill_hg_250_1M.out \
-    r12_bt2s100_mm_mason_ill_mm_100_1M.out \
-    r12_bt2s250_mm_mason_ill_mm_250_1M.out \
-    r12_bt2s100_zm_mason_ill_zm_100_1M.out \
-    r12_bt2s250_zm_mason_ill_zm_250_1M.out
+    r0_bt2s_hg_mason_ill_hg_100_1M.out/DONE \
+    r0_bt2s_hg_mason_ill_hg_250_1M.out/DONE \
+    r0_bt2s_mm_mason_ill_mm_100_1M.out/DONE \
+    r0_bt2s_mm_mason_ill_mm_250_1M.out/DONE \
+    r0_bt2s_zm_mason_ill_zm_100_1M.out/DONE \
+    r0_bt2s_zm_mason_ill_zm_250_1M.out/DONE \
+    r12_bt2s100_hg_mason_ill_hg_100_1M.out/DONE \
+    r12_bt2s250_hg_mason_ill_hg_250_1M.out/DONE \
+    r12_bt2s100_mm_mason_ill_mm_100_1M.out/DONE \
+    r12_bt2s250_mm_mason_ill_mm_250_1M.out/DONE \
+    r12_bt2s100_zm_mason_ill_zm_100_1M.out/DONE \
+    r12_bt2s250_zm_mason_ill_zm_250_1M.out/DONE
 
 .PHONY: outs_bwamem
 outs_bwamem: \
-    r0_bwamem_hg_mason_ill_hg_100_1M.out \
-    r0_bwamem_hg_mason_ill_hg_250_1M.out \
-    r0_bwamem_mm_mason_ill_mm_100_1M.out \
-    r0_bwamem_mm_mason_ill_mm_250_1M.out \
-    r0_bwamem_zm_mason_ill_zm_100_1M.out \
-    r0_bwamem_zm_mason_ill_zm_250_1M.out \
-    r12_bwamem100_hg_mason_ill_hg_100_1M.out \
-    r12_bwamem250_hg_mason_ill_hg_250_1M.out \
-    r12_bwamem100_mm_mason_ill_mm_100_1M.out \
-    r12_bwamem250_mm_mason_ill_mm_250_1M.out \
-    r12_bwamem100_zm_mason_ill_zm_100_1M.out \
-    r12_bwamem250_zm_mason_ill_zm_250_1M.out
+    r0_bwamem_hg_mason_ill_hg_100_1M.out/DONE \
+    r0_bwamem_hg_mason_ill_hg_250_1M.out/DONE \
+    r0_bwamem_mm_mason_ill_mm_100_1M.out/DONE \
+    r0_bwamem_mm_mason_ill_mm_250_1M.out/DONE \
+    r0_bwamem_zm_mason_ill_zm_100_1M.out/DONE \
+    r0_bwamem_zm_mason_ill_zm_250_1M.out/DONE \
+    r12_bwamem100_hg_mason_ill_hg_100_1M.out/DONE \
+    r12_bwamem250_hg_mason_ill_hg_250_1M.out/DONE \
+    r12_bwamem100_mm_mason_ill_mm_100_1M.out/DONE \
+    r12_bwamem250_mm_mason_ill_mm_250_1M.out/DONE \
+    r12_bwamem100_zm_mason_ill_zm_100_1M.out/DONE \
+    r12_bwamem250_zm_mason_ill_zm_250_1M.out/DONE
 
 .PHONY: reads
 reads: \

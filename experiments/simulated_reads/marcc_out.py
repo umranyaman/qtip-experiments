@@ -49,7 +49,7 @@ def write_slurm(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False,
     pbs_lns.append('#SBATCH --error=' + fn + '.e')
     pbs_lns.append('export QSIM_EXPERIMENTS_HOME=%s' % os.environ['QSIM_EXPERIMENTS_HOME'])
     pbs_lns.append('cd %s' % os.path.abspath(dirname))
-    pbs_lns.append('if make -f %s %s ; then touch %s/DONE ; fi' % (makefile, rule, rule))
+    pbs_lns.append('make -f %s %s/DONE' % (makefile, rule))
     with open(os.path.join(dirname, fn), 'w') as ofh:
         ofh.write('\n'.join(pbs_lns) + '\n')
 

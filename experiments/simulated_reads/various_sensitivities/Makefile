@@ -52,41 +52,41 @@ outs: outs_unpaired outs_paired
 
 .PHONY: outs_unpaired
 outs_unpaired: \
-    r0_bt2vf_mason_ill_100_1M.out \
-    r0_bt2vf_mason_ill_250_1M.out \
-    r0_bt2f_mason_ill_100_1M.out \
-    r0_bt2f_mason_ill_250_1M.out \
-    r0_bt2s_mason_ill_100_1M.out \
-    r0_bt2s_mason_ill_250_1M.out \
-    r0_bt2vs_mason_ill_100_1M.out \
-    r0_bt2vs_mason_ill_250_1M.out \
-    r0_bt2vfl_mason_ill_100_1M.out \
-    r0_bt2vfl_mason_ill_250_1M.out \
-    r0_bt2fl_mason_ill_100_1M.out \
-    r0_bt2fl_mason_ill_250_1M.out \
-    r0_bt2sl_mason_ill_100_1M.out \
-    r0_bt2sl_mason_ill_250_1M.out \
-    r0_bt2vsl_mason_ill_100_1M.out \
-    r0_bt2vsl_mason_ill_250_1M.out
+    r0_bt2vf_mason_ill_100_1M.out/DONE \
+    r0_bt2vf_mason_ill_250_1M.out/DONE \
+    r0_bt2f_mason_ill_100_1M.out/DONE \
+    r0_bt2f_mason_ill_250_1M.out/DONE \
+    r0_bt2s_mason_ill_100_1M.out/DONE \
+    r0_bt2s_mason_ill_250_1M.out/DONE \
+    r0_bt2vs_mason_ill_100_1M.out/DONE \
+    r0_bt2vs_mason_ill_250_1M.out/DONE \
+    r0_bt2vfl_mason_ill_100_1M.out/DONE \
+    r0_bt2vfl_mason_ill_250_1M.out/DONE \
+    r0_bt2fl_mason_ill_100_1M.out/DONE \
+    r0_bt2fl_mason_ill_250_1M.out/DONE \
+    r0_bt2sl_mason_ill_100_1M.out/DONE \
+    r0_bt2sl_mason_ill_250_1M.out/DONE \
+    r0_bt2vsl_mason_ill_100_1M.out/DONE \
+    r0_bt2vsl_mason_ill_250_1M.out/DONE
 
 .PHONY: outs_paired
 outs_paired: \
-    r12_bt2vf100_mason_ill_100_1M.out \
-    r12_bt2vf250_mason_ill_250_1M.out \
-    r12_bt2f100_mason_ill_100_1M.out \
-    r12_bt2f250_mason_ill_250_1M.out \
-    r12_bt2s100_mason_ill_100_1M.out \
-    r12_bt2s250_mason_ill_250_1M.out \
-    r12_bt2vs100_mason_ill_100_1M.out \
-    r12_bt2vs250_mason_ill_250_1M.out \
-    r12_bt2vfl100_mason_ill_100_1M.out \
-    r12_bt2vfl250_mason_ill_250_1M.out \
-    r12_bt2fl100_mason_ill_100_1M.out \
-    r12_bt2fl250_mason_ill_250_1M.out \
-    r12_bt2sl100_mason_ill_100_1M.out \
-    r12_bt2sl250_mason_ill_250_1M.out \
-    r12_bt2vsl100_mason_ill_100_1M.out \
-    r12_bt2vsl250_mason_ill_250_1M.out
+    r12_bt2vf100_mason_ill_100_1M.out/DONE \
+    r12_bt2vf250_mason_ill_250_1M.out/DONE \
+    r12_bt2f100_mason_ill_100_1M.out/DONE \
+    r12_bt2f250_mason_ill_250_1M.out/DONE \
+    r12_bt2s100_mason_ill_100_1M.out/DONE \
+    r12_bt2s250_mason_ill_250_1M.out/DONE \
+    r12_bt2vs100_mason_ill_100_1M.out/DONE \
+    r12_bt2vs250_mason_ill_250_1M.out/DONE \
+    r12_bt2vfl100_mason_ill_100_1M.out/DONE \
+    r12_bt2vfl250_mason_ill_250_1M.out/DONE \
+    r12_bt2fl100_mason_ill_100_1M.out/DONE \
+    r12_bt2fl250_mason_ill_250_1M.out/DONE \
+    r12_bt2sl100_mason_ill_100_1M.out/DONE \
+    r12_bt2sl250_mason_ill_250_1M.out/DONE \
+    r12_bt2vsl100_mason_ill_100_1M.out/DONE \
+    r12_bt2vsl250_mason_ill_250_1M.out/DONE
 
 .PHONY: reads
 reads: \
