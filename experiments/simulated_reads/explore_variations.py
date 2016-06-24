@@ -84,28 +84,22 @@ def parse_qsim_parameters_from_argv(argv):
     second being list of lists, each element being parameters for one qsim run
     """
     argv = argv[:]
-    my_args = []
-    global_qsim_args = []
-    exp_names = [[]]
-    exp_qsim_args = [[]]
-    targets = [[]]
-    sections = [exp_names, exp_qsim_args, targets]
-    section_i = -2
+    sections = [[], [], [], [[]], []]
+    nested = [False, False, False, True, False]
+    section_i = 0
     # maybe move these params into an input file
     for arg in argv:
         if arg == '==':
             section_i += 1
             continue
-        if section_i >= 0:
+        if nested[section_i]:
             if arg == '--':
                 sections[section_i].append([])
             else:
                 sections[section_i][-1].append(arg)
-        elif section_i == -2:
-            my_args.append(arg)
-        elif section_i == -1:
-            global_qsim_args.append(arg)
-    return my_args, global_qsim_args, sections[0], sections[1], sections[2]
+        else:
+            sections[section_i].append(arg)
+    return tuple(sections)
 
 
 if __name__ == "__main__":
