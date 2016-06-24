@@ -17,12 +17,6 @@ def handle_dir(dr, global_name, base_args, exp_names, exp_qsim_args, targets, su
     Maybe this just creates a whole series of new Makefiles with only the SUBSAMPLING_ARGS line different?
     Then maybe the
     """
-
-    target_rules = []
-    for fulltarget in targets:
-        _, rule = fulltarget.split('/')
-        target_rules.append(rule)
-
     for name, ar in zip(exp_names, exp_qsim_args):
         nm = '.'.join([global_name, name])
         new_makefile_base = '.'.join(['Makefile', global_name, name])
@@ -31,17 +25,19 @@ def handle_dir(dr, global_name, base_args, exp_names, exp_qsim_args, targets, su
             for ln in open(join(dr, 'Makefile')):
                 # 2 things to do: change the args passed to qsim and change the .out target names
                 if ln.startswith('SUBSAMPLING_ARGS'):
-                    mk_out.write('SUBSAMPLING_ARGS=%s %s\n' % (base_args, exp_qsim_args))
+                    mk_out.write('SUBSAMPLING_ARGS=%s %s\n' % (' '.join(base_args), ' '.join(ar)))
                 else:
                     mk_out.write(ln.replace('.out', '.%s.out' % nm).replace(',out', ',%s.out' % nm))
         for fulltarget in targets:
             # TODO: set up destination directory with appropriate initial files
-            dr, rule = fulltarget.split('/')
+            targdir, rule = fulltarget.split('/')
+            if targdir != dr:
+                continue
             rule = rule.replace('.out', '.%s.out' % nm)
             logging.info('    Adding job to make target: %s/%s' % (dr, rule))
             fn = '.' + '_'.join([rule, global_name, name]) + '.sh'
             write_slurm(rule, fn, dr, mem_gb, hours, makefile=new_makefile_base, use_scavenger=use_scavenger)
-            submit_fh.write('pushd %s && sbatch %s && popd' % (dr, fn))
+            submit_fh.write('pushd %s && sbatch %s && popd\n' % (dr, fn))
 
 
 def go(args, global_qsim_args, exp_names, exp_qsim_args, targets):
@@ -49,18 +45,21 @@ def go(args, global_qsim_args, exp_names, exp_qsim_args, targets):
     logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',
                         datefmt='%m/%d/%y-%H:%M:%S', level=logging.DEBUG)
 
-    logging.info('Global qsim args: ' + global_qsim_args)
+    logging.info('Global qsim args: ' + str(global_qsim_args))
     logging.info('Experiments: ' + str(list(zip(exp_names, exp_qsim_args))))
-    logging.info('Targets: ' + targets)
+    logging.info('Targets: ' + str(targets))
 
     target_dirs = set()
     for fulltarget in targets:
         _dir, _ = fulltarget.split('/')
         target_dirs.add(_dir)
 
+    logging.info('Target dirs: ' + str(list(target_dirs)))
+
     with open(args.name + '_submit.sh', 'w') as submit_fh:
         # Descend into subdirectories looking for Makefiles
         for dirname, dirs, files in os.walk('.'):
+            dirname = dirname.split('/')[-1]
             assert not (dirname in target_dirs and 'IGNORE' in files)
             if 'Makefile' in files and 'IGNORE' not in files and dirname in target_dirs:
                 logging.info('Found a relevant Makefile: %s' % join(dirname, 'Makefile'))
@@ -116,4 +115,4 @@ if __name__ == "__main__":
     _argv, _global_qsim_args, _exp_names, _exp_qsim_args, _targets = parse_qsim_parameters_from_argv(sys.argv)
     _args = _parser.parse_args(_argv[1:])
 
-    go(vars(_args), _global_qsim_args, _exp_names, _exp_qsim_args, _targets)
+    go(_args, _global_qsim_args, _exp_names, _exp_qsim_args, _targets)
