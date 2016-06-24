@@ -57,7 +57,7 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args,
                 logging.info('      Copying %s to new target dir' % (join(src_dir, 'input.sam')))
                 shutil.copy(join(src_dir, 'input.sam'), dest_dir)
                 assert os.path.exists(join(dest_dir, 'input.sam'))
-            fn = '.' + '_'.join([rule, global_name, name]) + '.sh'
+            fn = '.' + rule + '.sh'
             write_slurm(rule, fn, dr, mem_gb, hours,
                         ncores=1 if start_from == 'inputalign' else 8,
                         makefile=new_makefile_base,
