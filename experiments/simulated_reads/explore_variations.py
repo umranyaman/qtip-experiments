@@ -5,6 +5,7 @@
 import os
 import sys
 import logging
+import shutil
 from marcc_out import write_slurm
 
 join = os.path.join
@@ -12,7 +13,19 @@ mem_gb = 8
 hours = 8
 
 
-def handle_dir(dr, global_name, base_args, exp_names, exp_qsim_args, targets, submit_fh, use_scavenger=False):
+def mkdir_quiet(dr):
+    # Create output directory if needed
+    import errno
+    if not os.path.isdir(dr):
+        try:
+            os.makedirs(dr)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+
+
+def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args, targets, submit_fh,
+               use_scavenger=False):
     """
     Maybe this just creates a whole series of new Makefiles with only the SUBSAMPLING_ARGS line different?
     Then maybe the
@@ -29,14 +42,26 @@ def handle_dir(dr, global_name, base_args, exp_names, exp_qsim_args, targets, su
                 else:
                     mk_out.write(ln.replace('.out', '.%s.out' % nm).replace(',out', ',%s.out' % nm))
         for fulltarget in targets:
-            # TODO: set up destination directory with appropriate initial files
             targdir, rule = fulltarget.split('/')
             if targdir != dr:
                 continue
+            orig_rule = rule
             rule = rule.replace('.out', '.%s.out' % nm)
             logging.info('    Adding job to make target: %s/%s' % (dr, rule))
+            if start_from == 'inputalign':
+                dest_dir = join(dr, rule)
+                src_dir = join(dr, orig_rule)
+                mkdir_quiet(dest_dir)
+                assert os.path.exists(src_dir)
+                assert os.path.exists(join(src_dir, 'input.sam'))
+                logging.info('      Copying %s to new target dir' % (join(src_dir, 'input.sam')))
+                shutil.copy(join(src_dir, 'input.sam'), dest_dir)
+                assert os.path.exists(join(dest_dir, 'input.sam'))
             fn = '.' + '_'.join([rule, global_name, name]) + '.sh'
-            write_slurm(rule, fn, dr, mem_gb, hours, makefile=new_makefile_base, use_scavenger=use_scavenger)
+            write_slurm(rule, fn, dr, mem_gb, hours,
+                        ncores=1 if start_from == 'inputalign' else 8,
+                        makefile=new_makefile_base,
+                        use_scavenger=use_scavenger)
             submit_fh.write('pushd %s && sbatch %s && popd\n' % (dr, fn))
 
 
@@ -63,8 +88,8 @@ def go(args, global_qsim_args, exp_names, exp_qsim_args, targets):
             assert not (dirname in target_dirs and 'IGNORE' in files)
             if 'Makefile' in files and 'IGNORE' not in files and dirname in target_dirs:
                 logging.info('Found a relevant Makefile: %s' % join(dirname, 'Makefile'))
-                handle_dir(dirname, args.name, global_qsim_args, exp_names, exp_qsim_args,
-                           targets, submit_fh, use_scavenger=args.use_scavenger)
+                handle_dir(dirname, args.start_from, args.name, global_qsim_args, exp_names,
+                           exp_qsim_args, targets, submit_fh, use_scavenger=args.use_scavenger)
 
 
 def add_args(parser):

@@ -17,7 +17,7 @@ import time
 import re
 
 
-def write_slurm(rule, fn, dirname, mem_gb, hours, use_scavenger=False, makefile='Makefile'):
+def write_slurm(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False, makefile='Makefile'):
     my_mem_gb, my_hours = mem_gb, hours
     if 'r12' in rule and 'various_genomes' in rule:
         my_hours *= 2
@@ -43,7 +43,7 @@ def write_slurm(rule, fn, dirname, mem_gb, hours, use_scavenger=False, makefile=
         pbs_lns.append('#SBATCH --qos=scavenger')
     else:
         pbs_lns.append('#SBATCH --partition=shared')
-    pbs_lns.append('#SBATCH --cpus-per-task=8')
+    pbs_lns.append('#SBATCH --cpus-per-task=%d' % ncores)
     pbs_lns.append('#SBATCH --time=%d:00:00' % my_hours)
     pbs_lns.append('#SBATCH --output=' + fn + '.o')
     pbs_lns.append('#SBATCH --error=' + fn + '.e')
