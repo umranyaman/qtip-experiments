@@ -137,29 +137,29 @@ SUBSAMPLING_ARGS=--subsampling-series 0.01,0.03,0.05 --trials=5 --predict-for-tr
 
 , := ,
 
-$(eval $(call bt2ts,bt2s_hg,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(FA_HG),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s_mm,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(FA_MM),$(MM_INDEX)))
-$(eval $(call bt2ts,bt2s_zm,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(FA_ZM),$(ZM_INDEX)))
+$(eval $(call bt2ts,bt2s_hg,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(FA_HG),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2s_mm,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(FA_MM),$(MM_INDEX),out))
+$(eval $(call bt2ts,bt2s_zm,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(FA_ZM),$(ZM_INDEX),out))
 
-$(eval $(call bwamemts,bwamem_hg,1000000,1000000,$(SUBSAMPLING_ARGS),,$(FA_HG),$(HG_INDEX)))
-$(eval $(call bwamemts,bwamem_mm,1000000,1000000,$(SUBSAMPLING_ARGS),,$(FA_MM),$(MM_INDEX)))
-$(eval $(call bwamemts,bwamem_zm,1000000,1000000,$(SUBSAMPLING_ARGS),,$(FA_ZM),$(ZM_INDEX)))
+$(eval $(call bwamemts,bwamem_hg,1000000,1000000,$(SUBSAMPLING_ARGS),,$(FA_HG),$(HG_INDEX),out))
+$(eval $(call bwamemts,bwamem_mm,1000000,1000000,$(SUBSAMPLING_ARGS),,$(FA_MM),$(MM_INDEX),out))
+$(eval $(call bwamemts,bwamem_zm,1000000,1000000,$(SUBSAMPLING_ARGS),,$(FA_ZM),$(ZM_INDEX),out))
 
-$(eval $(call bt2ts,bt2s100_hg,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_HG),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s100_mm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX)))
-$(eval $(call bt2ts,bt2s100_zm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX)))
+$(eval $(call bt2ts,bt2s100_hg,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_HG),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2s100_mm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX),out))
+$(eval $(call bt2ts,bt2s100_zm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX),out))
 
-$(eval $(call bwamemts,bwamem100_hg,1000000,1000000,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_HG),$(HG_INDEX)))
-$(eval $(call bwamemts,bwamem100_mm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_MM),$(MM_INDEX)))
-$(eval $(call bwamemts,bwamem100_zm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_ZM),$(ZM_INDEX)))
+$(eval $(call bwamemts,bwamem100_hg,1000000,1000000,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_HG),$(HG_INDEX),out))
+$(eval $(call bwamemts,bwamem100_mm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_MM),$(MM_INDEX),out))
+$(eval $(call bwamemts,bwamem100_zm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_ZM),$(ZM_INDEX),out))
 
-$(eval $(call bt2ts,bt2s250_hg,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_HG),$(HG_INDEX)))
-$(eval $(call bt2ts,bt2s250_mm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX)))
-$(eval $(call bt2ts,bt2s250_zm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX)))
+$(eval $(call bt2ts,bt2s250_hg,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_HG),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2s250_mm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX),out))
+$(eval $(call bt2ts,bt2s250_zm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX),out))
 
-$(eval $(call bwamemts,bwamem250_hg,1000000,1000000,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_HG),$(HG_INDEX)))
-$(eval $(call bwamemts,bwamem250_mm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_MM),$(MM_INDEX)))
-$(eval $(call bwamemts,bwamem250_zm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_ZM),$(ZM_INDEX)))
+$(eval $(call bwamemts,bwamem250_hg,1000000,1000000,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_HG),$(HG_INDEX),out))
+$(eval $(call bwamemts,bwamem250_mm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_MM),$(MM_INDEX),out))
+$(eval $(call bwamemts,bwamem250_zm,1000000,1000000,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_ZM),$(ZM_INDEX),out))
 
 $(eval $(call mason_ill_unp_reads,ill_hg_100_1M,$(FA_HG),100,1000000,7724))
 $(eval $(call mason_ill_unp_reads,ill_hg_250_1M,$(FA_HG),250,1000000,7724))
