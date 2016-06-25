@@ -18,33 +18,33 @@ SNAP_TS_ARGS=--write-orig-mapq
 define snapts
 
 r0_$1_%.$10/DONE: r0_%.fq.gz
-	mkdir -p $$(dirname $$@).temp
+	mkdir -p $$(dirname $$(@)).temp
 	$$(QSIM) --ref $8 \
 	       --snap-exe $$(SNAP) --aligner snap \
 	       --index $9.snap \
 	       --sim-unp-min $2 \
 	       $$(SNAP_TS_ARGS) $$(TS_ARGS) $4 \
-	       --output-directory $$(dirname $$@) \
-	       --temp-directory $$(dirname $$@).temp \
+	       --output-directory $$(dirname $$(@)) \
+	       --temp-directory $$(dirname $$(@)).temp \
 	       --U $$< \
 	       -- $5 $$(SNAP_ARGS) -t 1 -- $6 -- $7
-	-$$(SNAP) 2> $$(dirname $$@)/snap_version
-	-$$(QSIM) --version > $$(dirname $$@)/qsim_version
-	touch $$@
+	-$$(SNAP) 2> $$(dirname $$(@))/snap_version
+	-$$(QSIM) --version > $$(dirname $$(@))/qsim_version
+	touch $$(@)
 
 r12_$1_%.$10/DONE: r1_%.fq.gz
-	mkdir -p $$(dirname $$@).temp
+	mkdir -p $$(dirname $$(@)).temp
 	$$(QSIM) --ref $8 \
 	       --snap-exe $$(SNAP) --aligner snap \
 	       --index $9.snap \
 	       --sim-conc-min $2 --sim-disc-min $3 --sim-bad-end-min $3 \
 	       $$(SNAP_TS_ARGS) $$(TS_ARGS) $4 \
-	       --output-directory $$(dirname $$@) \
-	       --temp-directory $$(dirname $$@).temp \
+	       --output-directory $$(dirname $$(@)) \
+	       --temp-directory $$(dirname $$(@)).temp \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
 	       -- $5 $$(SNAP_ARGS) -t 1 -- $6 -- $7
-	-$$(SNAP) 2> $$(dirname $$@)/snap_version
-	-$$(QSIM) --version > $$(dirname $$@)/qsim_version
-	touch $$@
+	-$$(SNAP) 2> $$(dirname $$(@))/snap_version
+	-$$(QSIM) --version > $$(dirname $$(@))/qsim_version
+	touch $$(@)
 
 endef
