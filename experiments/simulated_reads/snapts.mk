@@ -17,7 +17,7 @@ SNAP_TS_ARGS=--write-orig-mapq
 
 define snapts
 
-r0_$1_%.$10/DONE: r0_%.fq.gz
+r0_$1_%.$(10)/DONE: r0_%.fq.gz
 	mkdir -p $$(dirname $$(@)).temp
 	$$(QSIM) --ref $8 \
 	       --snap-exe $$(SNAP) --aligner snap \
@@ -32,7 +32,7 @@ r0_$1_%.$10/DONE: r0_%.fq.gz
 	-$$(QSIM) --version > $$(dirname $$(@))/qsim_version
 	touch $$(@)
 
-r12_$1_%.$10/DONE: r1_%.fq.gz
+r12_$1_%.$(10)/DONE: r1_%.fq.gz
 	mkdir -p $$(dirname $$(@)).temp
 	$$(QSIM) --ref $8 \
 	       --snap-exe $$(SNAP) --aligner snap \
