@@ -92,7 +92,8 @@ def go(args, global_qsim_args, exp_names, exp_qsim_args, targets):
             if 'Makefile' in files and 'IGNORE' not in files and dirname in target_dirs:
                 logging.info('Found a relevant Makefile: %s' % join(dirname, 'Makefile'))
                 handle_dir(dirname, args.start_from, args.name, global_qsim_args, exp_names,
-                           exp_qsim_args, targets, submit_fh, use_scavenger=args.use_scavenger)
+                           exp_qsim_args, targets, submit_fh, use_scavenger=args.use_scavenger,
+                           wet=args.wet)
 
 
 def add_args(parser):
