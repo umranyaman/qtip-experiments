@@ -25,7 +25,7 @@ def mkdir_quiet(dr):
 
 
 def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args, targets, submit_fh,
-               use_scavenger=False):
+               use_scavenger=False, wet=False):
     """
     Maybe this just creates a whole series of new Makefiles with only the SUBSAMPLING_ARGS line different?
     Then maybe the
@@ -62,7 +62,10 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args,
                         ncores=1,
                         makefile=new_makefile_base,
                         use_scavenger=use_scavenger)
-            submit_fh.write('pushd %s && sbatch %s && popd\n' % (dr, fn))
+            cmd = 'pushd %s && sbatch %s && popd' % (dr, fn)
+            submit_fh.write(cmd + '\n')
+            if wet:
+                os.system(cmd)
 
 
 def go(args, global_qsim_args, exp_names, exp_qsim_args, targets):
@@ -99,6 +102,8 @@ def add_args(parser):
                         help='What step to resume after.  options: "beginning" or "inputalign"')
     parser.add_argument('--use-scavenger', action='store_const', const=True, default=False,
                         help='Use the MARCC scavenger queue')
+    parser.add_argument('--wet', action='store_const', const=True, default=False,
+                        help='Submit the jobs as submission scripts are constructed')
 
 
 def parse_qsim_parameters_from_argv(argv):
