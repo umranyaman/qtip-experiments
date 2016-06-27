@@ -81,7 +81,6 @@ include ../bwamemts.mk
 include ../snapts.mk
 
 NREADS=4000000
-NREADS_NM=4M
 
 .PHONY: clean
 clean:
@@ -93,48 +92,48 @@ outs: outs_bt2 outs_bwamem
 
 .PHONY: outs_bt2
 outs_bt2: \
-    r0_bt2s_hg_mason_ill_hg_100_$(NREADS_NM).out/DONE \
-    r0_bt2s_hg_mason_ill_hg_250_$(NREADS_NM).out/DONE \
-    r0_bt2s_mm_mason_ill_mm_100_$(NREADS_NM).out/DONE \
-    r0_bt2s_mm_mason_ill_mm_250_$(NREADS_NM).out/DONE \
-    r0_bt2s_zm_mason_ill_zm_100_$(NREADS_NM).out/DONE \
-    r0_bt2s_zm_mason_ill_zm_250_$(NREADS_NM).out/DONE \
-    r12_bt2s100_hg_mason_ill_hg_100_$(NREADS_NM).out/DONE \
-    r12_bt2s250_hg_mason_ill_hg_250_$(NREADS_NM).out/DONE \
-    r12_bt2s100_mm_mason_ill_mm_100_$(NREADS_NM).out/DONE \
-    r12_bt2s250_mm_mason_ill_mm_250_$(NREADS_NM).out/DONE \
-    r12_bt2s100_zm_mason_ill_zm_100_$(NREADS_NM).out/DONE \
-    r12_bt2s250_zm_mason_ill_zm_250_$(NREADS_NM).out/DONE
+    r0_bt2s_hg_mason_ill_hg_100.out/DONE \
+    r0_bt2s_hg_mason_ill_hg_250.out/DONE \
+    r0_bt2s_mm_mason_ill_mm_100.out/DONE \
+    r0_bt2s_mm_mason_ill_mm_250.out/DONE \
+    r0_bt2s_zm_mason_ill_zm_100.out/DONE \
+    r0_bt2s_zm_mason_ill_zm_250.out/DONE \
+    r12_bt2s100_hg_mason_ill_hg_100.out/DONE \
+    r12_bt2s250_hg_mason_ill_hg_250.out/DONE \
+    r12_bt2s100_mm_mason_ill_mm_100.out/DONE \
+    r12_bt2s250_mm_mason_ill_mm_250.out/DONE \
+    r12_bt2s100_zm_mason_ill_zm_100.out/DONE \
+    r12_bt2s250_zm_mason_ill_zm_250.out/DONE
 
 .PHONY: outs_bwamem
 outs_bwamem: \
-    r0_bwamem_hg_mason_ill_hg_100_$(NREADS_NM).out/DONE \
-    r0_bwamem_hg_mason_ill_hg_250_$(NREADS_NM).out/DONE \
-    r0_bwamem_mm_mason_ill_mm_100_$(NREADS_NM).out/DONE \
-    r0_bwamem_mm_mason_ill_mm_250_$(NREADS_NM).out/DONE \
-    r0_bwamem_zm_mason_ill_zm_100_$(NREADS_NM).out/DONE \
-    r0_bwamem_zm_mason_ill_zm_250_$(NREADS_NM).out/DONE \
-    r12_bwamem100_hg_mason_ill_hg_100_$(NREADS_NM).out/DONE \
-    r12_bwamem250_hg_mason_ill_hg_250_$(NREADS_NM).out/DONE \
-    r12_bwamem100_mm_mason_ill_mm_100_$(NREADS_NM).out/DONE \
-    r12_bwamem250_mm_mason_ill_mm_250_$(NREADS_NM).out/DONE \
-    r12_bwamem100_zm_mason_ill_zm_100_$(NREADS_NM).out/DONE \
-    r12_bwamem250_zm_mason_ill_zm_250_$(NREADS_NM).out/DONE
+    r0_bwamem_hg_mason_ill_hg_100.out/DONE \
+    r0_bwamem_hg_mason_ill_hg_250.out/DONE \
+    r0_bwamem_mm_mason_ill_mm_100.out/DONE \
+    r0_bwamem_mm_mason_ill_mm_250.out/DONE \
+    r0_bwamem_zm_mason_ill_zm_100.out/DONE \
+    r0_bwamem_zm_mason_ill_zm_250.out/DONE \
+    r12_bwamem100_hg_mason_ill_hg_100.out/DONE \
+    r12_bwamem250_hg_mason_ill_hg_250.out/DONE \
+    r12_bwamem100_mm_mason_ill_mm_100.out/DONE \
+    r12_bwamem250_mm_mason_ill_mm_250.out/DONE \
+    r12_bwamem100_zm_mason_ill_zm_100.out/DONE \
+    r12_bwamem250_zm_mason_ill_zm_250.out/DONE
 
 .PHONY: reads
 reads: \
-    r0_mason_ill_hg_100_$(NREADS_NM).fq.gz \
-    r0_mason_ill_hg_250_$(NREADS_NM).fq.gz \
-    r0_mason_ill_mm_100_$(NREADS_NM).fq.gz \
-    r0_mason_ill_mm_250_$(NREADS_NM).fq.gz \
-    r0_mason_ill_zm_100_$(NREADS_NM).fq.gz \
-    r0_mason_ill_zm_250_$(NREADS_NM).fq.gz \
-    r1_mason_ill_hg_100_$(NREADS_NM).fq.gz \
-    r1_mason_ill_hg_250_$(NREADS_NM).fq.gz \
-    r1_mason_ill_mm_100_$(NREADS_NM).fq.gz \
-    r1_mason_ill_mm_250_$(NREADS_NM).fq.gz \
-    r1_mason_ill_zm_100_$(NREADS_NM).fq.gz \
-    r1_mason_ill_zm_250_$(NREADS_NM).fq.gz
+    r0_mason_ill_hg_100.fq.gz \
+    r0_mason_ill_hg_250.fq.gz \
+    r0_mason_ill_mm_100.fq.gz \
+    r0_mason_ill_mm_250.fq.gz \
+    r0_mason_ill_zm_100.fq.gz \
+    r0_mason_ill_zm_250.fq.gz \
+    r1_mason_ill_hg_100.fq.gz \
+    r1_mason_ill_hg_250.fq.gz \
+    r1_mason_ill_mm_100.fq.gz \
+    r1_mason_ill_mm_250.fq.gz \
+    r1_mason_ill_zm_100.fq.gz \
+    r1_mason_ill_zm_250.fq.gz
 
 SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
@@ -164,20 +163,20 @@ $(eval $(call bwamemts,bwamem250_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 7
 $(eval $(call bwamemts,bwamem250_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_MM),$(MM_INDEX),out))
 $(eval $(call bwamemts,bwamem250_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_ZM),$(ZM_INDEX),out))
 
-$(eval $(call mason_ill_unp_reads,ill_hg_100_$(NREADS_NM),$(FA_HG),100,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_hg_250_$(NREADS_NM),$(FA_HG),250,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_hg_100,$(FA_HG),100,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_hg_250,$(FA_HG),250,$(NREADS),7724))
 
-$(eval $(call mason_ill_unp_reads,ill_mm_100_$(NREADS_NM),$(FA_MM),100,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_mm_250_$(NREADS_NM),$(FA_MM),250,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_mm_100,$(FA_MM),100,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_mm_250,$(FA_MM),250,$(NREADS),7724))
 
-$(eval $(call mason_ill_unp_reads,ill_zm_100_$(NREADS_NM),$(FA_ZM),100,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_zm_250_$(NREADS_NM),$(FA_ZM),250,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_zm_100,$(FA_ZM),100,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_zm_250,$(FA_ZM),250,$(NREADS),7724))
 
-$(eval $(call mason_ill_pair_reads,ill_hg_100_$(NREADS_NM),$(FA_HG),100,$(NREADS),300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_hg_250_$(NREADS_NM),$(FA_HG),250,$(NREADS),750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg_100,$(FA_HG),100,$(NREADS),300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg_250,$(FA_HG),250,$(NREADS),750,250,7724))
 
-$(eval $(call mason_ill_pair_reads,ill_mm_100_$(NREADS_NM),$(FA_MM),100,$(NREADS),300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_mm_250_$(NREADS_NM),$(FA_MM),250,$(NREADS),750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_mm_100,$(FA_MM),100,$(NREADS),300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_mm_250,$(FA_MM),250,$(NREADS),750,250,7724))
 
-$(eval $(call mason_ill_pair_reads,ill_zm_100_$(NREADS_NM),$(FA_ZM),100,$(NREADS),300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_zm_250_$(NREADS_NM),$(FA_ZM),250,$(NREADS),750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_zm_100,$(FA_ZM),100,$(NREADS),300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_zm_250,$(FA_ZM),250,$(NREADS),750,250,7724))

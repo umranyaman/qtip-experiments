@@ -66,7 +66,6 @@ include ../bwamemts.mk
 include ../snapts.mk
 
 NREADS=4000000
-NREADS_NM=4M
 
 .PHONY: clean
 clean:
@@ -78,35 +77,35 @@ outs: outs_bt2 outs_bwamem outs_snap
 
 .PHONY: outs_bt2
 outs_bt2: \
-    r0_bt2s_mason_ill_100_$(NREADS_NM).out/DONE \
-    r0_bt2s_mason_ill_250_$(NREADS_NM).out/DONE \
-    r12_bt2s100_mason_ill_100_$(NREADS_NM).out/DONE \
-    r12_bt2s250_mason_ill_250_$(NREADS_NM).out/DONE \
-    r0_bt2sl_mason_ill_100_$(NREADS_NM).out/DONE \
-    r0_bt2sl_mason_ill_250_$(NREADS_NM).out/DONE \
-    r12_bt2sl100_mason_ill_100_$(NREADS_NM).out/DONE \
-    r12_bt2sl250_mason_ill_250_$(NREADS_NM).out/DONE
+    r0_bt2s_mason_ill_100.out/DONE \
+    r0_bt2s_mason_ill_250.out/DONE \
+    r12_bt2s100_mason_ill_100.out/DONE \
+    r12_bt2s250_mason_ill_250.out/DONE \
+    r0_bt2sl_mason_ill_100.out/DONE \
+    r0_bt2sl_mason_ill_250.out/DONE \
+    r12_bt2sl100_mason_ill_100.out/DONE \
+    r12_bt2sl250_mason_ill_250.out/DONE
 
 .PHONY: outs_bwamem
 outs_bwamem: \
-    r0_bwamem_mason_ill_100_$(NREADS_NM).out/DONE \
-    r0_bwamem_mason_ill_250_$(NREADS_NM).out/DONE \
-    r12_bwamem100_mason_ill_100_$(NREADS_NM).out/DONE \
-    r12_bwamem250_mason_ill_250_$(NREADS_NM).out/DONE
+    r0_bwamem_mason_ill_100.out/DONE \
+    r0_bwamem_mason_ill_250.out/DONE \
+    r12_bwamem100_mason_ill_100.out/DONE \
+    r12_bwamem250_mason_ill_250.out/DONE
 
 .PHONY: outs_snap
 outs_snap: \
-    r0_snap_mason_ill_100_$(NREADS_NM).out/DONE \
-    r0_snap_mason_ill_250_$(NREADS_NM).out/DONE \
-    r12_snap100_mason_ill_100_$(NREADS_NM).out/DONE \
-    r12_snap250_mason_ill_250_$(NREADS_NM).out/DONE
+    r0_snap_mason_ill_100.out/DONE \
+    r0_snap_mason_ill_250.out/DONE \
+    r12_snap100_mason_ill_100.out/DONE \
+    r12_snap250_mason_ill_250.out/DONE
 
 .PHONY: reads
 reads: \
-    r0_mason_ill_100_$(NREADS_NM).fq.gz \
-    r0_mason_ill_250_$(NREADS_NM).fq.gz \
-    r1_mason_ill_100_$(NREADS_NM).fq.gz \
-    r1_mason_ill_250_$(NREADS_NM).fq.gz
+    r0_mason_ill_100.fq.gz \
+    r0_mason_ill_250.fq.gz \
+    r1_mason_ill_100.fq.gz \
+    r1_mason_ill_250.fq.gz
 
 SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
@@ -130,8 +129,8 @@ $(eval $(call snapts,snap,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,,$(HG_FASTA)
 $(eval $(call snapts,snap100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,-s 100 300,$(HG_FASTA),$(HG_INDEX),out))
 $(eval $(call snapts,snap250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,-s 250 750,$(HG_FASTA),$(HG_INDEX),out))
 
-$(eval $(call mason_ill_unp_reads,ill_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_100,$(HG_FASTA),100,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_250,$(HG_FASTA),250,$(NREADS),7724))
 
-$(eval $(call mason_ill_pair_reads,ill_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_100,$(HG_FASTA),100,$(NREADS),300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_250,$(HG_FASTA),250,$(NREADS),750,250,7724))

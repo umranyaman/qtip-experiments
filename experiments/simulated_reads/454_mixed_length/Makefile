@@ -43,7 +43,6 @@ include ../mason.mk
 include ../bowtie2ts.mk
 
 NREADS=4000000
-NREADS_NM=4M
 
 .PHONY: clean
 clean:
@@ -55,12 +54,12 @@ outs: outs_bt2
 
 .PHONY: outs_bt2
 outs_bt2: \
-    r0_bt2s_mason_fff_50to500_$(NREADS_NM).out/DONE \
-    r0_bt2sl_mason_fff_50to500_$(NREADS_NM).out/DONE
+    r0_bt2s_mason_fff_50to500.out/DONE \
+    r0_bt2sl_mason_fff_50to500.out/DONE
 
 .PHONY: reads
 reads: \
-    r0_mason_fff_50to500_$(NREADS_NM).fq.gz
+    r0_mason_fff_50to500.fq.gz
 
 SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
@@ -70,4 +69,4 @@ SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-traini
 $(eval $(call bt2ts,bt2s,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out))
 $(eval $(call bt2ts,bt2sl,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
 
-$(eval $(call mason_fff_unp_reads,fff_50to500_$(NREADS_NM),$(HG_FASTA),275,225,$(NREADS),7724))
+$(eval $(call mason_fff_unp_reads,fff_50to500,$(HG_FASTA),275,225,$(NREADS),7724))

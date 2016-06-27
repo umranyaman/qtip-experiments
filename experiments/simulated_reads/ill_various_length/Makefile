@@ -43,7 +43,6 @@ include ../mason.mk
 include ../bowtie2ts.mk
 
 NREADS=4000000
-NREADS_NM=4M
 
 .PHONY: outs
 outs: outs_bt2
@@ -58,42 +57,42 @@ outs: outs_unpaired outs_paired
 
 .PHONY: outs_unpaired
 outs_unpaired: \
-    r0_bt2s_mason_ill_50_$(NREADS_NM).out/DONE \
-    r0_bt2s_mason_ill_100_$(NREADS_NM).out/DONE \
-    r0_bt2s_mason_ill_150_$(NREADS_NM).out/DONE \
-    r0_bt2s_mason_ill_250_$(NREADS_NM).out/DONE \
-    r0_bt2s_mason_ill_500_$(NREADS_NM).out/DONE \
-    r0_bt2sl_mason_ill_50_$(NREADS_NM).out/DONE \
-    r0_bt2sl_mason_ill_100_$(NREADS_NM).out/DONE \
-    r0_bt2sl_mason_ill_150_$(NREADS_NM).out/DONE \
-    r0_bt2sl_mason_ill_250_$(NREADS_NM).out/DONE \
-    r0_bt2sl_mason_ill_500_$(NREADS_NM).out/DONE
+    r0_bt2s_mason_ill_50.out/DONE \
+    r0_bt2s_mason_ill_100.out/DONE \
+    r0_bt2s_mason_ill_150.out/DONE \
+    r0_bt2s_mason_ill_250.out/DONE \
+    r0_bt2s_mason_ill_500.out/DONE \
+    r0_bt2sl_mason_ill_50.out/DONE \
+    r0_bt2sl_mason_ill_100.out/DONE \
+    r0_bt2sl_mason_ill_150.out/DONE \
+    r0_bt2sl_mason_ill_250.out/DONE \
+    r0_bt2sl_mason_ill_500.out/DONE
 
 .PHONY: outs_paired
 outs_paired: \
-    r12_bt2s50_mason_ill_50_$(NREADS_NM).out/DONE \
-    r12_bt2s100_mason_ill_100_$(NREADS_NM).out/DONE \
-    r12_bt2s150_mason_ill_150_$(NREADS_NM).out/DONE \
-    r12_bt2s250_mason_ill_250_$(NREADS_NM).out/DONE \
-    r12_bt2s500_mason_ill_500_$(NREADS_NM).out/DONE \
-    r12_bt2sl50_mason_ill_50_$(NREADS_NM).out/DONE \
-    r12_bt2sl100_mason_ill_100_$(NREADS_NM).out/DONE \
-    r12_bt2sl150_mason_ill_150_$(NREADS_NM).out/DONE \
-    r12_bt2sl250_mason_ill_250_$(NREADS_NM).out/DONE \
-    r12_bt2sl500_mason_ill_500_$(NREADS_NM).out/DONE
+    r12_bt2s50_mason_ill_50.out/DONE \
+    r12_bt2s100_mason_ill_100.out/DONE \
+    r12_bt2s150_mason_ill_150.out/DONE \
+    r12_bt2s250_mason_ill_250.out/DONE \
+    r12_bt2s500_mason_ill_500.out/DONE \
+    r12_bt2sl50_mason_ill_50.out/DONE \
+    r12_bt2sl100_mason_ill_100.out/DONE \
+    r12_bt2sl150_mason_ill_150.out/DONE \
+    r12_bt2sl250_mason_ill_250.out/DONE \
+    r12_bt2sl500_mason_ill_500.out/DONE
 
 .PHONY: reads
 reads: \
-    r0_mason_ill_50_$(NREADS_NM).fq.gz  \
-    r0_mason_ill_100_$(NREADS_NM).fq.gz \
-    r0_mason_ill_150_$(NREADS_NM).fq.gz \
-    r0_mason_ill_250_$(NREADS_NM).fq.gz \
-    r0_mason_ill_500_$(NREADS_NM).fq.gz \
-    r1_mason_ill_50_$(NREADS_NM).fq.gz  \
-    r1_mason_ill_100_$(NREADS_NM).fq.gz \
-    r1_mason_ill_150_$(NREADS_NM).fq.gz \
-    r1_mason_ill_250_$(NREADS_NM).fq.gz \
-    r1_mason_ill_500_$(NREADS_NM).fq.gz
+    r0_mason_ill_50.fq.gz  \
+    r0_mason_ill_100.fq.gz \
+    r0_mason_ill_150.fq.gz \
+    r0_mason_ill_250.fq.gz \
+    r0_mason_ill_500.fq.gz \
+    r1_mason_ill_50.fq.gz  \
+    r1_mason_ill_100.fq.gz \
+    r1_mason_ill_150.fq.gz \
+    r1_mason_ill_250.fq.gz \
+    r1_mason_ill_500.fq.gz
 
 SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
@@ -114,14 +113,14 @@ $(eval $(call bt2ts,bt2sl250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1
 $(eval $(call bt2ts,bt2s500,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 1000 -X 2000 --sensitive,$(HG_FASTA),$(HG_INDEX),out))
 $(eval $(call bt2ts,bt2sl500,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 1000 -X 2000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
 
-$(eval $(call mason_ill_unp_reads,ill_50_$(NREADS_NM),$(HG_FASTA),50,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_150_$(NREADS_NM),$(HG_FASTA),150,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_500_$(NREADS_NM),$(HG_FASTA),500,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_50,$(HG_FASTA),50,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_100,$(HG_FASTA),100,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_150,$(HG_FASTA),150,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_250,$(HG_FASTA),250,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_500,$(HG_FASTA),500,$(NREADS),7724))
 
-$(eval $(call mason_ill_pair_reads,ill_50_$(NREADS_NM),$(HG_FASTA),50,$(NREADS),150,50,7724))
-$(eval $(call mason_ill_pair_reads,ill_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_150_$(NREADS_NM),$(HG_FASTA),150,$(NREADS),450,150,7724))
-$(eval $(call mason_ill_pair_reads,ill_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),750,250,7724))
-$(eval $(call mason_ill_pair_reads,ill_500_$(NREADS_NM),$(HG_FASTA),500,$(NREADS),1500,500,7724))
+$(eval $(call mason_ill_pair_reads,ill_50,$(HG_FASTA),50,$(NREADS),150,50,7724))
+$(eval $(call mason_ill_pair_reads,ill_100,$(HG_FASTA),100,$(NREADS),300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_150,$(HG_FASTA),150,$(NREADS),450,150,7724))
+$(eval $(call mason_ill_pair_reads,ill_250,$(HG_FASTA),250,$(NREADS),750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_500,$(HG_FASTA),500,$(NREADS),1500,500,7724))

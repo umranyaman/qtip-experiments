@@ -47,7 +47,6 @@ include ../art.mk
 include ../bowtie2ts.mk
 
 NREADS=4000000
-NREADS_NM=4M
 
 .PHONY: clean
 clean:
@@ -59,36 +58,36 @@ outs: outs_unpaired outs_paired
 
 .PHONY: outs_unpaired
 outs_unpaired: \
-    r0_bt2s_mason_ill_hg_100_$(NREADS_NM).out/DONE \
-    r0_bt2s_mason_ill_hg_250_$(NREADS_NM).out/DONE \
-    r0_bt2s_wgsim_ill_hg_100_$(NREADS_NM).out/DONE \
-    r0_bt2s_wgsim_ill_hg_250_$(NREADS_NM).out/DONE \
-    r0_bt2s_art_ill_hg_100_$(NREADS_NM).out/DONE \
-    r0_bt2s_art_ill_hg_250_$(NREADS_NM).out/DONE
+    r0_bt2s_mason_ill_hg_100.out/DONE \
+    r0_bt2s_mason_ill_hg_250.out/DONE \
+    r0_bt2s_wgsim_ill_hg_100.out/DONE \
+    r0_bt2s_wgsim_ill_hg_250.out/DONE \
+    r0_bt2s_art_ill_hg_100.out/DONE \
+    r0_bt2s_art_ill_hg_250.out/DONE
 
 .PHONY: outs_paired
 outs_paired: \
-    r12_bt2s100_mason_ill_hg_100_$(NREADS_NM).out/DONE \
-    r12_bt2s250_mason_ill_hg_250_$(NREADS_NM).out/DONE \
-    r12_bt2s100_wgsim_ill_hg_100_$(NREADS_NM).out/DONE \
-    r12_bt2s250_wgsim_ill_hg_250_$(NREADS_NM).out/DONE \
-    r12_bt2s100_art_ill_hg_100_$(NREADS_NM).out/DONE \
-    r12_bt2s250_art_ill_hg_250_$(NREADS_NM).out/DONE
+    r12_bt2s100_mason_ill_hg_100.out/DONE \
+    r12_bt2s250_mason_ill_hg_250.out/DONE \
+    r12_bt2s100_wgsim_ill_hg_100.out/DONE \
+    r12_bt2s250_wgsim_ill_hg_250.out/DONE \
+    r12_bt2s100_art_ill_hg_100.out/DONE \
+    r12_bt2s250_art_ill_hg_250.out/DONE
 
 .PHONY: reads
 reads: \
-    r0_mason_ill_hg_100_$(NREADS_NM).fq.gz \
-    r0_mason_ill_hg_250_$(NREADS_NM).fq.gz \
-    r0_wgsim_ill_hg_100_$(NREADS_NM).fq.gz \
-    r0_wgsim_ill_hg_250_$(NREADS_NM).fq.gz \
-    r0_art_ill_hg_100_$(NREADS_NM).fq.gz \
-    r0_art_ill_hg_250_$(NREADS_NM).fq.gz \
-    r1_mason_ill_hg_100_$(NREADS_NM).fq.gz \
-    r1_mason_ill_hg_250_$(NREADS_NM).fq.gz \
-    r1_wgsim_ill_hg_100_$(NREADS_NM).fq.gz \
-    r1_wgsim_ill_hg_250_$(NREADS_NM).fq.gz \
-    r1_art_ill_hg_100_$(NREADS_NM).fq.gz \
-    r1_art_ill_hg_250_$(NREADS_NM).fq.gz
+    r0_mason_ill_hg_100.fq.gz \
+    r0_mason_ill_hg_250.fq.gz \
+    r0_wgsim_ill_hg_100.fq.gz \
+    r0_wgsim_ill_hg_250.fq.gz \
+    r0_art_ill_hg_100.fq.gz \
+    r0_art_ill_hg_250.fq.gz \
+    r1_mason_ill_hg_100.fq.gz \
+    r1_mason_ill_hg_250.fq.gz \
+    r1_wgsim_ill_hg_100.fq.gz \
+    r1_wgsim_ill_hg_250.fq.gz \
+    r1_art_ill_hg_100.fq.gz \
+    r1_art_ill_hg_250.fq.gz
 
 SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
@@ -102,29 +101,29 @@ $(eval $(call bt2ts,bt2s250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 10
 #
 # Make the read rules
 #
-$(eval $(call mason_ill_unp_reads,ill_hg_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_hg_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),7724))
-$(eval $(call wgsim_ill_unp_reads,ill_hg_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),7724))
-$(eval $(call wgsim_ill_unp_reads,ill_hg_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_hg_100,$(HG_FASTA),100,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_hg_250,$(HG_FASTA),250,$(NREADS),7724))
+$(eval $(call wgsim_ill_unp_reads,ill_hg_100,$(HG_FASTA),100,$(NREADS),7724))
+$(eval $(call wgsim_ill_unp_reads,ill_hg_250,$(HG_FASTA),250,$(NREADS),7724))
 
-$(eval $(call mason_ill_pair_reads,ill_hg_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),300,25,7724))
-$(eval $(call mason_ill_pair_reads,ill_hg_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),750,75,7724))
-$(eval $(call wgsim_ill_pair_reads,ill_hg_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),300,25,7724))
-$(eval $(call wgsim_ill_pair_reads,ill_hg_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),750,75,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg_100,$(HG_FASTA),100,$(NREADS),300,25,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg_250,$(HG_FASTA),250,$(NREADS),750,75,7724))
+$(eval $(call wgsim_ill_pair_reads,ill_hg_100,$(HG_FASTA),100,$(NREADS),300,25,7724))
+$(eval $(call wgsim_ill_pair_reads,ill_hg_250,$(HG_FASTA),250,$(NREADS),750,75,7724))
 
 # For Art, we have to convert desired # reads to a fold coverage.
 # Note: for paired-end, we're specifying *fragment* coverage.
 
 # >>> 4000000 * 100 / 3.1e9
 # 0.12903225806451613
-$(eval $(call art_ill_unp_reads,ill_hg_100_$(NREADS_NM),$(HG_FASTA),100,0.129,7724))
+$(eval $(call art_ill_unp_reads,ill_hg_100,$(HG_FASTA),100,0.129,7724))
 # >>> 4000000 * 250 / 3.1e9
 # 0.3225806451612903
-$(eval $(call art_ill_unp_reads,ill_hg_250_$(NREADS_NM),$(HG_FASTA),250,0.323,7724))
+$(eval $(call art_ill_unp_reads,ill_hg_250,$(HG_FASTA),250,0.323,7724))
 
 # >>> 4000000 * 300 / 3.1e9
 # 0.3870967741935484
-$(eval $(call art_ill_pair_reads,ill_hg_100_$(NREADS_NM),$(HG_FASTA),100,0.387,300,25,7724))
+$(eval $(call art_ill_pair_reads,ill_hg_100,$(HG_FASTA),100,0.387,300,25,7724))
 # >>> 4000000 * 750 / 3.1e9
 # 0.967741935483871
-$(eval $(call art_ill_pair_reads,ill_hg_250_$(NREADS_NM),$(HG_FASTA),250,0.968,750,75,7724))
+$(eval $(call art_ill_pair_reads,ill_hg_250,$(HG_FASTA),250,0.968,750,75,7724))
