@@ -18,7 +18,7 @@ import time
 
 idx = 0
 mem_gb = 64
-hours = 8
+hours = 16
 
 
 def mkdir_quiet(dr):
