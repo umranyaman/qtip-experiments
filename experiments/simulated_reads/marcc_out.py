@@ -76,7 +76,7 @@ def handle_dir(dirname, re_out, mem_gb, hours, dry_run=True, use_scavenger=False
                         # delete it???
                         pass
                     fn = '.' + target + '.sh'
-                    write_slurm(target, fn, dirname, mem_gb, hours, use_scavenger)
+                    write_slurm(target, fn, dirname, mem_gb, hours, use_scavenger=use_scavenger)
                     print('pushd %s && sbatch %s && popd' % (dirname, fn))
                     if not dry_run:
                         os.system('cd %s && sbatch %s' % (dirname, fn))
