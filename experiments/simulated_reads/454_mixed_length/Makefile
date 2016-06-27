@@ -1,4 +1,4 @@
-#!/bin/sh
+#!gmake
 
 # Generate simulated FASTQ files for Illumina-like reads, both
 # unpaired and paired-end.  We generate several files, each for a
@@ -42,6 +42,9 @@ $(BOWTIE2):
 include ../mason.mk
 include ../bowtie2ts.mk
 
+NREADS=4000000
+NREADS_NM=4M
+
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
@@ -52,19 +55,19 @@ outs: outs_bt2
 
 .PHONY: outs_bt2
 outs_bt2: \
-    r0_bt2s_mason_fff_50to500_1M.out/DONE \
-    r0_bt2sl_mason_fff_50to500_1M.out/DONE
+    r0_bt2s_mason_fff_50to500_$(NREADS_NM).out/DONE \
+    r0_bt2sl_mason_fff_50to500_$(NREADS_NM).out/DONE
 
 .PHONY: reads
 reads: \
-    r0_mason_fff_50to500_1M.fq.gz
+    r0_mason_fff_50to500_$(NREADS_NM).fq.gz
 
-SUBSAMPLING_ARGS=--subsampling-series 0.01,0.03,0.05 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy --try-exclude-mapq
+SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2sl,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2s,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2sl,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
 
-$(eval $(call mason_fff_unp_reads,fff_50to500_1M,$(HG_FASTA),275,225,1000000,7724))
+$(eval $(call mason_fff_unp_reads,fff_50to500_$(NREADS_NM),$(HG_FASTA),275,225,$(NREADS),7724))

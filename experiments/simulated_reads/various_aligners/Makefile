@@ -1,4 +1,4 @@
-#!/bin/sh
+#!gmake
 
 # Generate simulated FASTQ files for Illumina-like reads, both
 # unpaired and paired-end.  We generate several files, each for a
@@ -65,10 +65,12 @@ include ../bowtie2ts.mk
 include ../bwamemts.mk
 include ../snapts.mk
 
+NREADS=4000000
+NREADS_NM=4M
+
 .PHONY: clean
 clean:
 	rm -f *.fq.gz
-	rm -f *.mkb
 	rm -rf *.out
 
 .PHONY: outs
@@ -76,60 +78,60 @@ outs: outs_bt2 outs_bwamem outs_snap
 
 .PHONY: outs_bt2
 outs_bt2: \
-    r0_bt2s_mason_ill_100_1M.out/DONE \
-    r0_bt2s_mason_ill_250_1M.out/DONE \
-    r12_bt2s100_mason_ill_100_1M.out/DONE \
-    r12_bt2s250_mason_ill_250_1M.out/DONE \
-    r0_bt2sl_mason_ill_100_1M.out/DONE \
-    r0_bt2sl_mason_ill_250_1M.out/DONE \
-    r12_bt2sl100_mason_ill_100_1M.out/DONE \
-    r12_bt2sl250_mason_ill_250_1M.out/DONE
+    r0_bt2s_mason_ill_100_$(NREADS_NM).out/DONE \
+    r0_bt2s_mason_ill_250_$(NREADS_NM).out/DONE \
+    r12_bt2s100_mason_ill_100_$(NREADS_NM).out/DONE \
+    r12_bt2s250_mason_ill_250_$(NREADS_NM).out/DONE \
+    r0_bt2sl_mason_ill_100_$(NREADS_NM).out/DONE \
+    r0_bt2sl_mason_ill_250_$(NREADS_NM).out/DONE \
+    r12_bt2sl100_mason_ill_100_$(NREADS_NM).out/DONE \
+    r12_bt2sl250_mason_ill_250_$(NREADS_NM).out/DONE
 
 .PHONY: outs_bwamem
 outs_bwamem: \
-    r0_bwamem_mason_ill_100_1M.out/DONE \
-    r0_bwamem_mason_ill_250_1M.out/DONE \
-    r12_bwamem100_mason_ill_100_1M.out/DONE \
-    r12_bwamem250_mason_ill_250_1M.out/DONE
+    r0_bwamem_mason_ill_100_$(NREADS_NM).out/DONE \
+    r0_bwamem_mason_ill_250_$(NREADS_NM).out/DONE \
+    r12_bwamem100_mason_ill_100_$(NREADS_NM).out/DONE \
+    r12_bwamem250_mason_ill_250_$(NREADS_NM).out/DONE
 
 .PHONY: outs_snap
 outs_snap: \
-    r0_snap_mason_ill_100_1M.out/DONE \
-    r0_snap_mason_ill_250_1M.out/DONE \
-    r12_snap100_mason_ill_100_1M.out/DONE \
-    r12_snap250_mason_ill_250_1M.out/DONE
+    r0_snap_mason_ill_100_$(NREADS_NM).out/DONE \
+    r0_snap_mason_ill_250_$(NREADS_NM).out/DONE \
+    r12_snap100_mason_ill_100_$(NREADS_NM).out/DONE \
+    r12_snap250_mason_ill_250_$(NREADS_NM).out/DONE
 
 .PHONY: reads
 reads: \
-    r0_mason_ill_100_1M.fq.gz \
-    r0_mason_ill_250_1M.fq.gz \
-    r1_mason_ill_100_1M.fq.gz \
-    r1_mason_ill_250_1M.fq.gz
+    r0_mason_ill_100_$(NREADS_NM).fq.gz \
+    r0_mason_ill_250_$(NREADS_NM).fq.gz \
+    r1_mason_ill_100_$(NREADS_NM).fq.gz \
+    r1_mason_ill_250_$(NREADS_NM).fq.gz
 
-SUBSAMPLING_ARGS=--subsampling-series 0.01,0.03,0.05 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy --try-exclude-mapq
+SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2sl,1000000,1000000,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2s100,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2sl100,1000000,1000000,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2s250,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2sl250,1000000,1000000,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2s,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2sl,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2s100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2sl100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2s250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2sl250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
 
 , := ,
 
-$(eval $(call bwamemts,bwamem,1000000,1000000,$(SUBSAMPLING_ARGS),,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bwamemts,bwamem100,1000000,1000000,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bwamemts,bwamem250,1000000,1000000,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bwamemts,bwamem,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bwamemts,bwamem100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 300$(,)25,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bwamemts,bwamem250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(HG_FASTA),$(HG_INDEX),out))
 
-$(eval $(call snapts,snap,1000000,1000000,$(SUBSAMPLING_ARGS),,,,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call snapts,snap100,1000000,1000000,$(SUBSAMPLING_ARGS),,,-s 100 300,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call snapts,snap250,1000000,1000000,$(SUBSAMPLING_ARGS),,,-s 250 750,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call snapts,snap,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call snapts,snap100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,-s 100 300,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call snapts,snap250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,-s 250 750,$(HG_FASTA),$(HG_INDEX),out))
 
-$(eval $(call mason_ill_unp_reads,ill_100_1M,$(HG_FASTA),100,1000000,7724))
-$(eval $(call mason_ill_unp_reads,ill_250_1M,$(HG_FASTA),250,1000000,7724))
+$(eval $(call mason_ill_unp_reads,ill_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),7724))
 
-$(eval $(call mason_ill_pair_reads,ill_100_1M,$(HG_FASTA),100,1000000,300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_250_1M,$(HG_FASTA),250,1000000,750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_100_$(NREADS_NM),$(HG_FASTA),100,$(NREADS),300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_250_$(NREADS_NM),$(HG_FASTA),250,$(NREADS),750,250,7724))
