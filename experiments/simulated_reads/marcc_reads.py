@@ -19,6 +19,7 @@ import time
 idx = 0
 mem_gb = 64
 hours = 16
+jobs = 0
 
 
 def mkdir_quiet(dr):
@@ -33,7 +34,7 @@ def mkdir_quiet(dr):
 
 
 def handle_dir(dirname, dry_run=True):
-    global idx
+    global idx, jobs
     with open(os.path.join(dirname, 'Makefile')) as fh:
         in_reads = False
         for ln in fh:
@@ -70,6 +71,7 @@ def handle_dir(dirname, dry_run=True):
                         ofh.write('\n'.join(pbs_lns) + '\n')
                     idx += 1
                     print('pushd %s && sbatch %s && popd' % (dirname, qsub_basename))
+                    jobs += 1
                     if not dry_run:
                         os.system('cd %s && sbatch %s' % (dirname, qsub_basename))
                         time.sleep(0.5)
@@ -82,6 +84,7 @@ def go():
         if 'Makefile' in files and 'IGNORE' not in files:
             print('Found a Makefile: %s' % (os.path.join(dirname, 'Makefile')), file=sys.stderr)
             handle_dir(dirname, dry_run=sys.argv[1] == 'dry')
+    print('Composed %d jobs' % jobs, file=sys.stderr)
 
 if len(sys.argv) == 1:
     print("pass argument 'dry' for dry run, or 'wet' for normal run")
