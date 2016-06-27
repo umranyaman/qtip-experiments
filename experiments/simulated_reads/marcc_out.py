@@ -66,7 +66,7 @@ def handle_dir(dirname, re_out, mem_gb, hours, dry_run=True, use_scavenger=False
                 if len(ln.rstrip()) == 0:
                     in_out = False
                 else:
-                    target = ln.split()[0]
+                    target = ln.split()[0].split('/')[0]
                     print('  Found a .out target: %s' % target, file=sys.stderr)
                     target_full = os.path.join(dirname, target)
                     if os.path.exists(os.path.join(target_full, 'DONE')):
@@ -75,7 +75,7 @@ def handle_dir(dirname, re_out, mem_gb, hours, dry_run=True, use_scavenger=False
                     elif os.path.exists(target_full):
                         # delete it???
                         pass
-                    fn = '.' + target + 'sh'
+                    fn = '.' + target + '.sh'
                     write_slurm(target, fn, dirname, mem_gb, hours, use_scavenger)
                     print('pushd %s && sbatch %s && popd' % (dirname, fn))
                     if not dry_run:
