@@ -90,7 +90,7 @@ def go():
     if 'QSIM_EXPERIMENTS_HOME' not in os.environ:
         raise RuntimeError('Must have QSIM_EXPERIMENTS_HOME set')
     for dirname, dirs, files in os.walk('.'):
-        if 'Makefile' in files:
+        if 'Makefile' in files and 'IGNORE' not in files:
             print('Found a Makefile: %s' % (os.path.join(dirname, 'Makefile')), file=sys.stderr)
             handle_dir(dirname, re_out, mem_gb, hours, dry_run=sys.argv[1] == 'dry',
                        use_scavenger=len(sys.argv) > 2 and sys.argv[2] == 'scavenger')
