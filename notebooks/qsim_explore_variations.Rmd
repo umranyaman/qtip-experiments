@@ -1,0 +1,28 @@
+---
+title: "qsim_explore_variations"
+author: "Ben Langmead"
+date: "June 27, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Libraries
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+## Analysis
+
+```{r}
+m <- read.table(sep=',', quote='', header=T, '~/tmp.csv')
+mvsim <- m[m$dir == 'various_simulators',]
+```
+
+```{r}
+ggplot(mvsim %>% filter(sample == 'sample0.05'), aes(x=param, y=rca)) + geom_boxplot(aes(linetype=training, color=mapq, fill=target)) + scale_y_continuous(limits=c(-15, 15))
+```
