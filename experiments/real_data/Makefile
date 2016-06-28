@@ -13,6 +13,7 @@ NTHREADS_VS=16
 
 $(shell mkdir -p temp)
 ARGS=--ref $(INDEXES)/hg19.fa --write-orig-mapq --write-precise-mapq --seed 346 --temp-directory temp
+EXTRA_ARGS=
 
 #
 # These CSV files contain the ultimate output from multi_aligner.py when
@@ -46,14 +47,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bwa.unp.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(BWA_ARGS) $(ARGS) \
+		$(BWA_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
 %.bwa.pair.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(BWA_ARGS) $(ARGS) \
+		$(BWA_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
@@ -65,14 +66,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bt2.unp.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(BT2_ARGS) $(ARGS) \
+		$(BT2_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS)
 
 %.bt2.pair.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(BT2_ARGS) $(ARGS) \
+		$(BT2_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
@@ -84,14 +85,14 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.snap.unp.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(SNAP_ARGS) $(ARGS) \
+		$(SNAP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS)
 
 %.snap.pair.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(SNAP_ARGS) $(ARGS) \
+		$(SNAP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
