@@ -66,6 +66,7 @@ include ../bwamemts.mk
 include ../snapts.mk
 
 NREADS=4000000
+NCORES=8
 
 .PHONY: clean
 clean:
@@ -112,22 +113,22 @@ SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-traini
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2sl,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2s100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2sl100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2s250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2sl250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2s,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
 , := ,
 
-$(eval $(call bwamemts,bwamem,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bwamemts,bwamem100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 300$(,)25,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bwamemts,bwamem250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bwamemts,bwamem,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 300$(,)25,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
-$(eval $(call snapts,snap,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call snapts,snap100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,-s 100 300,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call snapts,snap250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,-s 250 750,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call snapts,snap,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap100,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,-s 100 300,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap250,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,,-s 250 750,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
 $(eval $(call mason_ill_unp_reads,ill_100,$(HG_FASTA),100,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_250,$(HG_FASTA),250,$(NREADS),7724))

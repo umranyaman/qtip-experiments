@@ -81,6 +81,7 @@ include ../bwamemts.mk
 include ../snapts.mk
 
 NREADS=4000000
+NCORES=8
 
 .PHONY: clean
 clean:
@@ -139,29 +140,29 @@ SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-traini
 
 , := ,
 
-$(eval $(call bt2ts,bt2s_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(FA_HG),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2s_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(FA_MM),$(MM_INDEX),out))
-$(eval $(call bt2ts,bt2s_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(FA_ZM),$(ZM_INDEX),out))
+$(eval $(call bt2ts,bt2s_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bwamemts,bwamem_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,$(FA_HG),$(HG_INDEX),out))
-$(eval $(call bwamemts,bwamem_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,$(FA_MM),$(MM_INDEX),out))
-$(eval $(call bwamemts,bwamem_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,$(FA_ZM),$(ZM_INDEX),out))
+$(eval $(call bwamemts,bwamem_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bt2ts,bt2s100_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_HG),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2s100_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX),out))
-$(eval $(call bt2ts,bt2s100_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX),out))
+$(eval $(call bt2ts,bt2s100_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bwamemts,bwamem100_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_HG),$(HG_INDEX),out))
-$(eval $(call bwamemts,bwamem100_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_MM),$(MM_INDEX),out))
-$(eval $(call bwamemts,bwamem100_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_ZM),$(ZM_INDEX),out))
+$(eval $(call bwamemts,bwamem100_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem100_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem100_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bt2ts,bt2s250_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_HG),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2s250_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX),out))
-$(eval $(call bt2ts,bt2s250_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX),out))
+$(eval $(call bt2ts,bt2s250_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bwamemts,bwamem250_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_HG),$(HG_INDEX),out))
-$(eval $(call bwamemts,bwamem250_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_MM),$(MM_INDEX),out))
-$(eval $(call bwamemts,bwamem250_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_ZM),$(ZM_INDEX),out))
+$(eval $(call bwamemts,bwamem250_hg,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem250_mm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem250_zm,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
 $(eval $(call mason_ill_unp_reads,ill_hg_100,$(FA_HG),100,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_hg_250,$(FA_HG),250,$(NREADS),7724))

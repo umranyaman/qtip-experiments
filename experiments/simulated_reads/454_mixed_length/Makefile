@@ -43,6 +43,7 @@ include ../mason.mk
 include ../bowtie2ts.mk
 
 NREADS=4000000
+NCORES=8
 
 .PHONY: clean
 clean:
@@ -66,7 +67,7 @@ SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-traini
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out))
-$(eval $(call bt2ts,bt2sl,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out))
+$(eval $(call bt2ts,bt2s,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl,$(NREADS),$(NREADS),$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
 $(eval $(call mason_fff_unp_reads,fff_50to500,$(HG_FASTA),275,225,$(NREADS),7724))

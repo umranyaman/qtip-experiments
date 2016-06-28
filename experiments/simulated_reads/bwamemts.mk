@@ -15,7 +15,7 @@ r0_$1_%.$8/DONE: r0_%.fq.gz
 	       --output-directory $$(shell dirname $$(@))\
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --U $$< \
-	       -- $5 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS) -t 1
+	       -- $5 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS) -t $9
 	-$$(BWA) > $$(shell dirname $$(@))/bwa_version 2>&1
 	-$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version
 	touch $$(@)
@@ -30,7 +30,7 @@ r12_$1_%.$8/DONE: r1_%.fq.gz
 	       --output-directory $$(shell dirname $$(@)) \
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
-	       -- $5 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS) -t 1
+	       -- $5 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS) -t $9
 	-$$(BWA) > $$(shell dirname $$(@))/bwa_version 2>&1
 	-$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version
 	touch $$(@)

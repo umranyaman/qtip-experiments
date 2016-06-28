@@ -15,7 +15,7 @@ r0_$1_%.$8/DONE: r0_%.fq.gz
 	       --output-directory $$(shell dirname $$(@)) \
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --U $$< \
-	       -- $5 $$(BT2_ARGS) -p 1
+	       -- $5 $$(BT2_ARGS) -p $9
 	-$$(BOWTIE2) --version > $$(shell dirname $$(@))/bt2_version
 	-$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version
 	touch $$(@)
@@ -30,7 +30,7 @@ r12_$1_%.$8/DONE: r1_%.fq.gz
 	       --output-directory $$(shell dirname $$(@)) \
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
-	       -- $5 $$(BT2_ARGS) -p 1
+	       -- $5 $$(BT2_ARGS) -p $9
 	-$$(BOWTIE2) --version > $$(shell dirname $$(@))/bt2_version
 	-$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version
 	touch $$(@)
