@@ -59,7 +59,6 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args,
                 assert os.path.exists(join(dest_dir, 'input.sam'))
             fn = '.' + rule + '.sh'
             write_slurm(rule, fn, dr, mem_gb, hours,
-                        ncores=1,
                         makefile=new_makefile_base,
                         use_scavenger=use_scavenger)
             cmd = 'pushd %s && sbatch %s && popd' % (dr, fn)
