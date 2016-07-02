@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 GRCh37_FA=Homo_sapiens.GRCh37.75.dna.primary_assembly.fa
 GRCh37_URL=ftp://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/dna/$GRCh37_FA.gz
