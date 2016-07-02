@@ -88,7 +88,7 @@ def handle_dir(dirname, re_out, mem_gb, hours, dry_run=True, use_scavenger=False
 def go():
     re_out = re.compile('^outs_[_a-zA-Z01-9]*:.*')
     mem_gb = 8
-    hours = 8
+    hours = 12
     if 'QSIM_EXPERIMENTS_HOME' not in os.environ:
         raise RuntimeError('Must have QSIM_EXPERIMENTS_HOME set')
     for dirname, dirs, files in os.walk('.'):
