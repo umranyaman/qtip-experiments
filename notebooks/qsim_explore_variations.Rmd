@@ -16,13 +16,27 @@ library(ggplot2)
 library(dplyr)
 ```
 
-## Analysis
+## Analysis of try data
 
 ```{r}
-m <- read.table(sep=',', quote='', header=T, '~/tmp.csv')
+m <- read.table(sep=',', quote='', header=T, 'models.csv')
 mvsim <- m[m$dir == 'various_simulators',]
 ```
 
 ```{r}
 ggplot(mvsim %>% filter(sample == 'sample0.05'), aes(x=param, y=rca)) + geom_boxplot(aes(linetype=training, color=mapq, fill=target)) + scale_y_continuous(limits=c(-15, 15))
+```
+
+## Analysis of under/overfitting data
+
+```{r}
+muo <- read.table(sep=',', quote='', header=T, 'under_over_fitting.csv')
+```
+
+```{r}
+ggplot(muo, aes(x=param, y=rca)) + geom_boxplot(aes(fill=training))
+```
+
+```{r}
+ggplot(muo, aes(x=param, y=rce)) + geom_boxplot(aes(fill=training))
 ```
