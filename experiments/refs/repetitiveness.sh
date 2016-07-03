@@ -2,7 +2,7 @@
 
 mkdir -p mm10
 cd mm10
-wget http://hgdownload.cse.ucsc.edu/goldenpath/mm10/bigzips/chromfa.tar.gz
+wget http://hgdownload.cse.ucsc.edu/goldenPath/mm10/bigZips/chromfa.tar.gz
 tar xvf chromfa.tar.gz
 cat *.fa | grep -av '^>' | tee >(tr -cd acgtn | wc -c | tee mm10_upper.txt | xargs echo "mm10 upper") | \
                                  tr -cd acgtn | wc -c | tee mm10_lower.txt | xargs echo "mm10 lower"
@@ -11,7 +11,7 @@ rm -rf mm10
 
 mkdir -p hg19
 cd hg19
-wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigzips/chromfa.tar.gz
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/chromfa.tar.gz
 tar xvf chromfa.tar.gz
 cat *.fa | grep -av '^>' | tee >(tr -cd acgtn | wc -c | tee mm10_upper.txt | xargs echo "hg19 upper") | \
                                  tr -cd acgtn | wc -c | tee mm10_lower.txt | xargs echo "hg19 lower"
