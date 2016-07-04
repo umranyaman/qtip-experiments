@@ -51,6 +51,7 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args,
             if start_from == 'inputalign':
                 dest_dir = join(dr, rule)
                 src_dir = join(dr, orig_rule)
+                logging.info('    Copying from original dir %s' % src_dir)
                 mkdir_quiet(dest_dir)
                 assert os.path.exists(src_dir)
                 assert os.path.exists(join(src_dir, 'input.sam'))
