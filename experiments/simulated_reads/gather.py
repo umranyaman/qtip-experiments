@@ -224,13 +224,15 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                                 target_full_sm = join(target_full_s, dir_mapq)
                                 if not os.path.isdir(target_full_sm):
                                     raise RuntimeError('Directory "%s" does not exist' % target_full_sm)
+                                next_subdirs = get_immediate_subdirectories(target_full_sm)
                             else:
                                 assert dir_mapq.startswith('trial')
                                 target_full_sm = target_full_s
                                 odir_rm = odir_r
                                 mapq_included = False
+                                next_subdirs = [dir_mapq]
 
-                            for dir_trial in get_immediate_subdirectories(target_full_sm):
+                            for dir_trial in next_subdirs:
 
                                 assert dir_trial.startswith('trial')
                                 trial = dir_trial[5:]
