@@ -177,14 +177,14 @@ def get_immediate_subdirectories(a_dir):
             if os.path.isdir(os.path.join(a_dir, name))]
 
 
-def handle_dir(dirname, dest_dirname, ofh, first):
+def handle_dir(dirname, dest_dirname, ofh, first, makefile_fn='Makefile'):
     # ofh is a writable file for overall.csv
     name = os.path.basename(dirname)
 
     if os.path.exists(join(name, 'IGNORE')):
         return
 
-    with open(join(dirname, 'Makefile')) as fh:
+    with open(join(dirname, makefile_fn)) as fh:
 
         in_target = False
         for ln in fh:
@@ -274,24 +274,36 @@ def go():
     logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',
                         datefmt='%m/%d/%y-%H:%M:%S', level=logging.DEBUG)
 
-    # Set up output directory
-    odir = 'summary'
-    if os.path.exists(odir):
-        raise RuntimeError('summary directory exists')
-    mkdir_quiet(odir)
-
     # Open output overall.csv file
     first = True
-    with open(join(odir, 'overall.csv'), 'w') as fh:
+    makefile_fn = 'Makefile'
+    out_fn = 'overall.csv'
+    summary_fn = 'summary'
+    experiment = False
+
+    if '--experiment' in sys.argv:
+        exp_name = sys.argv[sys.argv.index('--experiment')+1]
+        makefile_fn = 'Makefile.' + exp_name
+        out_fn = 'overall.' + exp_name + '.csv'
+        summary_fn = 'summary_%s' % exp_name
+        experiment = True
+
+    # Set up output directory
+    if os.path.exists(summary_fn):
+        raise RuntimeError('%s directory exists' % summary_fn)
+    mkdir_quiet(summary_fn)
+
+    with open(join(summary_fn, out_fn), 'w') as fh:
         # Descend into subdirectories looking for Makefiles
         for dirname, dirs, files in os.walk('.'):
-            if 'Makefile' in files:
-                logging.info('Found a Makefile: %s' % join(dirname, 'Makefile'))
-                handle_dir(dirname, odir, fh, first)
-                first = False
+            for fn in files:
+                if fn == makefile_fn or (experiment and fn.startswith(makefile_fn)):
+                    logging.info('Found a Makefile: %s' % join(dirname, fn))
+                    handle_dir(dirname, summary_fn, fh, first, makefile_fn=fn)
+                    first = False
 
     # Compress the output directory, which is large because of the CID and CSE curves
-    os.system('tar -cvzf summary.tar.gz summary')
+    os.system('tar -cvzf %s.tar.gz %s' % (summary_fn, summary_fn))
 
 if '--slurm' in sys.argv:
     my_hours = 24
