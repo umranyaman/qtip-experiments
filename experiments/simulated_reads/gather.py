@@ -306,8 +306,14 @@ def go():
     os.system('tar -cvzf %s.tar.gz %s' % (summary_fn, summary_fn))
 
 if '--slurm' in sys.argv:
-    my_hours = 24
-    with open('.gather.sh', 'w') as ofh:
+    script_fn = '.gather.sh'
+    gather_args = ''
+    if '--experiment' in sys.argv:
+        exp_name = sys.argv[sys.argv.index('--experiment')+1]
+        script_fn = '.gather_%s.sh' % exp_name
+        gather_args = '--experiment ' + exp_name
+    my_hours = 4
+    with open(script_fn, 'w') as ofh:
         print("#!/bin/bash -l", file=ofh)
         print("#SBATCH", file=ofh)
         print("#SBATCH --nodes=1", file=ofh)
@@ -318,9 +324,9 @@ if '--slurm' in sys.argv:
         else:
             print('#SBATCH --partition=shared', file=ofh)
         print('#SBATCH --time=%d:00:00' % my_hours, file=ofh)
-        print('#SBATCH --output=.gather.sh.o', file=ofh)
-        print('#SBATCH --error=.gather.sh.e', file=ofh)
-        print('python gather.py', file=ofh)
-    print('sbatch .gather.sh')
+        print('#SBATCH --output=%s.o' % script_fn, file=ofh)
+        print('#SBATCH --error=%s.e' % script_fn, file=ofh)
+        print('python gather.py %s' % gather_args, file=ofh)
+    print('sbatch ' + script_fn)
 else:
     go()
