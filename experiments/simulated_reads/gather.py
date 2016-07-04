@@ -217,13 +217,18 @@ def handle_dir(dirname, dest_dirname, ofh, first):
 
                         for dir_mapq in get_immediate_subdirectories(target_full_s):
 
-                            assert dir_mapq in ['mapq_excluded', 'mapq_included']
-                            mapq_included = dir_mapq == 'mapq_included'
-                            odir_rm = join(odir_r, dir_mapq)
-                            logging.info('      Found %s' % dir_mapq)
-                            target_full_sm = join(target_full_s, dir_mapq)
-                            if not os.path.isdir(target_full_sm):
-                                raise RuntimeError('Directory "%s" does not exist' % target_full_sm)
+                            if dir_mapq in ['mapq_excluded', 'mapq_included']:
+                                mapq_included = dir_mapq == 'mapq_included'
+                                odir_rm = join(odir_r, dir_mapq)
+                                logging.info('      Found %s' % dir_mapq)
+                                target_full_sm = join(target_full_s, dir_mapq)
+                                if not os.path.isdir(target_full_sm):
+                                    raise RuntimeError('Directory "%s" does not exist' % target_full_sm)
+                            else:
+                                assert dir_mapq.startswith('trial')
+                                target_full_sm = target_full_s
+                                odir_rm = odir_r
+                                mapq_included = False
 
                             for dir_trial in get_immediate_subdirectories(target_full_sm):
 
