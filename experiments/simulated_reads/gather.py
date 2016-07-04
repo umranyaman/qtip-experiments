@@ -88,7 +88,7 @@ def parse_paired(target):
 
 def parse_readlen(target):
     """ Based on Makefile target name, parse the read length """
-    readlen = target.split('_')[-2]
+    readlen = target.split('_')[-1]
     return 500 if readlen == '50to500' else int(readlen)
 
 
