@@ -196,6 +196,8 @@ def handle_dir(dirname, dest_dirname, ofh, first):
                 else:
                     # Parsing a target from the list of targets in the Makefile
                     target = ln.split()[0]
+                    if target.endswith('/DONE'):
+                        target = target[:-5]
                     target_full = join(dirname, target)
                     has_done(target_full)
 
