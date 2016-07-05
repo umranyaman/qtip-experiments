@@ -204,15 +204,20 @@ def handle_dir(dirname, variant, dest_dirname, ofh, first):
 
     for dir_samp in get_immediate_subdirectories(dirname):
 
-        assert dir_samp.startswith('sample')
-        rate = dir_samp[6:]
-        odir_r = join(dest_dirname, 'sample' + rate)
-        logging.info('    Found sampling rate: %s' % rate)
-        target_full_s = join(dirname, 'sample' + rate)
-        if not os.path.isdir(target_full_s):
-            raise RuntimeError('Directory "%s" does not exist' % target_full_s)
+        if dir_samp.startswith('sample'):
+            rate = dir_samp[6:]
+            odir_r = join(dest_dirname, 'sample' + rate)
+            logging.info('    Found sampling rate: %s' % rate)
+            target_full_s = join(dirname, 'sample' + rate)
+            if not os.path.isdir(target_full_s):
+                raise RuntimeError('Directory "%s" does not exist' % target_full_s)
+            next_subdirs1 = get_immediate_subdirectories(target_full_s)
+        else:
+            odir_r = dest_dirname
+            target_full_s = dirname
+            next_subdirs1 = [dir_samp]
 
-        for dir_mapq in get_immediate_subdirectories(target_full_s):
+        for dir_mapq in next_subdirs1:
 
             if dir_mapq in ['mapq_excluded', 'mapq_included']:
                 mapq_included = dir_mapq == 'mapq_included'
@@ -221,15 +226,15 @@ def handle_dir(dirname, variant, dest_dirname, ofh, first):
                 target_full_sm = join(target_full_s, dir_mapq)
                 if not os.path.isdir(target_full_sm):
                     raise RuntimeError('Directory "%s" does not exist' % target_full_sm)
-                next_subdirs = get_immediate_subdirectories(target_full_sm)
+                next_subdirs2 = get_immediate_subdirectories(target_full_sm)
             else:
                 assert dir_mapq.startswith('trial')
                 target_full_sm = target_full_s
                 odir_rm = odir_r
                 mapq_included = False
-                next_subdirs = [dir_mapq]
+                next_subdirs2 = [dir_mapq]
 
-            for dir_trial in next_subdirs:
+            for dir_trial in next_subdirs2:
 
                 assert dir_trial.startswith('trial')
                 trial = dir_trial[5:]
