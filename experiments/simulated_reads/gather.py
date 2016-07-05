@@ -200,7 +200,7 @@ def targets_from_makefile(dirname, fn):
                     yield target, target_full
 
 
-def handle_dir(dirname, variant, dest_dirname, ofh, first):
+def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first):
 
     for dir_samp in get_immediate_subdirectories(dirname):
 
@@ -265,7 +265,7 @@ def handle_dir(dirname, variant, dest_dirname, ofh, first):
                     os.system('cp -f %s %s' % (join(target_full_smtt, 'roc.csv'), roc_fn))
                     os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_orig.csv'), roc_orig_fn))
                     os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_round.csv'), roc_round_fn))
-                    compile_line(ofh, os.path.basename(dirname), variant,
+                    compile_line(ofh, combined_target_name, variant,
                                  mapq_included, tt, trial, params_fn,
                                  summ_fn, roc_round_fn, roc_orig_fn, first)
                     first = False
@@ -304,8 +304,9 @@ def go():
                     if ma is not None:
                         variant = ma.group(1)
                         target_dir = join(dirname, dr)
+                        combined_target_name = os.path.basename(dirname) + '_' + dr[:-4]
                         logging.info('Found target dir: %s (variant=%s)' % (target_dir, variant))
-                        handle_dir(target_dir, variant, summary_fn, fh, first)
+                        handle_dir(target_dir, combined_target_name, variant, summary_fn, fh, first)
                         first = False
 
         else:
@@ -318,7 +319,7 @@ def go():
                         for target, target_full in targets_from_makefile(dirname, makefile_fn):
                             combined_target_name = name + '_' + target[:-4]
                             logging.info('  Found target dir: %s (normal)' % combined_target_name)
-                            handle_dir(dirname, 'normal', summary_fn, fh, first)
+                            handle_dir(dirname, combined_target_name, 'normal', summary_fn, fh, first)
                             first = False
 
     # Compress the output directory, which is large because of the CID and CSE curves
