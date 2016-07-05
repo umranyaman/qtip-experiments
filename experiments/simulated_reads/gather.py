@@ -152,9 +152,9 @@ def compile_line(ofh, combined_target_name, variant, mapq_incl, tt, trial,
     readlen = parse_readlen(target)
     sensitivity = parse_sensitivity(target, aligner)
     species = parse_species(target)
-    headers = ['name', 'variant', 'mapq_included', 'training', 'trial_no', 'aligner', 'local',
+    headers = ['name', 'combined_name', 'variant', 'mapq_included', 'training', 'trial_no', 'aligner', 'local',
                'paired', 'sim', 'readlen', 'sensitivity', 'species']
-    values = [name, variant, 'T' if mapq_incl else 'F', 'T' if tt == 'training' else 'F',
+    values = [name, combined_target_name, variant, 'T' if mapq_incl else 'F', 'T' if tt == 'training' else 'F',
               trial, aligner, 'T' if local else 'F', 'T' if paired else 'F', sim,
               str(readlen), sensitivity, species]
     for fn in [params_fn, summ_fn]:
