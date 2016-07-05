@@ -141,7 +141,8 @@ def roc_file_to_string(roc_fn, inner_sep=':', outer_sep=';'):
     return outer_sep.join(fields)
 
 
-def compile_line(ofh, combined_target_name, mapq_incl, tt, trial, params_fn, summ_fn, roc_round_fn, roc_orig_fn, first):
+def compile_line(ofh, combined_target_name, variant, mapq_incl, tt, trial,
+                 params_fn, summ_fn, roc_round_fn, roc_orig_fn, first):
     """ Put together one line of output and write to ofh (overall.csv)
         """
     name, target = parse_name_and_target(combined_target_name)
@@ -151,9 +152,9 @@ def compile_line(ofh, combined_target_name, mapq_incl, tt, trial, params_fn, sum
     readlen = parse_readlen(target)
     sensitivity = parse_sensitivity(target, aligner)
     species = parse_species(target)
-    headers = ['name', 'mapq_included', 'training', 'trial_no', 'aligner', 'local',
+    headers = ['name', 'variant', 'mapq_included', 'training', 'trial_no', 'aligner', 'local',
                'paired', 'sim', 'readlen', 'sensitivity', 'species']
-    values = [name, 'T' if mapq_incl else 'F', 'T' if tt == 'training' else 'F',
+    values = [name, variant, 'T' if mapq_incl else 'F', 'T' if tt == 'training' else 'F',
               trial, aligner, 'T' if local else 'F', 'T' if paired else 'F', sim,
               str(readlen), sensitivity, species]
     for fn in [params_fn, summ_fn]:
@@ -177,15 +178,11 @@ def get_immediate_subdirectories(a_dir):
             if os.path.isdir(os.path.join(a_dir, name))]
 
 
-def handle_dir(dirname, dest_dirname, ofh, first, makefile_fn='Makefile'):
-    # ofh is a writable file for overall.csv
+def targets_from_makefile(dirname, fn):
     name = os.path.basename(dirname)
-
     if os.path.exists(join(name, 'IGNORE')):
         return
-
-    with open(join(dirname, makefile_fn)) as fh:
-
+    with open(fn) as fh:
         in_target = False
         for ln in fh:
             if target_re.match(ln):
@@ -200,72 +197,73 @@ def handle_dir(dirname, dest_dirname, ofh, first, makefile_fn='Makefile'):
                         target = target[:-5]
                     target_full = join(dirname, target)
                     has_done(target_full)
+                    yield target, target_full
 
-                    combined_target_name = name + '_' + target[:-4]
-                    logging.info('  Found target: %s' % combined_target_name)
-                    odir = join(dest_dirname, combined_target_name)
 
-                    for dir_samp in get_immediate_subdirectories(target_full):
+def handle_dir(dirname, variant, dest_dirname, ofh, first):
 
-                        assert dir_samp.startswith('sample')
-                        rate = dir_samp[6:]
-                        odir_r = join(odir, 'sample' + rate)
-                        logging.info('    Found sampling rate: %s' % rate)
-                        target_full_s = join(target_full, 'sample' + rate)
-                        if not os.path.isdir(target_full_s):
-                            raise RuntimeError('Directory "%s" does not exist' % target_full_s)
+    for dir_samp in get_immediate_subdirectories(dirname):
 
-                        for dir_mapq in get_immediate_subdirectories(target_full_s):
+        assert dir_samp.startswith('sample')
+        rate = dir_samp[6:]
+        odir_r = join(dest_dirname, 'sample' + rate)
+        logging.info('    Found sampling rate: %s' % rate)
+        target_full_s = join(dirname, 'sample' + rate)
+        if not os.path.isdir(target_full_s):
+            raise RuntimeError('Directory "%s" does not exist' % target_full_s)
 
-                            if dir_mapq in ['mapq_excluded', 'mapq_included']:
-                                mapq_included = dir_mapq == 'mapq_included'
-                                odir_rm = join(odir_r, dir_mapq)
-                                logging.info('      Found %s' % dir_mapq)
-                                target_full_sm = join(target_full_s, dir_mapq)
-                                if not os.path.isdir(target_full_sm):
-                                    raise RuntimeError('Directory "%s" does not exist' % target_full_sm)
-                                next_subdirs = get_immediate_subdirectories(target_full_sm)
-                            else:
-                                assert dir_mapq.startswith('trial')
-                                target_full_sm = target_full_s
-                                odir_rm = odir_r
-                                mapq_included = False
-                                next_subdirs = [dir_mapq]
+        for dir_mapq in get_immediate_subdirectories(target_full_s):
 
-                            for dir_trial in next_subdirs:
+            if dir_mapq in ['mapq_excluded', 'mapq_included']:
+                mapq_included = dir_mapq == 'mapq_included'
+                odir_rm = join(odir_r, dir_mapq)
+                logging.info('      Found %s' % dir_mapq)
+                target_full_sm = join(target_full_s, dir_mapq)
+                if not os.path.isdir(target_full_sm):
+                    raise RuntimeError('Directory "%s" does not exist' % target_full_sm)
+                next_subdirs = get_immediate_subdirectories(target_full_sm)
+            else:
+                assert dir_mapq.startswith('trial')
+                target_full_sm = target_full_s
+                odir_rm = odir_r
+                mapq_included = False
+                next_subdirs = [dir_mapq]
 
-                                assert dir_trial.startswith('trial')
-                                trial = dir_trial[5:]
-                                odir_rmt = join(odir_rm, 'trial' + trial)
-                                logging.info('        Found trial: %s' % trial)
-                                target_full_smt = join(target_full_sm, 'trial' + trial)
-                                if not os.path.isdir(target_full_smt):
-                                    raise RuntimeError('Directory "%s" does not exist' % target_full_smt)
+            for dir_trial in next_subdirs:
 
-                                mkdir_quiet(odir_rmt)
+                assert dir_trial.startswith('trial')
+                trial = dir_trial[5:]
+                odir_rmt = join(odir_rm, 'trial' + trial)
+                logging.info('        Found trial: %s' % trial)
+                target_full_smt = join(target_full_sm, 'trial' + trial)
+                if not os.path.isdir(target_full_smt):
+                    raise RuntimeError('Directory "%s" does not exist' % target_full_smt)
 
-                                os.system('cp -f %s %s' % (join(target_full_smt, 'featimport_*.csv'), odir_rmt))
-                                params_fn = join(odir_rmt, 'params.csv')
-                                os.system('cp -f %s %s' % (join(target_full_smt, 'params.csv'), params_fn))
+                mkdir_quiet(odir_rmt)
 
-                                for tt in ['test', 'training']:
+                os.system('cp -f %s %s' % (join(target_full_smt, 'featimport_*.csv'), odir_rmt))
+                params_fn = join(odir_rmt, 'params.csv')
+                os.system('cp -f %s %s' % (join(target_full_smt, 'params.csv'), params_fn))
 
-                                    target_full_smtt = join(target_full_smt, tt)
-                                    if not os.path.isdir(target_full_smtt):
-                                        raise RuntimeError('Directory "%s" does not exist' % target_full_smtt)
+                for tt in ['test', 'training']:
 
-                                    mapqst = 'incl' if mapq_included else 'excl'
-                                    summ_fn = join(odir_rmt, tt + '_' + mapqst + '_summary.csv')
-                                    roc_fn = join(odir_rmt, tt + '_' + mapqst + '_roc.csv')
-                                    roc_orig_fn = join(odir_rmt, tt + '_' + mapqst + '_roc_orig.csv')
-                                    roc_round_fn = join(odir_rmt, tt + '_' + mapqst + '_roc_round.csv')
-                                    os.system('cp -f %s %s' % (join(target_full_smtt, 'summary.csv'), summ_fn))
-                                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc.csv'), roc_fn))
-                                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_orig.csv'), roc_orig_fn))
-                                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_round.csv'), roc_round_fn))
-                                    compile_line(ofh, combined_target_name, mapq_included, tt, trial, params_fn,
-                                                 summ_fn, roc_round_fn, roc_orig_fn, first)
-                                    first = False
+                    target_full_smtt = join(target_full_smt, tt)
+                    if not os.path.isdir(target_full_smtt):
+                        raise RuntimeError('Directory "%s" does not exist' % target_full_smtt)
+
+                    mapqst = 'incl' if mapq_included else 'excl'
+                    summ_fn = join(odir_rmt, tt + '_' + mapqst + '_summary.csv')
+                    roc_fn = join(odir_rmt, tt + '_' + mapqst + '_roc.csv')
+                    roc_orig_fn = join(odir_rmt, tt + '_' + mapqst + '_roc_orig.csv')
+                    roc_round_fn = join(odir_rmt, tt + '_' + mapqst + '_roc_round.csv')
+                    os.system('cp -f %s %s' % (join(target_full_smtt, 'summary.csv'), summ_fn))
+                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc.csv'), roc_fn))
+                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_orig.csv'), roc_orig_fn))
+                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_round.csv'), roc_round_fn))
+                    compile_line(ofh, os.path.basename(dirname), variant,
+                                 mapq_included, tt, trial, params_fn,
+                                 summ_fn, roc_round_fn, roc_orig_fn, first)
+                    first = False
 
 
 def go():
@@ -279,14 +277,13 @@ def go():
     makefile_fn = 'Makefile'
     out_fn = 'overall.csv'
     summary_fn = 'summary'
-    experiment = False
+    exp_name = None
 
     if '--experiment' in sys.argv:
         exp_name = sys.argv[sys.argv.index('--experiment')+1]
         makefile_fn = 'Makefile.' + exp_name
         out_fn = 'overall.' + exp_name + '.csv'
         summary_fn = 'summary_%s' % exp_name
-        experiment = True
 
     # Set up output directory
     if os.path.exists(summary_fn):
@@ -294,13 +291,30 @@ def go():
     mkdir_quiet(summary_fn)
 
     with open(join(summary_fn, out_fn), 'w') as fh:
-        # Descend into subdirectories looking for Makefiles
-        for dirname, dirs, files in os.walk('.'):
-            for fn in files:
-                if fn == makefile_fn or (experiment and fn.startswith(makefile_fn)):
-                    logging.info('Found a Makefile: %s' % join(dirname, fn))
-                    handle_dir(dirname, summary_fn, fh, first, makefile_fn=fn)
-                    first = False
+        if '--experiment' in sys.argv:
+            # Descend into subdirectories looking for Makefiles
+            for dirname, dirs, files in os.walk('.'):
+                for dr in dirs:
+                    ma = re.match('\.%s\.(.*)\.out' % exp_name, dr)
+                    if ma is not None:
+                        variant = ma.group(1)
+                        target_dir = join(dirname, dr)
+                        logging.info('Found target dir: %s (variant=%s)' % (target_dir, variant))
+                        handle_dir(target_dir, variant, summary_fn, fh, first)
+                        first = False
+
+        else:
+            # Descend into subdirectories looking for Makefiles
+            for dirname, dirs, files in os.walk('.'):
+                name = os.path.basename(dirname)
+                for fn in files:
+                    if fn == makefile_fn:
+                        logging.info('Found a Makefile: %s' % join(dirname, fn))
+                        for target, target_full in targets_from_makefile(dirname, makefile_fn):
+                            combined_target_name = name + '_' + target[:-4]
+                            logging.info('  Found target dir: %s (normal)' % combined_target_name)
+                            handle_dir(dirname, 'normal', summary_fn, fh, first)
+                            first = False
 
     # Compress the output directory, which is large because of the CID and CSE curves
     os.system('tar -cvzf %s.tar.gz %s' % (summary_fn, summary_fn))
