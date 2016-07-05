@@ -202,11 +202,12 @@ def targets_from_makefile(dirname, fn):
 
 def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first):
 
+    odir = join(dest_dirname, combined_target_name, variant)
     for dir_samp in get_immediate_subdirectories(dirname):
 
         if dir_samp.startswith('sample'):
             rate = dir_samp[6:]
-            odir_r = join(dest_dirname, 'sample' + rate)
+            odir_r = join(odir, 'sample' + rate)
             logging.info('    Found sampling rate: %s' % rate)
             target_full_s = join(dirname, 'sample' + rate)
             if not os.path.isdir(target_full_s):
@@ -304,7 +305,7 @@ def go():
                     if ma is not None:
                         variant = ma.group(1)
                         target_dir = join(dirname, dr)
-                        combined_target_name = os.path.basename(dirname) + '_' + dr[:-4]
+                        combined_target_name = os.path.basename(dirname) + '_' + dr[:dr.index('.')]
                         logging.info('Found target dir: %s (variant=%s)' % (target_dir, variant))
                         handle_dir(target_dir, combined_target_name, variant, summary_fn, fh, first)
                         first = False
