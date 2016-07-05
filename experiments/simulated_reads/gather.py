@@ -300,7 +300,7 @@ def go():
             # Descend into subdirectories looking for Makefiles
             for dirname, dirs, files in os.walk('.'):
                 for dr in dirs:
-                    ma = re.match('\.%s\.(.*)\.out' % exp_name, dr)
+                    ma = re.match('^.*\.%s\.([^.]*)\.out$' % exp_name, dr)
                     if ma is not None:
                         variant = ma.group(1)
                         target_dir = join(dirname, dr)
