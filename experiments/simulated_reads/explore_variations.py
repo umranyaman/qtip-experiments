@@ -10,7 +10,7 @@ from marcc_out import write_slurm
 
 join = os.path.join
 mem_gb = 8
-hours = 8
+hours = 12
 
 
 def mkdir_quiet(dr):
