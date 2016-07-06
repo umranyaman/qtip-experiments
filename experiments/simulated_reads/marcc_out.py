@@ -21,13 +21,9 @@ def write_slurm(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False,
     my_mem_gb, my_hours = mem_gb, hours
     if 'r12' in rule:
         my_mem_gb = int(round(1.5*my_mem_gb))
+        my_hours *= 3
+        my_hours /= 2
     if 'r12' in rule and 'various_genomes' in rule:
-        my_hours *= 2
-    if '_bwamem' in rule:
-        my_mem_gb = max(my_mem_gb, 12)
-    if '_snap' in rule:
-        my_mem_gb = max(my_mem_gb, 32)
-    if 'r12' in rule and 'ill_various_length' in rule:
         my_hours *= 3
         my_hours /= 2
     if 'r12' in rule and '250_mason' in rule:
@@ -35,6 +31,10 @@ def write_slurm(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False,
         my_hours /= 2
     if 'r12' in rule and '500_mason' in rule:
         my_hours *= 2
+    if '_bwamem' in rule:
+        my_mem_gb = max(my_mem_gb, 12)
+    if '_snap' in rule:
+        my_mem_gb = max(my_mem_gb, 32)
     pbs_lns = list()
     pbs_lns.append('#!/bin/bash -l')
     pbs_lns.append('#SBATCH')
