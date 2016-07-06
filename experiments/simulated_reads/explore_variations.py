@@ -9,8 +9,6 @@ import shutil
 from marcc_out import write_slurm
 
 join = os.path.join
-mem_gb = 8
-hours = 12
 
 
 def mkdir_quiet(dr):
@@ -25,7 +23,7 @@ def mkdir_quiet(dr):
 
 
 def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args, targets, submit_fh,
-               use_scavenger=False, wet=False):
+               use_scavenger=False, wet=False, base_mem_gb=8, base_hours=4):
     """
     Maybe this just creates a whole series of new Makefiles with only the SUBSAMPLING_ARGS line different?
     Then maybe the
@@ -59,7 +57,7 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args,
                 shutil.copy(join(src_dir, 'input.sam'), dest_dir)
                 assert os.path.exists(join(dest_dir, 'input.sam'))
             fn = '.' + rule + '.sh'
-            write_slurm(rule, fn, dr, mem_gb, hours,
+            write_slurm(rule, fn, dr, base_mem_gb, base_hours,
                         makefile=new_makefile_base,
                         use_scavenger=use_scavenger)
             cmd = 'pushd %s && sbatch %s && popd' % (dr, fn)
@@ -93,7 +91,7 @@ def go(args, global_qsim_args, exp_names, exp_qsim_args, targets):
                 logging.info('Found a relevant Makefile: %s' % join(dirname, 'Makefile'))
                 handle_dir(dirname, args.start_from, args.name, global_qsim_args, exp_names,
                            exp_qsim_args, targets, submit_fh, use_scavenger=args.use_scavenger,
-                           wet=args.wet)
+                           wet=args.wet, base_mem_gb=args.base_mem_gb, base_hours=args.base_hours)
 
 
 def add_args(parser):
@@ -105,6 +103,10 @@ def add_args(parser):
                         help='Use the MARCC scavenger queue')
     parser.add_argument('--wet', action='store_const', const=True, default=False,
                         help='Submit the jobs as submission scripts are constructed')
+    parser.add_argument('--base-mem-gb', metavar='int', type=str, default=8,
+                        help='Set base number of gigabytes to ask slurm for')
+    parser.add_argument('--base-hours', metavar='int', type=str, default=4,
+                        help='Set base number of hours to ask slurm for')
 
 
 def parse_qsim_parameters_from_argv(argv):
