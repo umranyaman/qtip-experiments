@@ -211,7 +211,7 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
             logging.info('    Found sampling rate: %s' % rate)
             target_full_s = join(dirname, 'sample' + rate)
             if not os.path.isdir(target_full_s):
-                raise RuntimeError('Directory "%s" does not exist' % target_full_s)
+                logging.warn('*** Directory "%s" does not exist!' % target_full_s)
             next_subdirs1 = get_immediate_subdirectories(target_full_s)
         else:
             odir_r = dest_dirname
@@ -226,7 +226,8 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
                 logging.info('      Found %s' % dir_mapq)
                 target_full_sm = join(target_full_s, dir_mapq)
                 if not os.path.isdir(target_full_sm):
-                    raise RuntimeError('Directory "%s" does not exist' % target_full_sm)
+                    logging.warn('*** Directory "%s" does not exist!' % target_full_sm)
+                    continue
                 next_subdirs2 = get_immediate_subdirectories(target_full_sm)
             else:
                 assert dir_mapq.startswith('trial')
@@ -243,7 +244,8 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
                 logging.info('        Found trial: %s' % trial)
                 target_full_smt = join(target_full_sm, 'trial' + trial)
                 if not os.path.isdir(target_full_smt):
-                    raise RuntimeError('Directory "%s" does not exist' % target_full_smt)
+                    logging.warn('*** Directory "%s" does not exist!' % target_full_smt)
+                    continue
 
                 mkdir_quiet(odir_rmt)
 
@@ -255,7 +257,8 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
 
                     target_full_smtt = join(target_full_smt, tt)
                     if not os.path.isdir(target_full_smtt):
-                        raise RuntimeError('Directory "%s" does not exist' % target_full_smtt)
+                        logging.warn('*** Directory "%s" does not exist!' % target_full_smtt)
+                        continue
 
                     mapqst = 'incl' if mapq_included else 'excl'
                     summ_fn = join(odir_rmt, tt + '_' + mapqst + '_summary.csv')
