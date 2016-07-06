@@ -103,9 +103,9 @@ def add_args(parser):
                         help='Use the MARCC scavenger queue')
     parser.add_argument('--wet', action='store_const', const=True, default=False,
                         help='Submit the jobs as submission scripts are constructed')
-    parser.add_argument('--base-mem-gb', metavar='int', type=str, default=8,
+    parser.add_argument('--base-mem-gb', metavar='int', type=int, default=8,
                         help='Set base number of gigabytes to ask slurm for')
-    parser.add_argument('--base-hours', metavar='int', type=str, default=4,
+    parser.add_argument('--base-hours', metavar='int', type=int, default=4,
                         help='Set base number of hours to ask slurm for')
 
 
