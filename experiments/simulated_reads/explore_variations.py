@@ -45,6 +45,9 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args,
                 continue
             orig_rule = rule
             rule = rule.replace('.out', '.%s.out' % nm)
+            if os.path.exists(join(dr, rule)) and os.path.exists(join(dr, rule, 'DONE')):
+                logging.info('    Skipping: %s/%s because DONE exists' % (dr, rule))
+                continue
             logging.info('    Adding job to make target: %s/%s' % (dr, rule))
             if start_from == 'inputalign':
                 dest_dir = join(dr, rule)
