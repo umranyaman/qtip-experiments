@@ -23,7 +23,7 @@ def mkdir_quiet(dr):
 
 
 def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args, targets, submit_fh,
-               use_scavenger=False, wet=False, base_mem_gb=8, base_hours=4):
+               use_scavenger=False, wet=False, base_mem_gb=6, base_hours=3):
     """
     Maybe this just creates a whole series of new Makefiles with only the SUBSAMPLING_ARGS line different?
     Then maybe the
@@ -37,6 +37,8 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args,
                 # 2 things to do: change the args passed to qsim and change the .out target names
                 if ln.startswith('SUBSAMPLING_ARGS'):
                     mk_out.write('SUBSAMPLING_ARGS=%s %s\n' % (' '.join(base_args), ' '.join(ar)))
+                elif ln.startswith('NUM_CORES='):
+                    mk_out.write('NUM_CORES=1\n')
                 else:
                     mk_out.write(ln.replace('.out', '.%s.out' % nm).replace(',out', ',%s.out' % nm))
         for fulltarget in targets:
@@ -62,7 +64,8 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qsim_args,
             fn = '.' + rule + '.sh'
             write_slurm(rule, fn, dr, base_mem_gb, base_hours,
                         makefile=new_makefile_base,
-                        use_scavenger=use_scavenger)
+                        use_scavenger=use_scavenger,
+                        ncores=1)
             cmd = 'pushd %s && sbatch %s && popd' % (dr, fn)
             submit_fh.write(cmd + '\n')
             if wet:
