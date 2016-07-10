@@ -182,7 +182,7 @@ def targets_from_makefile(dirname, fn):
     name = os.path.basename(dirname)
     if os.path.exists(join(name, 'IGNORE')):
         return
-    with open(fn) as fh:
+    with open(join(dirname, fn)) as fh:
         in_target = False
         for ln in fh:
             if target_re.match(ln):
