@@ -136,33 +136,33 @@ reads: \
     r1_mason_ill_zm_100.fq.gz \
     r1_mason_ill_zm_250.fq.gz
 
-SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
+MK_QSIM_ARGS=--trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 , := ,
 
-$(eval $(call bt2ts,bt2s_hg,$(SUBSAMPLING_ARGS),--sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s_mm,$(SUBSAMPLING_ARGS),--sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s_zm,$(SUBSAMPLING_ARGS),--sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s_hg,$(MK_QSIM_ARGS),--sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s_mm,$(MK_QSIM_ARGS),--sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s_zm,$(MK_QSIM_ARGS),--sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bwamemts,bwamem_hg,$(SUBSAMPLING_ARGS),,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bwamemts,bwamem_mm,$(SUBSAMPLING_ARGS),,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
-$(eval $(call bwamemts,bwamem_zm,$(SUBSAMPLING_ARGS),,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem_hg,$(MK_QSIM_ARGS),,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem_mm,$(MK_QSIM_ARGS),,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem_zm,$(MK_QSIM_ARGS),,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bt2ts,bt2s100_hg,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s100_mm,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s100_zm,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100_hg,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100_mm,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100_zm,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bwamemts,bwamem100_hg,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bwamemts,bwamem100_mm,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
-$(eval $(call bwamemts,bwamem100_zm,$(SUBSAMPLING_ARGS),-I 300$(,)25,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem100_hg,$(MK_QSIM_ARGS),-I 300$(,)25,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem100_mm,$(MK_QSIM_ARGS),-I 300$(,)25,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem100_zm,$(MK_QSIM_ARGS),-I 300$(,)25,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bt2ts,bt2s250_hg,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s250_mm,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s250_zm,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250_hg,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250_mm,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250_zm,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bwamemts,bwamem250_hg,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bwamemts,bwamem250_mm,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
-$(eval $(call bwamemts,bwamem250_zm,$(SUBSAMPLING_ARGS),-I 750$(,)62,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem250_hg,$(MK_QSIM_ARGS),-I 750$(,)62,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem250_mm,$(MK_QSIM_ARGS),-I 750$(,)62,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem250_zm,$(MK_QSIM_ARGS),-I 750$(,)62,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
 $(eval $(call mason_ill_unp_reads,ill_hg_100,$(FA_HG),100,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_hg_250,$(FA_HG),250,$(NREADS),7724))

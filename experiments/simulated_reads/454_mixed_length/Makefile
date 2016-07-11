@@ -62,12 +62,12 @@ outs_bt2: \
 reads: \
     r0_mason_fff_50to500.fq.gz
 
-SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
+MK_QSIM_ARGS=--trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2s,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2sl,$(SUBSAMPLING_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s,$(MK_QSIM_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl,$(MK_QSIM_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
 $(eval $(call mason_fff_unp_reads,fff_50to500,$(HG_FASTA),275,225,$(NREADS),7724))

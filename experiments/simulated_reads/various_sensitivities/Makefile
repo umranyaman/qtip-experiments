@@ -98,38 +98,38 @@ reads: \
     r1_mason_ill_100.fq.gz \
     r1_mason_ill_250.fq.gz
 
-SUBSAMPLING_ARGS=--subsampling-series 0.015,0.03 --trials=5 --predict-for-training --keep-intermediates --assess-accuracy
+MK_QSIM_ARGS=--trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
-$(eval $(call bt2ts,bt2vf,$(SUBSAMPLING_ARGS),--very-fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2f,$(SUBSAMPLING_ARGS),--fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s,$(SUBSAMPLING_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vs,$(SUBSAMPLING_ARGS),--very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vf,$(MK_QSIM_ARGS),--very-fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2f,$(MK_QSIM_ARGS),--fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s,$(MK_QSIM_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vs,$(MK_QSIM_ARGS),--very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
-$(eval $(call bt2ts,bt2vfl,$(SUBSAMPLING_ARGS),--very-fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2fl,$(SUBSAMPLING_ARGS),--fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2sl,$(SUBSAMPLING_ARGS),--sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vsl,$(SUBSAMPLING_ARGS),--very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vfl,$(MK_QSIM_ARGS),--very-fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2fl,$(MK_QSIM_ARGS),--fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl,$(MK_QSIM_ARGS),--sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vsl,$(MK_QSIM_ARGS),--very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
-$(eval $(call bt2ts,bt2vf100,$(SUBSAMPLING_ARGS),-I 200 -X 400 --very-fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vf250,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --very-fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2f100,$(SUBSAMPLING_ARGS),-I 200 -X 400 --fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2f250,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s100,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s250,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vs100,$(SUBSAMPLING_ARGS),-I 200 -X 400 --very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vs250,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vf100,$(MK_QSIM_ARGS),-I 200 -X 400 --very-fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vf250,$(MK_QSIM_ARGS),-I 500 -X 1000 --very-fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2f100,$(MK_QSIM_ARGS),-I 200 -X 400 --fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2f250,$(MK_QSIM_ARGS),-I 500 -X 1000 --fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vs100,$(MK_QSIM_ARGS),-I 200 -X 400 --very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vs250,$(MK_QSIM_ARGS),-I 500 -X 1000 --very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
-$(eval $(call bt2ts,bt2vfl100,$(SUBSAMPLING_ARGS),-I 200 -X 400 --very-fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vfl250,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --very-fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2fl100,$(SUBSAMPLING_ARGS),-I 200 -X 400 --fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2fl250,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2sl100,$(SUBSAMPLING_ARGS),-I 200 -X 400 --sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2sl250,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vsl100,$(SUBSAMPLING_ARGS),-I 200 -X 400 --very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vsl250,$(SUBSAMPLING_ARGS),-I 500 -X 1000 --very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vfl100,$(MK_QSIM_ARGS),-I 200 -X 400 --very-fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vfl250,$(MK_QSIM_ARGS),-I 500 -X 1000 --very-fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2fl100,$(MK_QSIM_ARGS),-I 200 -X 400 --fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2fl250,$(MK_QSIM_ARGS),-I 500 -X 1000 --fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl100,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl250,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vsl100,$(MK_QSIM_ARGS),-I 200 -X 400 --very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2vsl250,$(MK_QSIM_ARGS),-I 500 -X 1000 --very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
 $(eval $(call mason_ill_unp_reads,ill_100,$(HG_FASTA),100,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_250,$(HG_FASTA),250,$(NREADS),7724))
