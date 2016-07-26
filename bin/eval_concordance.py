@@ -25,46 +25,48 @@ Finally:
   + Sort the percentile vector by MAPQ percentile and record
 
 Example usage:
-pypy eval_concordance.py $HOME/final.sam $HOME/tandem_unp.sam inp.incor tan.incor
+pypy eval_concordance.py $HOME/input.sam $HOME/predictions.csv dists.txt incor.mapq incor.mapq_orig
 
 TODO:
 - Are we doing paired-end correctly for the various name formats?
 """
 
 
-def pass1_line(ln, mapq_dist, ztz_dist):
-    """ Extracts MAPQ and ZT:Z fields; sticks them in histograms """
-    if ln[0] == '@':
-        return
-    toks = ln.rstrip().split('\t')
-    if toks[1] == '4':
-        return
-    mapq_dist[int(toks[4])] += 1  # MAPQ
-    for tok in toks[12:]:
-        if tok.startswith('ZT:Z:'):
-            for i, ztok in enumerate(tok[6:].split(',')):
-                ztz_dist[i][float(ztok)] += 1  # ZT:Z
-            break
+def pass1_fh(fh_sam, fh_pred):
+    """ Histograms all the alignments """
+    mapq_dist, mapq_orig_dist = defaultdict(int), defaultdict(int)
+    ztz_dist = defaultdict(lambda: defaultdict(int))
+    line = 0
+    for ln in fh_sam:
+        line += 1
+        if ln[0] == '@':
+            continue
+        toks = ln.rstrip().split('\t')
+        flags = int(toks[1])
+        if (flags & 4) != 0 or (flags & 2048) != 0:
+            continue
+        pred = fh_pred.readline()
+        assert len(pred) > 0
+        predline, pred = pred.split(',')
+        assert int(predline) == line, (predline, line)
+        mapq_dist[int(round(float(pred)))] += 1
+        mapq_orig_dist[int(toks[4])] += 1
+        for tok in toks[12:]:
+            if tok.startswith('ZT:Z:'):
+                for i, ztok in enumerate(tok[5:].split(',')):
+                    if ztok == 'NA':
+                        pass
+                    else:
+                        ztz_dist[i][int(ztok)] += 1  # ZT:Z
+                break
+    return mapq_dist, mapq_orig_dist, ztz_dist
 
 
-def pass1_fh(ifh, tfh):
+def pass1_fn(fn_sam, fn_pred):
     """ Histograms all the input and tandem alignments """
-    mapq_dist_inp = defaultdict(int)
-    ztz_dist_inp = defaultdict(lambda: defaultdict(int))
-    for ln in ifh:
-        pass1_line(ln, mapq_dist_inp, ztz_dist_inp)
-    mapq_dist_tan = defaultdict(int)
-    ztz_dist_tan = defaultdict(lambda: defaultdict(int))
-    for ln in tfh:
-        pass1_line(ln, mapq_dist_tan, ztz_dist_tan)
-    return mapq_dist_inp, ztz_dist_inp, mapq_dist_tan, ztz_dist_tan
-
-
-def pass1_fn(input_fn, tandem_fn):
-    """ Histograms all the input and tandem alignments """
-    with open(input_fn) as ifh:
-        with open(tandem_fn) as tfh:
-            return pass1_fh(ifh, tfh)
+    with open(fn_sam) as fh_sam:
+        with open(fn_pred) as fh_pred:
+            return pass1_fh(fh_sam, fh_pred)
 
 """
 Example: 10_26049747_26049846_0:0:0_0:0:0_100_100_0_3999999
@@ -165,11 +167,6 @@ def is_correct(toks, wiggle=30):
     return same_pos(true_pos, aligned_pos, wiggle=wiggle)
 
 
-def percentile_in(item, dist):
-    # get item's percentile in empirical distribution dist
-    pass
-
-
 def percentileize(dist):
     last_v = 0
     cum = {}
@@ -183,43 +180,80 @@ def percentileize(dist):
     return pct_dict
 
 
-def pass2_fh(fh, mapq_dist, ztz_dist, ofh):
+def pass2_fh(fh_sam, fh_preds, mapq_dist, mapq_orig_dist, ztz_dist, ofh, ofh_orig):
     logging.info('  Calculating percentiles')
     mapq_pctile_dict = percentileize(mapq_dist)
+    mapq_orig_pctile_dict = percentileize(mapq_orig_dist)
     ztz_pctile_dict = {x: percentileize(v) for x, v in ztz_dist.items()}
-    incors = []
-    for ln in fh:
+    incors, incors_orig = [], []
+    line = 0
+    for ln in fh_sam:
+        line += 1
         if ln[0] == '@':
             continue
         toks = ln.rstrip().split('\t')
-        if toks[1] == '4':
+        flags = int(toks[1])
+        if (flags & 4) != 0 or (flags & 2048) != 0:
             continue
+        pred = fh_preds.readline()
+        assert len(pred) > 0
+        predline, pred = pred.split(',')
+        assert int(predline) == line
         if not is_correct(toks):
-            mapq = int(toks[4])
+            mapq = int(round(float(pred)))
+            mapq_orig = int(toks[4])  # TODO: make mapq_orig dist
             assert mapq in mapq_pctile_dict
             mapq_pctile = mapq_pctile_dict[mapq]
+            mapq_orig_pctile = mapq_orig_pctile_dict[mapq_orig]
             ls = [mapq_pctile[1]]
+            ls_orig = [mapq_orig_pctile[1]]
             for tok in toks[12:]:
                 if tok.startswith('ZT:Z:'):
-                    for i, ztok in enumerate(tok[6:].split(',')):
-                        flztok = float(ztok)
-                        assert flztok in ztz_pctile_dict[i]
-                        ztz_pctile = ztz_pctile_dict[i][flztok]
-                        ls.append(ztz_pctile[1])
+                    for i, ztok in enumerate(tok[5:].split(',')):
+                        if ztok == 'NA':
+                            ls.append('NA')
+                            ls_orig.append('NA')
+                        else:
+                            iztok = int(ztok)
+                            assert iztok in ztz_pctile_dict[i]
+                            ztz_pctile = ztz_pctile_dict[i][iztok]
+                            ls.append(ztz_pctile[1])
+                            ls_orig.append(ztz_pctile[1])
                     break
             incors.append(ls)
+            incors_orig.append(ls_orig)
     logging.info('  Sorting and printing')
     for ls in sorted(incors, reverse=True):
         ofh.write(','.join(map(str, ls)) + '\n')
+    for ls in sorted(incors_orig, reverse=True):
+        ofh_orig.write(','.join(map(str, ls)) + '\n')
 
 
-def pass2_fn(input_fn, tandem_fn, mapq_dist_inp, ztz_dist_inp, mapq_dist_tan, ztz_dist_tan, ofn_inp, ofn_tan):
-    with open(ofn_inp, 'w') as ofh:
-        with open(input_fn) as ifh:
-            pass2_fh(ifh, mapq_dist_inp, ztz_dist_inp, ofh)
-    with open(ofn_tan, 'w') as ofh:
-        with open(tandem_fn) as tfh:
-            pass2_fh(tfh, mapq_dist_tan, ztz_dist_tan, ofh)
+def pass2_fn(sam_fn, predictions_fn, mapq_dist, mapq_orig_dist, ztz_dist, ofn, ofn_orig):
+    with open(ofn, 'w') as ofh:
+        with open(ofn_orig, 'w') as ofh_orig:
+            with open(sam_fn) as fh_sam:
+                with open(predictions_fn) as fh_preds:
+                    pass2_fh(fh_sam, fh_preds, mapq_dist, mapq_orig_dist, ztz_dist, ofh, ofh_orig)
+
+
+def write_dists_fh(mapq_dist, mapq_orig_dist, ztz_dist, ofh):
+    for k, v in sorted(mapq_dist.items()):
+        ofh.write('%d:%d ' % (int(k), v))
+    ofh.write('\n')
+    for k, v in sorted(mapq_orig_dist.items()):
+        ofh.write('%d:%d ' % (k, v))
+    ofh.write('\n')
+    for k_outer, v_outer in sorted(ztz_dist.items()):
+        ofh.write('ztz%d: ' % k_outer)
+        for k, v in sorted(v_outer.items()):
+            ofh.write('%d:%d ' % (k, v))
+        ofh.write('\n')
+
+
+def write_dists_fn(mapq_dist, mapq_orig_dist, ztz_dist, ofn):
+    with open(ofn, 'w') as ofh:
+        write_dists_fh(mapq_dist, mapq_orig_dist, ztz_dist, ofh)
 
 
 def go():
@@ -228,9 +262,11 @@ def go():
     logging.basicConfig(format=format_str, datefmt='%m/%d/%y-%H:%M:%S', level=level)
 
     logging.info('Pass 1')
-    mapq_dist_inp, ztz_dist_inp, mapq_dist_tan, ztz_dist_tan = pass1_fn(sys.argv[1], sys.argv[2])
+    mapq_dist, mapq_orig_dist, ztz_dist = pass1_fn(sys.argv[1], sys.argv[2])
+    logging.info('Writing distributions')
+    write_dists_fn(mapq_dist, mapq_orig_dist, ztz_dist, sys.argv[3])
     logging.info('Pass 2')
-    pass2_fn(sys.argv[1], sys.argv[2], mapq_dist_inp, ztz_dist_inp, mapq_dist_tan, ztz_dist_tan, sys.argv[3], sys.argv[4])
+    pass2_fn(sys.argv[1], sys.argv[2], mapq_dist, mapq_orig_dist, ztz_dist, sys.argv[4], sys.argv[5])
     logging.info('Done')
 
 
