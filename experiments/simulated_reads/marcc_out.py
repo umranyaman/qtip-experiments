@@ -94,7 +94,7 @@ def go():
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files and 'IGNORE' not in files:
             print('Found a Makefile: %s' % (os.path.join(dirname, 'Makefile')), file=sys.stderr)
-            handle_dir(dirname, re_out, mem_gb, hours, dry_run=sys.argv[1] == 'dry',
+            handle_dir(dirname, re_out, mem_gb, hours, dry_run=(sys.argv[1] == 'dry' or sys.argv[1] == '--dry'),
                        use_scavenger=len(sys.argv) > 2 and sys.argv[2] == 'scavenger')
 
 if __name__ == '__main__':
