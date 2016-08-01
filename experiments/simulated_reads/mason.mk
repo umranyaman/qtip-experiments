@@ -9,6 +9,8 @@
 # -hM  Haplotype indel size max (6)
 # Illumina:
 # -n   read length for illumina
+# -ll  Mate-pair mean library length. Default: 1000.
+# -le, Mate-pair library tolerance. Default: 100.
 # 454:
 # -nu  Use uniform read length distribution (default: normal)
 # -nm  Read length mean
