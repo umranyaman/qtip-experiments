@@ -4,9 +4,15 @@ TS_BT2_HOME=$(QSIM_EXPERIMENTS_HOME)/software/bowtie2
 INDEXES=$(QSIM_EXPERIMENTS_HOME)/experiments/refs
 PYTHON=python -O
 
-BT2_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2 --index $(INDEXES)/hg19.fa
-BWA_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(INDEXES)/hg19.fa
-SNAP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap-aligner --index $(INDEXES)/hg19.fa.snap
+BT2_QSIM_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2 --index $(INDEXES)/hg19.fa
+BT2_ARGS=
+BT2_PAIR_ARGS=-X 750
+BWA_QSIM_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(INDEXES)/hg19.fa
+BWA_ARGS=
+BWA_PAIR_ARGS=
+SNAP_QSIM_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap-aligner --index $(INDEXES)/hg19.fa.snap
+SNAP_ARGS=
+SNAP_PAIR_ARGS=
 
 NTHREADS=1
 NTHREADS_VS=16
@@ -47,18 +53,18 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bwa.unp.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(BWA_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		$(BWA_QSIM_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--vanilla-output $@ \
-		-- -t $(NTHREADS)
+		-- -t $(NTHREADS) $(BWA_ARGS)
 
 %.bwa.pair.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(BWA_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		$(BWA_QSIM_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
-		-- -t $(NTHREADS)
+		-- -t $(NTHREADS) $(BWA_ARGS) $(BWA_PAIR_ARGS)
 
 # #######
 # Bowtie2
@@ -66,18 +72,18 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.bt2.unp.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(BT2_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		$(BT2_QSIM_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--vanilla-output $@ \
-		-- -p $(NTHREADS)
+		-- -p $(NTHREADS) $(BT2_ARGS)
 
 %.bt2.pair.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(BT2_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		$(BT2_QSIM_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
-		-- -p $(NTHREADS)
+		-- -p $(NTHREADS) $(BT2_ARGS) $(BT2_PAIR_ARGS)
 
 # #######
 # SNAP
@@ -85,18 +91,18 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 
 %.snap.unp.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(SNAP_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		$(SNAP_QSIM_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--vanilla-output $@ \
-		-- -t $(NTHREADS)
+		-- -t $(NTHREADS) $(SNAP_ARGS)
 
 %.snap.pair.sam: %.fastq
 	$(PYTHON) $(QSIM_HOME)/src/qsim \
-		$(SNAP_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		$(SNAP_QSIM_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
 		--vanilla-output $@ \
-		-- -t $(NTHREADS)
+		-- -t $(NTHREADS) $(SNAP_ARGS) $(SNAP_PAIR_ARGS)
 
 # ###############
 # Extra sensitive
@@ -108,6 +114,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS_VS) \
 		-U $< \
 		--very-sensitive \
+		$(BT2_ARGS) \
 		-S $@
 
 %.bt2vs.pair.sam: %.fastq
@@ -116,6 +123,8 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS_VS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive \
+		$(BT2_ARGS) \
+		$(BT2_PAIR_ARGS) \
 		-S $@
 
 # #####################
@@ -128,6 +137,7 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS_VS) \
 		-U $< \
 		--very-sensitive-local \
+		$(BT2_ARGS) \
 		-S $@
 
 %.bt2vsl.pair.sam: %.fastq
@@ -136,4 +146,6 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-p $(NTHREADS_VS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive-local \
+		$(BT2_ARGS) \
+		$(BT2_PAIR_ARGS) \
 		-S $@
