@@ -110,6 +110,8 @@ reads: \
 
 MK_QSIM_ARGS=--trials=5 --predict-for-training --keep-intermediates --assess-accuracy
 
+, := ,
+
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
 #
@@ -119,8 +121,6 @@ $(eval $(call bt2ts,bt2s100,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA
 $(eval $(call bt2ts,bt2sl100,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s250,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2sl250,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-
-, := ,
 
 $(eval $(call bwamemts,bwamem,$(MK_QSIM_ARGS),,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem100,$(MK_QSIM_ARGS),-I 300$(,)25,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
