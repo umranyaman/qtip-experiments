@@ -117,14 +117,14 @@ $(eval $(call wgsim_ill_pair_reads,ill_250,$(HG_FASTA),250,$(NREADS),750,75,7724
 
 # >>> 4000000 * 100 / 3.1e9
 # 0.12903225806451613
-$(eval $(call art_ill_unp_reads,ill_100,$(HG_FASTA),100,0.129,7724))
+$(eval $(call art_ill_unp_reads,ill_100,$(HG_FASTA),100,$(NREADS),0.15,7724))
 # >>> 4000000 * 250 / 3.1e9
 # 0.3225806451612903
-$(eval $(call art_ill_unp_reads,ill_250,$(HG_FASTA),250,0.323,7724))
+$(eval $(call art_ill_unp_reads,ill_250,$(HG_FASTA),250,$(NREADS),0.4,7724))
 
 # >>> 4000000 * 300 / 3.1e9
 # 0.3870967741935484
-$(eval $(call art_ill_pair_reads,ill_100,$(HG_FASTA),100,0.387,300,25,7724))
+$(eval $(call art_ill_pair_reads,ill_100,$(HG_FASTA),100,$(NREADS),0.35,300,25,7724))
 # >>> 4000000 * 750 / 3.1e9
 # 0.967741935483871
-$(eval $(call art_ill_pair_reads,ill_250,$(HG_FASTA),250,0.968,750,75,7724))
+$(eval $(call art_ill_pair_reads,ill_250,$(HG_FASTA),250,$(NREADS),0.9,750,75,7724))

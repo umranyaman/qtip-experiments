@@ -14,15 +14,15 @@
 
 # Use art to generate unpaired Illumina-like reads.  Macro takes
 # parameters: (1) batch name, (2) reference genome, (3) read length in
-# batch, (4) # reads in batch, (5) pseudo-random seed.
+# batch, (4) target # reads, (5) fold coverage, (6) pseudo-random seed.
 define art_ill_unp_reads
 
 # Generate unpaired reads
 r0_art_$1.fq.gz: $$(FA) $$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina
-	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina -sam -na -rs $5 -l $3 -f $4 -i $2 -o .$$@
+	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina -sam -na -rs $6 -l $3 -f $5 -i $2 -o .$$@
 	python $(QSIM_EXPERIMENTS_HOME)/bin/art_convert.py --in1 .$$(@).fq --sam .$$(@).sam --out1 .$$(@).final.fq
 	rm -f .$$(@).fq .$$(@).sam
-	gzip -c .$$(@).final.fq > $$@
+	head -n `python -c 'print(4 * $4)'` .$$(@).final.fq | gzip -c > $$@
 	rm -f .$$(@).final.fq
 	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina 2>&1 > $$@.version
 
@@ -30,17 +30,17 @@ endef
 
 # Use art to generate paired-end Illumina-like reads.  Macro takes
 # parameters: (1) batch name, (2) reference genome, (3) read length in
-# batch, (4) average fold-coverage, (5) mean fragment length, (6)
-# stddev for fragment length, (7) pseudo-random seed.
+# batch, (4) target # pairs, (5) average fold-coverage, (6) mean fragment
+# length, (7) stddev for fragment length, (8) pseudo-random seed.
 define art_ill_pair_reads
 
 # Generate paired-end reads
 r1_art_$1.fq.gz: $(FA) $$(FA) $$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina
-	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina -sam -na -p -rs $7 -m $5 -s $6 -l $3 -f $4 -i $2 -o .$$@
+	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina -sam -na -p -rs $8 -m $6 -s $7 -l $3 -f $5 -i $2 -o .$$@
 	python $(QSIM_EXPERIMENTS_HOME)/bin/art_convert.py --in1 .$$(@)1.fq --in2 .$$(@)2.fq --sam .$$(@).sam --out1 .$$(@).final1.fq --out2 .$$(@).final2.fq
 	rm -f .$$(@)1.fq .$$(@)2.fq .$$(@).sam
-	gzip -c .$$(@).final1.fq > $$@
-	gzip -c .$$(@).final2.fq > $$(@:r1_%=r2_%)
+	head -n `python -c 'print(4 * $4)'` .$$(@).final1.fq | gzip -c > $$@
+	head -n `python -c 'print(4 * $4)'` .$$(@).final2.fq | gzip -c > $$(@:r1_%=r2_%)
 	rm -f .$$(@).final1.fq .$$(@).final2.fq
 	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina 2>&1 > $$@.version
 
