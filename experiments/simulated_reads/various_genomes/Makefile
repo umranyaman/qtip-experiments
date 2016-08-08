@@ -89,7 +89,7 @@ clean:
 	rm -rf *.out
 
 .PHONY: outs
-outs: outs_bt2 outs_bwamem
+outs: outs_bt2 outs_bwamem outs_snap
 
 .PHONY: outs_bt2
 outs_bt2: \
@@ -121,6 +121,21 @@ outs_bwamem: \
     r12_bwamem100_zm_mason_ill_zm_100.out/DONE \
     r12_bwamem250_zm_mason_ill_zm_250.out/DONE
 
+.PHONY: outs_snap
+outs_snap: \
+    r0_snap_hg_mason_ill_hg_100.out/DONE \
+    r0_snap_hg_mason_ill_hg_250.out/DONE \
+    r0_snap_mm_mason_ill_mm_100.out/DONE \
+    r0_snap_mm_mason_ill_mm_250.out/DONE \
+    r0_snap_zm_mason_ill_zm_100.out/DONE \
+    r0_snap_zm_mason_ill_zm_250.out/DONE \
+    r12_snap100_hg_mason_ill_hg_100.out/DONE \
+    r12_snap250_hg_mason_ill_hg_250.out/DONE \
+    r12_snap100_mm_mason_ill_mm_100.out/DONE \
+    r12_snap250_mm_mason_ill_mm_250.out/DONE \
+    r12_snap100_zm_mason_ill_zm_100.out/DONE \
+    r12_snap250_zm_mason_ill_zm_250.out/DONE
+
 .PHONY: reads
 reads: \
     r0_mason_ill_hg_100.fq.gz \
@@ -148,6 +163,10 @@ $(eval $(call bwamemts,bwamem_hg,$(MK_QSIM_ARGS),,$(FA_HG),$(HG_INDEX),out,$(NCO
 $(eval $(call bwamemts,bwamem_mm,$(MK_QSIM_ARGS),,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem_zm,$(MK_QSIM_ARGS),,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
+$(eval $(call snapts,snap_hg,$(MK_QSIM_ARGS),,,,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap_mm,$(MK_QSIM_ARGS),,,,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap_zm,$(MK_QSIM_ARGS),,,,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
+
 $(eval $(call bt2ts,bt2s100_hg,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s100_mm,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s100_zm,$(MK_QSIM_ARGS),-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
@@ -156,6 +175,10 @@ $(eval $(call bwamemts,bwamem100_hg,$(MK_QSIM_ARGS),-I 300$(,)25,$(FA_HG),$(HG_I
 $(eval $(call bwamemts,bwamem100_mm,$(MK_QSIM_ARGS),-I 300$(,)25,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem100_zm,$(MK_QSIM_ARGS),-I 300$(,)25,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
+$(eval $(call snapts,snap100_hg,$(MK_QSIM_ARGS),,,-s 100 300,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap100_mm,$(MK_QSIM_ARGS),,,-s 100 300,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap100_zm,$(MK_QSIM_ARGS),,,-s 100 300,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
+
 $(eval $(call bt2ts,bt2s250_hg,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s250_mm,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s250_zm,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
@@ -163,6 +186,10 @@ $(eval $(call bt2ts,bt2s250_zm,$(MK_QSIM_ARGS),-I 500 -X 1000 --sensitive,$(FA_Z
 $(eval $(call bwamemts,bwamem250_hg,$(MK_QSIM_ARGS),-I 750$(,)62,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem250_mm,$(MK_QSIM_ARGS),-I 750$(,)62,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem250_zm,$(MK_QSIM_ARGS),-I 750$(,)62,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
+
+$(eval $(call snapts,snap250_hg,$(MK_QSIM_ARGS),,,-s 250 750,$(FA_HG),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap250_mm,$(MK_QSIM_ARGS),,,-s 250 750,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap250_zm,$(MK_QSIM_ARGS),,,-s 250 750,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
 $(eval $(call mason_ill_unp_reads,ill_hg_100,$(FA_HG),100,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_hg_250,$(FA_HG),250,$(NREADS),7724))
