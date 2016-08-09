@@ -1,6 +1,5 @@
 """
-Check whether there's good concordance between training and test data
-in various ways.
+Turn ZT:Zs and MAPQs into percentiles for further analysis.
 """
 
 from __future__ import print_function
@@ -25,10 +24,31 @@ Finally:
   + Sort the percentile vector by MAPQ percentile and record
 
 Example usage:
-pypy eval_concordance.py $HOME/input.sam $HOME/predictions.csv dists.txt incor.mapq incor.mapq_orig
+pypy eval_concordance.py $HOME/input.sam $HOME/predictions.csv dists.txt incor.mapq incor.mapq_orig incor.both
 
 TODO:
 - Are we doing paired-end correctly for the various name formats?
+
+# Load data and give appropriate column names
+setwd('~/git/qsim-experiments/bin')
+mq <- read.table('incor.mapq', sep=',', header=F, quote="", comment.char="")
+mo <- read.table('incor.mapq_orig', sep=',', header=F, quote="", comment.char="")
+mb <- read.table('incor.both', sep=',', header=F, quote="", comment.char="")
+ztn <- c('ztz0', 'ztz1', 'ztz2', 'ztz3', 'ztz4', 'ztz5', 'ztz6', 'ztz7', 'ztz8', 'ztz9')
+cn <- c('mapq', ztn)
+colnames(mq) <- cn
+colnames(mo) <- cn
+colnames(mb) <- c('mapq', 'mapq_orig', ztn)
+
+# Plot some basics
+plot(jitter(mq$ztz1), jitter(mq$mapq))
+points(jitter(mo$ztz1), jitter(mo$mapq), col='blue')
+
+# Plot mapq difference as a function of diff percentile
+library(ggplot2)
+library(ggExtra)
+p <- ggplot(mb, aes(x=ztz1, y=mapq - mapq_orig)) + geom_point() + theme_classic()
+ggExtra::ggMarginal(p)
 """
 
 
@@ -57,7 +77,7 @@ def pass1_fh(fh_sam, fh_pred):
                     if ztok == 'NA':
                         pass
                     else:
-                        ztz_dist[i][int(ztok)] += 1  # ZT:Z
+                        ztz_dist[i][float(ztok)] += 1  # ZT:Z
                 break
     return mapq_dist, mapq_orig_dist, ztz_dist
 
@@ -172,7 +192,7 @@ def percentileize(dist):
     cum = {}
     for k, v in sorted(dist.items()):
         assert k not in cum
-        cum[k] = last_v
+        cum[k] = last_v + v / 2.0
         last_v += v
     pct_dict = {}
     for k in dist.keys():
@@ -180,12 +200,12 @@ def percentileize(dist):
     return pct_dict
 
 
-def pass2_fh(fh_sam, fh_preds, mapq_dist, mapq_orig_dist, ztz_dist, ofh, ofh_orig):
+def pass2_fh(fh_sam, fh_preds, mapq_dist, mapq_orig_dist, ztz_dist, ofh, ofh_orig, ofh_both):
     logging.info('  Calculating percentiles')
     mapq_pctile_dict = percentileize(mapq_dist)
     mapq_orig_pctile_dict = percentileize(mapq_orig_dist)
     ztz_pctile_dict = {x: percentileize(v) for x, v in ztz_dist.items()}
-    incors, incors_orig = [], []
+    incor_mapq, incor_mapq_orig, incor_both = [], [], []
     line = 0
     for ln in fh_sam:
         line += 1
@@ -207,34 +227,41 @@ def pass2_fh(fh_sam, fh_preds, mapq_dist, mapq_orig_dist, ztz_dist, ofh, ofh_ori
             mapq_orig_pctile = mapq_orig_pctile_dict[mapq_orig]
             ls = [mapq_pctile[1]]
             ls_orig = [mapq_orig_pctile[1]]
+            ls_both = [mapq_pctile[1], mapq_orig_pctile[1]]
             for tok in toks[12:]:
                 if tok.startswith('ZT:Z:'):
                     for i, ztok in enumerate(tok[5:].split(',')):
                         if ztok == 'NA':
                             ls.append('NA')
                             ls_orig.append('NA')
+                            ls_both.append('NA')
                         else:
-                            iztok = int(ztok)
+                            iztok = float(ztok)
                             assert iztok in ztz_pctile_dict[i]
                             ztz_pctile = ztz_pctile_dict[i][iztok]
                             ls.append(ztz_pctile[1])
                             ls_orig.append(ztz_pctile[1])
+                            ls_both.append(ztz_pctile[1])
                     break
-            incors.append(ls)
-            incors_orig.append(ls_orig)
+            incor_mapq.append(ls)
+            incor_mapq_orig.append(ls_orig)
+            incor_both.append(ls_both)
     logging.info('  Sorting and printing')
-    for ls in sorted(incors, reverse=True):
+    for ls in sorted(incor_mapq, reverse=True):
         ofh.write(','.join(map(str, ls)) + '\n')
-    for ls in sorted(incors_orig, reverse=True):
+    for ls in sorted(incor_mapq_orig, reverse=True):
         ofh_orig.write(','.join(map(str, ls)) + '\n')
+    for ls in sorted(incor_both, reverse=True):
+        ofh_both.write(','.join(map(str, ls)) + '\n')
 
 
-def pass2_fn(sam_fn, predictions_fn, mapq_dist, mapq_orig_dist, ztz_dist, ofn, ofn_orig):
+def pass2_fn(sam_fn, predictions_fn, mapq_dist, mapq_orig_dist, ztz_dist, ofn, ofn_orig, ofn_both):
     with open(ofn, 'w') as ofh:
         with open(ofn_orig, 'w') as ofh_orig:
-            with open(sam_fn) as fh_sam:
-                with open(predictions_fn) as fh_preds:
-                    pass2_fh(fh_sam, fh_preds, mapq_dist, mapq_orig_dist, ztz_dist, ofh, ofh_orig)
+            with open(ofn_both, 'w') as ofh_both:
+                with open(sam_fn) as fh_sam:
+                    with open(predictions_fn) as fh_preds:
+                        pass2_fh(fh_sam, fh_preds, mapq_dist, mapq_orig_dist, ztz_dist, ofh, ofh_orig, ofh_both)
 
 
 def write_dists_fh(mapq_dist, mapq_orig_dist, ztz_dist, ofh):
@@ -266,7 +293,7 @@ def go():
     logging.info('Writing distributions')
     write_dists_fn(mapq_dist, mapq_orig_dist, ztz_dist, sys.argv[3])
     logging.info('Pass 2')
-    pass2_fn(sys.argv[1], sys.argv[2], mapq_dist, mapq_orig_dist, ztz_dist, sys.argv[4], sys.argv[5])
+    pass2_fn(sys.argv[1], sys.argv[2], mapq_dist, mapq_orig_dist, ztz_dist, sys.argv[4], sys.argv[5], sys.argv[6])
     logging.info('Done')
 
 
