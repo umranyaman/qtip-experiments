@@ -26,7 +26,11 @@ SHELL=/bin/bash
 all: r0_mason_human_mixture_100.fq \
      r0_mason_human_mixture_250.fq \
      r1_mason_human_mixture_100.fq \
-     r1_mason_human_mixture_250.fq
+     r1_mason_human_mixture_250.fq \
+     r0_mason_mouse_mixture_100.fq \
+     r0_mason_mouse_mixture_250.fq \
+     r1_mason_mouse_mixture_100.fq \
+     r1_mason_mouse_mixture_250.fq
 
 # 93% 1 target species (human or mouse)
 #  1% 1 other mammal (either human or mouse, whichever isn't target)
@@ -62,7 +66,59 @@ r12_%.sam: r1_%.fq
 	    -t \
 	    -S $@ 2> >(tee $@.stats)
 
-r0_mason_human_mixture_100.fq: reads
+READS_UNP_100=../simulated_reads/various_genomes/r0_mason_ill_hg_100.fq.gz \
+              ../simulated_reads/various_genomes/r0_mason_ill_mm_100.fq.gz \
+              r0_mason_a_laidlawii_100_10k.fq \
+              r0_mason_m_fermentans_100_10k.fq \
+              r0_mason_m_hyorhinis_100_10k.fq \
+              r0_mason_m_hominis_100_10k.fq \
+              r0_mason_m_globosa_100_10k.fq \
+              r0_mason_p_acnes_100_10k.fq
+
+READS_UNP_250=../simulated_reads/various_genomes/r0_mason_ill_hg_250.fq.gz \
+              ../simulated_reads/various_genomes/r0_mason_ill_mm_250.fq.gz \
+              r0_mason_a_laidlawii_250_10k.fq \
+              r0_mason_m_fermentans_250_10k.fq \
+              r0_mason_m_hyorhinis_250_10k.fq \
+              r0_mason_m_hominis_250_10k.fq \
+              r0_mason_m_globosa_250_10k.fq \
+              r0_mason_p_acnes_250_10k.fq
+
+READS_PAIR_100=../simulated_reads/various_genomes/r1_mason_ill_hg_100.fq.gz \
+               ../simulated_reads/various_genomes/r1_mason_ill_mm_100.fq.gz \
+               r1_mason_a_laidlawii_100_10k.fq \
+               r1_mason_m_fermentans_100_10k.fq \
+               r1_mason_m_hyorhinis_100_10k.fq \
+               r1_mason_m_hominis_100_10k.fq \
+               r1_mason_m_globosa_100_10k.fq \
+               r1_mason_p_acnes_100_10k.fq \
+               ../simulated_reads/various_genomes/r2_mason_ill_hg_100.fq.gz \
+               ../simulated_reads/various_genomes/r2_mason_ill_mm_100.fq.gz \
+               r2_mason_a_laidlawii_100_10k.fq \
+               r2_mason_m_fermentans_100_10k.fq \
+               r2_mason_m_hyorhinis_100_10k.fq \
+               r2_mason_m_hominis_100_10k.fq \
+               r2_mason_m_globosa_100_10k.fq \
+               r2_mason_p_acnes_100_10k.fq
+
+READS_PAIR_250=../simulated_reads/various_genomes/r1_mason_ill_hg_250.fq.gz \
+               ../simulated_reads/various_genomes/r1_mason_ill_mm_250.fq.gz \
+               r1_mason_a_laidlawii_250_10k.fq \
+               r1_mason_m_fermentans_250_10k.fq \
+               r1_mason_m_hyorhinis_250_10k.fq \
+               r1_mason_m_hominis_250_10k.fq \
+               r1_mason_m_globosa_250_10k.fq \
+               r1_mason_p_acnes_250_10k.fq \
+               ../simulated_reads/various_genomes/r2_mason_ill_hg_250.fq.gz \
+               ../simulated_reads/various_genomes/r2_mason_ill_mm_250.fq.gz \
+               r2_mason_a_laidlawii_250_10k.fq \
+               r2_mason_m_fermentans_250_10k.fq \
+               r2_mason_m_hyorhinis_250_10k.fq \
+               r2_mason_m_hominis_250_10k.fq \
+               r2_mason_m_globosa_250_10k.fq \
+               r2_mason_p_acnes_250_10k.fq
+
+r0_mason_human_mixture_100.fq: $(READS_UNP_100)
 	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg_100.fq.gz | head -n `expr 930000 \* 4` > $@
 	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_100.fq.gz | head -n 40000 | $(RENAME) >> $@
 	cat r0_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $@
@@ -72,7 +128,17 @@ r0_mason_human_mixture_100.fq: reads
 	cat r0_mason_m_globosa_100_10k.fq | $(RENAME) >> $@
 	cat r0_mason_p_acnes_100_10k.fq | $(RENAME) >> $@
 
-r0_mason_human_mixture_250.fq: reads
+r0_mason_mouse_mixture_100.fq: $(READS_UNP_100)
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_100.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg_100.fq.gz | head -n 40000 | $(RENAME) >> $@
+	cat r0_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_fermentans_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_hyorhinis_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_hominis_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_globosa_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_p_acnes_100_10k.fq | $(RENAME) >> $@
+
+r0_mason_human_mixture_250.fq: $(READS_UNP_250)
 	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg_250.fq.gz | head -n `expr 930000 \* 4` > $@
 	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_250.fq.gz | head -n 40000 | $(RENAME) >> $@
 	cat r0_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
@@ -82,7 +148,17 @@ r0_mason_human_mixture_250.fq: reads
 	cat r0_mason_m_globosa_250_10k.fq | $(RENAME) >> $@
 	cat r0_mason_p_acnes_250_10k.fq | $(RENAME) >> $@
 
-r1_mason_human_mixture_100.fq: reads
+r0_mason_mouse_mixture_250.fq: $(READS_UNP_250)
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_250.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg_250.fq.gz | head -n 40000 | $(RENAME) >> $@
+	cat r0_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_fermentans_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_hyorhinis_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_hominis_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_globosa_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_p_acnes_250_10k.fq | $(RENAME) >> $@
+
+r1_mason_human_mixture_100.fq: $(READS_PAIR_100)
 	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg_100.fq.gz | head -n `expr 930000 \* 4` > $@
 	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg_100.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
 	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_100.fq.gz | head -n 40000 | $(RENAME) >> $@
@@ -100,11 +176,47 @@ r1_mason_human_mixture_100.fq: reads
 	cat r2_mason_m_globosa_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
 	cat r2_mason_p_acnes_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
 
-r1_mason_human_mixture_250.fq: reads
+r1_mason_mouse_mixture_100.fq: $(READS_PAIR_100)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_100.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_mm_100.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg_100.fq.gz | head -n 40000 | $(RENAME) >> $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg_100.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r1_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_fermentans_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_hyorhinis_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_hominis_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_globosa_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_p_acnes_100_10k.fq | $(RENAME) >> $@
+	cat r2_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_fermentans_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_hyorhinis_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_hominis_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_globosa_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_p_acnes_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+
+r1_mason_human_mixture_250.fq: $(READS_PAIR_250)
 	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg_250.fq.gz | head -n `expr 930000 \* 4` > $@
 	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg_250.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
 	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_250.fq.gz | head -n 40000 | $(RENAME) >> $@
 	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_mm_250.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r1_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_fermentans_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_hyorhinis_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_hominis_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_globosa_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_p_acnes_250_10k.fq | $(RENAME) >> $@
+	cat r2_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_fermentans_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_hyorhinis_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_hominis_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_globosa_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_p_acnes_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+
+r1_mason_mouse_mixture_250.fq: $(READS_PAIR_250)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_250.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_mm_250.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg_250.fq.gz | head -n 40000 | $(RENAME) >> $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg_250.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
 	cat r1_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
 	cat r1_mason_m_fermentans_250_10k.fq | $(RENAME) >> $@
 	cat r1_mason_m_hyorhinis_250_10k.fq | $(RENAME) >> $@
@@ -189,4 +301,4 @@ $(eval $(call reads,a_laidlawii,GCA_000018785.1_ASM1878v1_genomic.fna))
 
 .PHONY: clean
 clean:
-	rm -f .*.fq *.fq *.fa
+	rm -f .*.fq *.fa *.fq *.fna.gz *.fna
