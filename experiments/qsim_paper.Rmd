@@ -290,7 +290,9 @@ various_lengths_plot <- function(
     labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
     geom_line() +
     theme_bw() +
-    theme(legend.title=element_blank(), axis.title.x = element_text(vjust=-0.4))
+    guides(colour = guide_legend(override.aes = list(size=1))) +
+    theme(legend.title=element_blank(), legend.key = element_blank(),
+          legend.text=element_text(size=12))
 }
 ```
 
@@ -433,15 +435,24 @@ various_aligners_plot <- function(
                       )
   mtmp <- explode_curves(mtmp, want_cid)
   mx <- max(abs(mtmp$y))
+  levels(mtmp$aligner2)[levels(mtmp$aligner2)=="bt2 e2e"] <- "Bowtie 2 end-to-end  "
+  levels(mtmp$aligner2)[levels(mtmp$aligner2)=="bt2 local"] <- "Bowtie 2 local  "
+  levels(mtmp$aligner2)[levels(mtmp$aligner2)=="bwamem"] <- "BWA-MEM  "
+  levels(mtmp$aligner2)[levels(mtmp$aligner2)=="snap"] <- "SNAP  "
+  mtmp$aligner2 <- relevel(mtmp$aligner2, "BWA-MEM  ")
+  mtmp$aligner2 <- relevel(mtmp$aligner2, "Bowtie 2 local  ")
+  mtmp$aligner2 <- relevel(mtmp$aligner2, "Bowtie 2 end-to-end  ")
   ggplot(mtmp, aes(x=x, y=y, color=aligner2)) +
     geom_abline(intercept = 0, slope = 0) +
     coord_trans(y = logmod_trans()) +
     scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
     labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+    theme(axis.title.x = element_text(vjust=-0.6)) +
     geom_line() +
     theme_bw() +
-    theme(legend.title=element_blank(),
-          axis.title.x = element_text(vjust=-0.4))
+    guides(colour = guide_legend(override.aes = list(size=1))) +
+    theme(legend.title=element_blank(), legend.key = element_blank(),
+          legend.text=element_text(size=12))
 }
 ```
 
@@ -462,7 +473,7 @@ grid_arrange_shared_legend(p_va_u100ei,
                            p_va_p250ei)
 
 # Write to PDF
-pdf(file="various_aligners_cse_test.pdf", onefile=F)
+pdf(file="various_aligners_cid_test.pdf", onefile=F)
 grid_arrange_shared_legend(p_va_u100ei,
                            p_va_u250ei,
                            p_va_p100ei,
@@ -748,13 +759,13 @@ various_sensitivities_plot <- function(
 #                      & mapq_included == want_mapq_included
 #                      & subsampling_fraction == want_subsampling_fraction
                       )
-  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="vs"] <- "--very-sensitive"
-  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="s"] <- "--sensitive"
-  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="f"] <- "--fast"
-  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="vf"] <- "--very-fast"
-  mtmp$sensitivity <- relevel(mtmp$sensitivity, "--sensitive")
-  mtmp$sensitivity <- relevel(mtmp$sensitivity, "--fast")
-  mtmp$sensitivity <- relevel(mtmp$sensitivity, "--very-fast")
+  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="vs"] <- "--very-sensitive  "
+  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="s"] <- "--sensitive  "
+  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="f"] <- "--fast  "
+  levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="vf"] <- "--very-fast  "
+  mtmp$sensitivity <- relevel(mtmp$sensitivity, "--sensitive  ")
+  mtmp$sensitivity <- relevel(mtmp$sensitivity, "--fast  ")
+  mtmp$sensitivity <- relevel(mtmp$sensitivity, "--very-fast  ")
   mtmp <- explode_curves(mtmp, want_cid)
   mx <- max(abs(mtmp$y))
   ggplot(mtmp, aes(x=x, y=y, color=sensitivity)) +
@@ -764,7 +775,9 @@ various_sensitivities_plot <- function(
     labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
     geom_line() +
     theme_bw() +
-    theme(legend.title=element_blank(), axis.title.x = element_text(vjust=-0.4))
+    guides(colour = guide_legend(override.aes = list(size=1))) +
+    theme(legend.title=element_blank(), legend.key = element_blank(),
+          legend.text=element_text(size=12))
 }
 ```
 
@@ -1153,6 +1166,11 @@ real_data_plot <- function(
                                loose == want_loose)
     realtmp <- explode_curves(realtmp, want_cid)
     mx <- max(abs(realtmp$y))
+    levels(realtmp$aligner)[levels(realtmp$aligner)=="bt2"] <- "Bowtie 2 end-to-end  "
+    levels(realtmp$aligner)[levels(realtmp$aligner)=="bwamem"] <- "BWA-MEM  "
+    levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP  "
+    realtmp$aligner <- relevel(realtmp$aligner, "BWA-MEM  ")
+    realtmp$aligner <- relevel(realtmp$aligner, "Bowtie 2 end-to-end  ")
     ggplot(realtmp, aes(x=x, y=y, color=aligner)) +
       geom_abline(intercept = 0, slope = 0) +
       coord_trans(y = logmod_trans()) +
@@ -1160,8 +1178,9 @@ real_data_plot <- function(
       labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
       geom_line() +
       theme_bw() +
-      theme(legend.title=element_blank(),
-            axis.title.x = element_text(vjust=-0.4))
+      guides(colour = guide_legend(override.aes = list(size=1))) +
+      theme(legend.title=element_blank(), legend.key = element_blank(),
+            legend.text=element_text(size=12))
 }
 ```
 
