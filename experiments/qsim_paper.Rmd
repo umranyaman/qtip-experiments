@@ -156,7 +156,7 @@ explode_curves <- function(tab, cid, length_out=1000) {
 trials_plot <- function(m_filt, want_cid, xlab) {
   mtmp <- explode_curves(m_filt, want_cid)
   mx <- max(abs(mtmp$y))
-  ggplot(mtmp, aes(x=x, y=y, color=factor(trial_no))) +
+  ggplot(mtmp, aes(x=x, y=y, color=factor(trial_no), linetype=mapq_included)) +
     geom_abline(intercept = 0, slope = 0) +
     coord_trans(y = logmod_trans()) +
     scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
@@ -167,13 +167,9 @@ trials_plot <- function(m_filt, want_cid, xlab) {
 }
 
 subsample_trials_plot <- function(m_filt, want_cid) {
-  f01_te <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.01 & !training), want_cid, "0.01 test")
-  f01_tr <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.01 &  training), want_cid, "0.01 training")
-  f03_te <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.03 & !training), want_cid, "0.03 test")
-  f03_tr <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.03 &  training), want_cid, "0.03 training")
-  f05_te <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.05 & !training), want_cid, "0.05 test")
-  f05_tr <- trials_plot(m_filt %>% filter(subsampling_fraction == 0.05 &  training), want_cid, "0.05 training")
-  grid_arrange_shared_legend(f01_te, f01_tr, f03_te, f03_tr, f05_te, f05_tr)
+  f_te <- trials_plot(m_filt %>% filter(!training), want_cid, "test")
+  f_tr <- trials_plot(m_filt %>% filter( training), want_cid, "training")
+  grid_arrange_shared_legend(f_te, f_tr)
 }
 ```
 
@@ -193,7 +189,6 @@ xtable <- function(x, file = "", ...) {
 }
 
 oa <- m[m$trial_no == 1,]  # for now
-oa <- oa[oa$subsampling_fraction == 0.03,]  # for now
 
 various_lengths_table <- function(want_training, want_paired, want_local) {
   oatmp <- oa %>% filter(training == want_training & name == 'ill_various_length' &
@@ -271,8 +266,10 @@ various_lengths_plot <- function(
   want_training,
   want_cid,
   want_local,
-  want_trial=1,
-  want_subsampling_fraction=0.03)
+  want_trial=1
+#  , want_subsampling_fraction=0.03,
+#  , want_mapq_included=F
+  )
 {
   xlab <- paste0(if(want_paired) "Paired " else "Unpaired ",
                  if(want_local) "local" else "end-to-end")
@@ -280,8 +277,10 @@ various_lengths_plot <- function(
                        paired == want_paired &
                        local == want_local &
                        training == want_training &
-                       trial_no == want_trial &
-                       subsampling_fraction == want_subsampling_fraction)
+                       trial_no == want_trial
+#                      & mapq_included == want_mapq_included
+#                      & subsampling_fraction == want_subsampling_fraction
+                       )
   mtmp <- explode_curves(mtmp, want_cid)
   mx <- max(abs(mtmp$y))
   ggplot(mtmp, aes(x=x, y=y, color=factor(readlen))) +
@@ -395,19 +394,19 @@ grid_arrange_shared_legend(p_vl_uree,
 dev.off()
 ```
 
-##### Diagnostics
+<!-- ##### Diagnostics -->
 
-Zooming in on BT2 50 bp end-to-end CID:
+<!-- Zooming in on BT2 50 bp end-to-end CID: -->
 
-```{r various_lengths_plot_bt2_50_ee}
-subsample_trials_plot(m %>% filter(name == 'ill_various_length' & !local & !paired & readlen == 50), T)
-```
+<!-- ```{r various_lengths_plot_bt2_50_ee} -->
+<!-- subsample_trials_plot(m %>% filter(name == 'ill_various_length' & !local & !paired & readlen == 50), T) -->
+<!-- ``` -->
 
-And local:
+<!-- And local: -->
 
-```{r various_lengths_plot_bt2_50_loc}
-subsample_trials_plot(m %>% filter(name == 'ill_various_length' & local & !paired & readlen == 50), T)
-```
+<!-- ```{r various_lengths_plot_bt2_50_loc} -->
+<!-- subsample_trials_plot(m %>% filter(name == 'ill_various_length' & local & !paired & readlen == 50), T) -->
+<!-- ``` -->
 
 #### Aligners
 
@@ -417,8 +416,10 @@ various_aligners_plot <- function(
   want_readlen,
   want_training,
   want_cid,
-  want_trial=1,
-  want_subsampling_fraction=0.03)
+  want_trial=1
+#  ,want_subsampling_fraction=0.03
+#  ,want_mapq_included=F
+)
 {
   xlab <- paste0(want_readlen, " bp ",
                  if(want_paired) "paired " else "unpaired ")
@@ -426,8 +427,10 @@ various_aligners_plot <- function(
                       paired == want_paired &
                       readlen == want_readlen &
                       training == want_training &
-                      trial_no == want_trial &
-                      subsampling_fraction == want_subsampling_fraction)
+                      trial_no == want_trial
+#                     & mapq_included == want_mapq_included
+#                     & subsampling_fraction == want_subsampling_fraction
+                      )
   mtmp <- explode_curves(mtmp, want_cid)
   mx <- max(abs(mtmp$y))
   ggplot(mtmp, aes(x=x, y=y, color=aligner2)) +
@@ -544,16 +547,16 @@ dev.off()
 
 ##### Diagnostics
 
-Zooming in on SNAP 250 x 250 CID unpaired:
+Zooming in on BWA-MEM unpaired 100bp:
 
-```{r various_lengths_plot_snap_250_unp}
-subsample_trials_plot(m %>% filter(name == 'various_aligners' & !paired & readlen == 250 & aligner == 'snap'), T)
+```{r various_aligners_plot_bwamem100_unp}
+subsample_trials_plot(m %>% filter(name == 'various_aligners' & !paired & readlen == 100 & aligner == 'bwamem'), T)
 ```
 
-And paired:
+And 250bp:
 
-```{r various_lengths_plot_snap_250_pe}
-subsample_trials_plot(m %>% filter(name == 'various_aligners' & paired & readlen == 250 & aligner == 'snap'), T)
+```{r various_aligners_plot_bwamem250_unp}
+subsample_trials_plot(m %>% filter(name == 'various_aligners' & !paired & readlen == 250 & aligner == 'bwamem'), T)
 ```
 
 #### Genomes
@@ -564,8 +567,10 @@ various_genomes_plot <- function(
   want_readlen,
   want_training,
   want_cid,
-  want_trial=1,
-  want_subsampling_fraction=0.03)
+  want_trial=1
+#  ,want_subsampling_fraction=0.03
+#  ,want_mapq_included=F
+)
 {
     xlab <- paste0(want_readlen, " bp ",
                    if(want_paired) "paired " else "unpaired ")
@@ -573,8 +578,10 @@ various_genomes_plot <- function(
                          paired == want_paired &
                          readlen == want_readlen &
                          training == want_training &
-                         trial_no == want_trial &
-                         subsampling_fraction == want_subsampling_fraction)
+                         trial_no == want_trial
+#                         & mapq_included == want_mapq_included
+#                         & subsampling_fraction == want_subsampling_fraction
+                         )
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
     ggplot(mtmp, aes(x=x, y=y, color=species, linetype=aligner)) +
@@ -691,40 +698,28 @@ dev.off()
 
 ##### Diagnostics
 
-Zooming in on BWA-MEM 100 x 100 human CID:
+Zooming in on BWA-MEM 100 bp human CID:
 
-```{r various_genomes_plot_bwa_100_pe_hg}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & paired & readlen == 100 & aligner == 'bwamem'), T)
+```{r various_genomes_plot_bwa_100_unp_hg}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & !paired & readlen == 100 & aligner == 'bwamem'), T)
 ```
 
-Now mouse:
+Now 250 bp:
 
-```{r various_genomes_plot_bwa_100_pe_mm}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'mm' & paired & readlen == 100 & aligner == 'bwamem'), T)
+```{r various_genomes_plot_bwa_250_unp_mm}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & !paired & readlen == 250 & aligner == 'bwamem'), T)
 ```
 
-Now corn:
+Now corn 100 bp unpaired:
 
-```{r various_genomes_plot_bwa_100_pe_zm}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'zm' & paired & readlen == 100 & aligner == 'bwamem'), T)
+```{r various_genomes_plot_bwa_100_unp_zm}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'zm' & !paired & readlen == 100 & aligner == 'bwamem'), T)
 ```
 
-And 250 x 250 human:
+And 250 bp unpaired:
 
-```{r various_genomes_plot_bwa_250_pe_hg}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & paired & readlen == 250 & aligner == 'bwamem'), T)
-```
-
-Now mouse:
-
-```{r various_genomes_plot_bwa_250_pe_mm}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'mm' & paired & readlen == 250 & aligner == 'bwamem'), T)
-```
-
-Now corn:
-
-```{r various_genomes_plot_bwa_250_pe_zm}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'zm' & paired & readlen == 250 & aligner == 'bwamem'), T)
+```{r various_genomes_plot_bwa_250_unp_zm}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'zm' & !paired & readlen == 250 & aligner == 'bwamem'), T)
 ```
 
 #### Various sensitivities:
@@ -736,8 +731,10 @@ various_sensitivities_plot <- function(
   want_readlen,
   want_training,
   want_cid,
-  want_trial=1,
-  want_subsampling_fraction=0.03)
+  want_trial=1
+#  , want_subsampling_fraction=0.03,
+#  , want_mapq_included=F
+  )
 {
   xlab <- paste0(want_readlen, " bp ",
                  if(want_paired) "paired " else "unpaired ",
@@ -747,8 +744,10 @@ various_sensitivities_plot <- function(
                       local == want_local &
                       readlen == want_readlen &
                       training == want_training &
-                      trial_no == want_trial &
-                      subsampling_fraction == want_subsampling_fraction)
+                      trial_no == want_trial
+#                      & mapq_included == want_mapq_included
+#                      & subsampling_fraction == want_subsampling_fraction
+                      )
   levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="vs"] <- "--very-sensitive"
   levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="s"] <- "--sensitive"
   levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="f"] <- "--fast"
@@ -877,8 +876,10 @@ various_simulators_plot <- function(
   want_readlen,
   want_training,
   want_cid,
-  want_trial=1,
-  want_subsampling_fraction=0.03)
+  want_trial=1
+#  , want_subsampling_fraction=0.03,
+#  , want_mapq_included=F
+  )
 {
     xlab <- paste0(want_readlen, " bp ",
                    if(want_paired) "paired " else "unpaired ")
@@ -886,8 +887,10 @@ various_simulators_plot <- function(
                          paired == want_paired &
                          readlen == want_readlen &
                          training == want_training &
-                         trial_no == want_trial &
-                         subsampling_fraction == want_subsampling_fraction)
+                         trial_no == want_trial
+#                         & mapq_included == want_mapq_included
+#                         & subsampling_fraction == want_subsampling_fraction
+                         )
     stopifnot(nrow(mtmp) == 3)
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
@@ -1003,19 +1006,19 @@ grid_arrange_shared_legend(p_vi_u100re,
 dev.off()
 ```
 
-##### Diagnostics
+<!-- ##### Diagnostics -->
 
-Zooming in on BT2 100 Art:
+<!-- Zooming in on BT2 100 Art: -->
 
-```{r various_simulators_plot_bt2_100_unp_art}
-subsample_trials_plot(m %>% filter(name == 'various_simulators' & !paired & readlen == 100 & sim == 'art'), T)
-```
+<!-- ```{r various_simulators_plot_bt2_100_unp_art} -->
+<!-- subsample_trials_plot(m %>% filter(name == 'various_simulators' & !paired & readlen == 100 & sim == 'art'), T) -->
+<!-- ``` -->
 
-And now 100 x 100 paired-end:
+<!-- And now 100 x 100 paired-end: -->
 
-```{r various_simulators_plot_bt2_100_pe_art}
-subsample_trials_plot(m %>% filter(name == 'various_simulators' & paired & readlen == 100 & sim == 'art'), T)
-```
+<!-- ```{r various_simulators_plot_bt2_100_pe_art} -->
+<!-- subsample_trials_plot(m %>% filter(name == 'various_simulators' & paired & readlen == 100 & sim == 'art'), T) -->
+<!-- ``` -->
 
 #### Mixed length
 
@@ -1023,13 +1026,17 @@ subsample_trials_plot(m %>% filter(name == 'various_simulators' & paired & readl
 mixed_length_plot <- function(
   want_training,
   want_cid,
-  want_trial=1,
-  want_subsampling_fraction=0.03)
+  want_trial=1
+#  , want_subsampling_fraction=0.03,
+#  , want_mapq_included=F
+  )
 {
     mtmp <- m %>% filter(name == '454_mixed_length' &
                          training == want_training &
-                         trial_no == want_trial &
-                         subsampling_fraction == want_subsampling_fraction)
+                         trial_no == want_trial
+#                         & mapq_included == want_mapq_included
+#                         & subsampling_fraction == want_subsampling_fraction
+                         )
     stopifnot(nrow(mtmp) == 2)  # local and end-to-end
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
