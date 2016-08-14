@@ -197,17 +197,36 @@ various_lengths_table <- function(want_training, want_paired, want_local) {
                                   overall_test_auc_diff_pct_round,
                                   overall_test_mse_diff_pct_round))
   colnames(oatmp) <- c('Read length', 'RCA', 'RCE')
-  oatmp$RCA <- paste0(prettyNum(oatmp$RCA, digits=4, format='fg'), '%')
+  oatmp$RCA <- paste0(formatC(oatmp$RCA, digits=2, format='f', flag='#'), '%')
   oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
-  oatmp$RCE <- paste0(prettyNum(oatmp$RCE, digits=4, format='fg'), '%')
+  oatmp$RCE <- paste0(formatC(oatmp$RCE, digits=2, format='f', flag='#'), '%')
   oatmp$RCE <- ifelse(oatmp$RCE >= 0.0, paste0('+', oatmp$RCE), oatmp$RCE)
   xtable(oatmp)
 }
 
-various_lengths_table(F, F, F)
-various_lengths_table(F, F, T)
-various_lengths_table(F, T, F)
-various_lengths_table(F, T, T)
+fn <- 'various_lengths.tex_snippet'
+write("\\begin{table}", file=fn)
+write("% cut the multicolumn/midrule line pairs and paste them down just before the results lines", file=fn, append=T)
+write("% get rid of the bottomrule, end tabular, begin tabular, toprule, header lines separating the chunks of results", file=fn, append=T)
+xt <- various_lengths_table(F, F, F)  # unpaired, end-to-end
+write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+xt <- various_lengths_table(F, F, T)  # unpaired, local
+write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+xt <- various_lengths_table(F, T, F)  # paired, end-to-end
+write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+xt <- various_lengths_table(F, T, T)  # paired, local
+write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for simulations spanning various read lengths.  Reads are either unpaired and paired-end and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
+write("\\label{length_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
 
 various_sensitivities_table <- function(want_training, want_paired, want_local, want_readlen) {
   oatmp <- oa %>% filter(training == want_training & name == 'various_sensitivities' &
@@ -216,24 +235,43 @@ various_sensitivities_table <- function(want_training, want_paired, want_local, 
   oatmp <- subset(oatmp, select=c(sensitivity,
                                   overall_test_auc_diff_pct_round,
                                   overall_test_mse_diff_pct_round))
-  levels(oatmp$sensitivity)[levels(oatmp$sensitivity)=="vs"] <- "--very-sensitive"
-  levels(oatmp$sensitivity)[levels(oatmp$sensitivity)=="s"] <- "--sensitive"
-  levels(oatmp$sensitivity)[levels(oatmp$sensitivity)=="f"] <- "--fast"
-  levels(oatmp$sensitivity)[levels(oatmp$sensitivity)=="vf"] <- "--very-fast"
+  levels(oatmp$sensitivity)[grepl('^vs', levels(oatmp$sensitivity))] <- "--very-sensitive"
+  levels(oatmp$sensitivity)[grepl('^s', levels(oatmp$sensitivity))] <- "--sensitive"
+  levels(oatmp$sensitivity)[grepl('^f', levels(oatmp$sensitivity))] <- "--fast"
+  levels(oatmp$sensitivity)[grepl('^vf', levels(oatmp$sensitivity))] <- "--very-fast"
   colnames(oatmp) <- c('Sensitivity', 'RCA', 'RCE')
-  oatmp$RCA <- paste0(prettyNum(oatmp$RCA, digits=4, format='fg'), '%')
+  oatmp$RCA <- paste0(formatC(oatmp$RCA, digits=2, format='f', flag='#'), '%')
   oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
-  oatmp$RCE <- paste0(prettyNum(oatmp$RCE, digits=4, format='fg'), '%')
+  oatmp$RCE <- paste0(formatC(oatmp$RCE, digits=2, format='f', flag='#'), '%')
   oatmp$RCE <- ifelse(oatmp$RCE >= 0.0, paste0('+', oatmp$RCE), oatmp$RCE)
   xtable(oatmp)
 }
 
-various_sensitivities_table(F, F, F, 100)
-various_sensitivities_table(F, F, T, 100)
-various_sensitivities_table(F, T, F, 100)
-various_sensitivities_table(F, T, T, 100)
+fn <- 'various_sensitivities.tex_snippet'
+write("\\begin{table}", file=fn)
+write("% cut the multicolumn/midrule line pairs and paste them down just before the results lines", file=fn, append=T)
+write("% get rid of the bottomrule, end tabular, begin tabular, toprule, header lines separating the chunks of results", file=fn, append=T)
+xt <- various_sensitivities_table(F, F, F, 100)
+write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+xt <- various_sensitivities_table(F, F, T, 100)
+write("\\multicolumn{3}{c}{Unpaired, local}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+xt <- various_sensitivities_table(F, T, F, 100)
+write("\\multicolumn{3}{c}{Paired, end-to-end}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+xt <- various_sensitivities_table(F, T, T, 100)
+write("\\multicolumn{3}{c}{Paired, local}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various sensitivity levels for Bowtie 2.  Experiments use 100 nt unpaired or paired-end as indicated.}", file=fn, append=T)
+write("\\label{sens_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
 
-various_aligners_table <- function(want_training, want_paired, want_readlen) {
+various_aligners_table <- function(want_training, want_paired, want_readlen, ...) {
   oatmp <- oa %>% filter(training == want_training & name == 'various_aligners' &
                            paired == want_paired & readlen == want_readlen)
   oatmp <- subset(oatmp, select=c(aligner,
@@ -245,17 +283,36 @@ various_aligners_table <- function(want_training, want_paired, want_readlen) {
   levels(oatmp$aligner)[levels(oatmp$aligner)=="snap"] <- "SNAP"
   oatmp$local <- ifelse(oatmp$local, 'local', 'end-to-end')
   colnames(oatmp) <- c('Aligner', 'Local?', 'RCA', 'RCE')
-  oatmp$RCA <- paste0(prettyNum(oatmp$RCA, digits=4, format='fg'), '%')
+  oatmp$RCA <- paste0(formatC(oatmp$RCA, digits=2, format='f', flag='#'), '%')
   oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
-  oatmp$RCE <- paste0(prettyNum(oatmp$RCE, digits=4, format='fg'), '%')
+  oatmp$RCE <- paste0(formatC(oatmp$RCE, digits=2, format='f', flag='#'), '%')
   oatmp$RCE <- ifelse(oatmp$RCE >= 0.0, paste0('+', oatmp$RCE), oatmp$RCE)
-  xtable(oatmp)
+  xtable(oatmp, ...)
 }
 
-various_aligners_table(F, F, 100)
-various_aligners_table(F, T, 100)
-various_aligners_table(F, F, 250)
-various_aligners_table(F, T, 250)
+fn <- 'various_aligners.tex_snippet'
+write("\\begin{table}", file=fn)
+write("% cut the multicolumn/midrule line pairs and paste them down just before the results lines", file=fn, append=T)
+write("% get rid of the bottomrule, end tabular, begin tabular, toprule, header lines separating the chunks of results", file=fn, append=T)
+xt <- various_aligners_table(F, F, 100)
+write("\\multicolumn{4}{c}{Unpaired, 100 nt}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+xt <- various_aligners_table(F, T, 100)
+write("\\multicolumn{4}{c}{Paired, 100 x 100 nt}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+xt <- various_aligners_table(F, F, 250)
+write("\\multicolumn{4}{c}{Unpaired, 250 nt}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+xt <- various_aligners_table(F, T, 250)
+write("\\multicolumn{4}{c}{Paired, 250 x 250 nt}", file=fn, append=T)
+write("  \\midrule", file=fn, append=T)
+write(xt, file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various read aligners.  Experiments use 100 nt or 250 nt reads and unpaired or paired-end reads as indicated.}", file=fn, append=T)
+write("\\label{aligners_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
 ```
 
 Now the plots:
