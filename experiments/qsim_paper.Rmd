@@ -27,6 +27,7 @@ library(grid)
 library(gridExtra)
 library(xtable)
 library(knitr)
+library(tables)
 ```
 
 ### Load/create R object for table
@@ -175,7 +176,7 @@ subsample_trials_plot <- function(m_filt, want_cid) {
 
 ### Simulated reads
 
-#### Various read lengths:
+#### Tables
 
 Start with tables:
 
@@ -206,22 +207,23 @@ various_lengths_table <- function(want_training, want_paired, want_local) {
 
 fn <- 'various_lengths.tex_snippet'
 write("\\begin{table}", file=fn)
+write("\\centering", file=fn, append=T)
 write("% cut the multicolumn/midrule line pairs and paste them down just before the results lines", file=fn, append=T)
 write("% get rid of the bottomrule, end tabular, begin tabular, toprule, header lines separating the chunks of results", file=fn, append=T)
 xt <- various_lengths_table(F, F, F)  # unpaired, end-to-end
-write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("\\multicolumn{3}{c}{Unpaired, end-to-end} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 xt <- various_lengths_table(F, F, T)  # unpaired, local
-write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("\\multicolumn{3}{c}{Unpaired, local} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 xt <- various_lengths_table(F, T, F)  # paired, end-to-end
-write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("\\multicolumn{3}{c}{Paired, end-to-end} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 xt <- various_lengths_table(F, T, T)  # paired, local
-write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("\\multicolumn{3}{c}{Paired, local} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for simulations spanning various read lengths.  Reads are either unpaired and paired-end and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
@@ -235,10 +237,10 @@ various_sensitivities_table <- function(want_training, want_paired, want_local, 
   oatmp <- subset(oatmp, select=c(sensitivity,
                                   overall_test_auc_diff_pct_round,
                                   overall_test_mse_diff_pct_round))
-  levels(oatmp$sensitivity)[grepl('^vs', levels(oatmp$sensitivity))] <- "--very-sensitive"
-  levels(oatmp$sensitivity)[grepl('^s', levels(oatmp$sensitivity))] <- "--sensitive"
-  levels(oatmp$sensitivity)[grepl('^f', levels(oatmp$sensitivity))] <- "--fast"
-  levels(oatmp$sensitivity)[grepl('^vf', levels(oatmp$sensitivity))] <- "--very-fast"
+  levels(oatmp$sensitivity)[grepl('^vs', levels(oatmp$sensitivity))] <- "\\texttt{--very-sensitive}"
+  levels(oatmp$sensitivity)[grepl('^s', levels(oatmp$sensitivity))] <- "\\texttt{--sensitive}"
+  levels(oatmp$sensitivity)[grepl('^f', levels(oatmp$sensitivity))] <- "\\texttt{--fast}"
+  levels(oatmp$sensitivity)[grepl('^vf', levels(oatmp$sensitivity))] <- "\\texttt{--very-fast}"
   colnames(oatmp) <- c('Sensitivity', 'RCA', 'RCE')
   oatmp$RCA <- paste0(formatC(oatmp$RCA, digits=2, format='f', flag='#'), '%')
   oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
@@ -249,22 +251,23 @@ various_sensitivities_table <- function(want_training, want_paired, want_local, 
 
 fn <- 'various_sensitivities.tex_snippet'
 write("\\begin{table}", file=fn)
+write("\\centering", file=fn, append=T)
 write("% cut the multicolumn/midrule line pairs and paste them down just before the results lines", file=fn, append=T)
 write("% get rid of the bottomrule, end tabular, begin tabular, toprule, header lines separating the chunks of results", file=fn, append=T)
 xt <- various_sensitivities_table(F, F, F, 100)
-write("\\multicolumn{3}{c}{Unpaired, end-to-end}", file=fn, append=T)
+write("\\multicolumn{3}{c}{Unpaired, end-to-end} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 xt <- various_sensitivities_table(F, F, T, 100)
-write("\\multicolumn{3}{c}{Unpaired, local}", file=fn, append=T)
+write("\\multicolumn{3}{c}{Unpaired, local} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 xt <- various_sensitivities_table(F, T, F, 100)
-write("\\multicolumn{3}{c}{Paired, end-to-end}", file=fn, append=T)
+write("\\multicolumn{3}{c}{Paired, end-to-end} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 xt <- various_sensitivities_table(F, T, T, 100)
-write("\\multicolumn{3}{c}{Paired, local}", file=fn, append=T)
+write("\\multicolumn{3}{c}{Paired, local} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various sensitivity levels for Bowtie 2.  Experiments use 100 nt unpaired or paired-end as indicated.}", file=fn, append=T)
@@ -292,22 +295,23 @@ various_aligners_table <- function(want_training, want_paired, want_readlen, ...
 
 fn <- 'various_aligners.tex_snippet'
 write("\\begin{table}", file=fn)
+write("\\centering", file=fn, append=T)
 write("% cut the multicolumn/midrule line pairs and paste them down just before the results lines", file=fn, append=T)
 write("% get rid of the bottomrule, end tabular, begin tabular, toprule, header lines separating the chunks of results", file=fn, append=T)
 xt <- various_aligners_table(F, F, 100)
-write("\\multicolumn{4}{c}{Unpaired, 100 nt}", file=fn, append=T)
+write("\\multicolumn{4}{c}{Unpaired, 100 nt} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 xt <- various_aligners_table(F, T, 100)
-write("\\multicolumn{4}{c}{Paired, 100 x 100 nt}", file=fn, append=T)
+write("\\multicolumn{4}{c}{Paired, 100 x 100 nt} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 xt <- various_aligners_table(F, F, 250)
-write("\\multicolumn{4}{c}{Unpaired, 250 nt}", file=fn, append=T)
+write("\\multicolumn{4}{c}{Unpaired, 250 nt} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 xt <- various_aligners_table(F, T, 250)
-write("\\multicolumn{4}{c}{Paired, 250 x 250 nt}", file=fn, append=T)
+write("\\multicolumn{4}{c}{Paired, 250 x 250 nt} \\\\", file=fn, append=T)
 write("  \\midrule", file=fn, append=T)
 write(xt, file=fn, append=T)
 write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various read aligners.  Experiments use 100 nt or 250 nt reads and unpaired or paired-end reads as indicated.}", file=fn, append=T)
@@ -315,7 +319,61 @@ write("\\label{aligners_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
 
-Now the plots:
+```{r various_genomes_table}
+various_genomes_table <- function(m, want_training, ...) {
+  mtmp <- m %>% filter(training == want_training & name == 'various_genomes')
+  mtmp <- subset(mtmp, select=c(aligner,
+                                species,
+                                paired,
+                                readlen,
+                                overall_test_auc_diff_pct_round,
+                                overall_test_mse_diff_pct_round))
+  levels(mtmp$aligner)[levels(mtmp$aligner)=="bt2"] <- "Bowtie 2"
+  levels(mtmp$aligner)[levels(mtmp$aligner)=="bwamem"] <- "BWA-MEM"
+  levels(mtmp$aligner)[levels(mtmp$aligner)=="snap"] <- "SNAP"
+  levels(mtmp$species)[levels(mtmp$species)=="hg"] <- "Human (GRCh37)"
+  levels(mtmp$species)[levels(mtmp$species)=="mm"] <- "Mouse (GRCm38)"
+  levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea Mays (AGPv3)"
+  colnames(mtmp) <- c('aligner', 'species', 'paired', 'readlen', 'RCA', 'RCE')
+  tabular(((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) * (Heading("100 nt") * (readlen == 100) + Heading("250 nt") * (readlen == 250)) * Heading() * aligner) ~ (Format(digits=2) * Heading() * species * (RCE + RCA) * (mean + sd)), data=mtmp)
+}
+
+fn <- 'various_genomes.tex_snippet'
+write("\\begin{table}", file=fn)
+write("\\centering", file=fn, append=T)
+capture.output(latex(various_genomes_table(m, F)), file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and reference genomes.  Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  The experiments used 100 nt or 250 nt reads and unpaired or paired-end reads as indicated by the row labels.}", file=fn, append=T)
+write("\\label{genomes_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
+```
+
+```{r various_simulators_table}
+various_simulators_table <- function(m, want_training, ...) {
+  mtmp <- m %>% filter(training == want_training & name == 'various_simulators')
+  mtmp <- subset(mtmp, select=c(sim,
+                                paired,
+                                readlen,
+                                overall_test_auc_diff_pct_round,
+                                overall_test_mse_diff_pct_round))
+  levels(mtmp$sim)[levels(mtmp$sim)=="art"] <- "Art"
+  levels(mtmp$sim)[levels(mtmp$sim)=="mason"] <- "Mason"
+  levels(mtmp$sim)[levels(mtmp$sim)=="wgsim"] <- "wgsim"
+  colnames(mtmp) <- c('simulator', 'paired', 'readlen', 'RCA', 'RCE')
+  tabular((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) *
+          (Heading("100 nt") * (readlen == 100) + Heading("250 nt") * (readlen == 250)) *
+          Heading() * simulator ~ ((RCE + RCA) * (mean + sd)), data=mtmp)
+}
+
+fn <- 'various_simulators.tex_snippet'
+write("\\begin{table}", file=fn)
+write("\\centering", file=fn, append=T)
+capture.output(latex(various_simulators_table(m, F)), file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for samples simulated by various simulators.  Bowtie 2 end-to-end alignment was used in all cases. Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  The experiments used 100 nt or 250 nt reads and unpaired or paired-end reads as indicated by the row labels.}", file=fn, append=T)
+write("\\label{simulators_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
+```
+
+#### Various read lengths
 
 ```{r various_lengths_plot}
 various_lengths_plot <- function(
@@ -652,6 +710,12 @@ various_genomes_plot <- function(
                          )
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
+    levels(mtmp$species)[levels(mtmp$species)=="hg"] <- "Human (GRCh37)  "
+    levels(mtmp$species)[levels(mtmp$species)=="mm"] <- "Mouse (GRCm38)  "
+    levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea Mays (AGPv3)  "
+    levels(mtmp$aligner)[levels(mtmp$aligner)=="bt2"] <- "Bowtie 2  "
+    levels(mtmp$aligner)[levels(mtmp$aligner)=="bwamem"] <- "BWA-MEM  "
+    levels(mtmp$aligner)[levels(mtmp$aligner)=="snap"] <- "SNAP  "
     ggplot(mtmp, aes(x=x, y=y, color=species, linetype=aligner)) +
       geom_abline(intercept = 0, slope = 0) +
       coord_trans(y = logmod_trans()) +
@@ -659,8 +723,9 @@ various_genomes_plot <- function(
       labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
       geom_line() +
       theme_bw() +
-      theme(legend.title=element_blank(),
-            axis.title.x = element_text(vjust=-0.4))
+      guides(colour = guide_legend(override.aes = list(size=1))) +
+      theme(legend.title=element_blank(), legend.key = element_blank(),
+            legend.text=element_text(size=12))
 }
 ```
 
@@ -681,7 +746,7 @@ grid_arrange_shared_legend(p_vg_u100ei,
                            p_vg_p250ei)
 
 # Write to PDF
-pdf(file="various_genomes_cid_test.pdf")
+pdf(file="various_genomes_cid_test.pdf", onefile=F)
 grid_arrange_shared_legend(p_vg_u100ei,
                            p_vg_u250ei,
                            p_vg_p100ei,
@@ -964,6 +1029,9 @@ various_simulators_plot <- function(
     stopifnot(nrow(mtmp) == 3)
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
+    levels(mtmp$sim)[levels(mtmp$sim)=="art"] <- "Art  "
+    levels(mtmp$sim)[levels(mtmp$sim)=="mason"] <- "Mason  "
+    levels(mtmp$sim)[levels(mtmp$sim)=="wgsim"] <- "wgsim  "
     ggplot(mtmp, aes(x=x, y=y, color=sim)) +
       geom_abline(intercept = 0, slope = 0) +
       coord_trans(y = logmod_trans()) +
@@ -971,8 +1039,9 @@ various_simulators_plot <- function(
       labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
       geom_line() +
       theme_bw() +
-      theme(legend.title=element_blank(),
-            axis.title.x = element_text(vjust=-0.4))
+      guides(colour = guide_legend(override.aes = list(size=1))) +
+      theme(legend.title=element_blank(), legend.key = element_blank(),
+            legend.text=element_text(size=12))
 }
 ```
 
@@ -1194,19 +1263,25 @@ real <- rbindlist(ls)
 ##### Accuracy
 
 ```{r real_data_accuracy_tables}
-# ERR050083 & ERR050082 (columns)
-# Unpaired & paired (rows)
-# Different aligners (chunks of rows)
-
-real_data_accuracy_table <- function(dataset) {
-  real %>% filter(data==dataset) %>%
-           select(data, paired, aligner, loose, RCA) %>%
-           arrange(paired, aligner, loose)
+real_data_accuracy_table <- function() {
+  realtmp <- real
+  levels(realtmp$aligner)[levels(realtmp$aligner)=="bt2"] <- "Bowtie 2"
+  levels(realtmp$aligner)[levels(realtmp$aligner)=="bwamem"] <- "BWA-MEM"
+  levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP"
+  tabular(((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) *
+            Heading() * aligner) ~
+           (Format(digits=2) * Heading() * data * (RCE + RCA) * (mean + sd)),
+          data=realtmp)
 }
-kable(real_data_accuracy_table("ERR050082"), format="markdown")
-kable(real_data_accuracy_table("ERR050083"), format="markdown")
-kable(real_data_accuracy_table("ERR050082"), format="latex")
-kable(real_data_accuracy_table("ERR050083"), format="latex")
+fn <- 'real_accuracy.tex_snippet'
+write("\\begin{table}", file=fn)
+write("\\centering", file=fn, append=T)
+write("\\resizebox{\\columnwidth}{!}{%", file=fn, append=T)
+capture.output(latex(real_data_accuracy_table()), file=fn, append=T)
+write("}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners on the public ERR050082 and ERR050083 DNA sequening samples.  Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  Both samples are paired-end, but in some experiments (``Unpaired'') we supply only the first end to the aligner.}", file=fn, append=T)
+write("\\label{real_accuracy_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
 ```
 
 ```{r real_data_plot}
