@@ -1268,18 +1268,19 @@ real_data_accuracy_table <- function() {
   levels(realtmp$aligner)[levels(realtmp$aligner)=="bt2"] <- "Bowtie 2"
   levels(realtmp$aligner)[levels(realtmp$aligner)=="bwamem"] <- "BWA-MEM"
   levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP"
+  realtmp$RCA <- realtmp$RCA * 100.0  # convert to percent
   tabular(((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) *
             Heading() * aligner) ~
-           (Format(digits=2) * Heading() * data * (RCE + RCA) * (mean + sd)),
+           (Format(digits=2) * Heading() * data * (RCA) * (mean + sd)),
           data=realtmp)
 }
 fn <- 'real_accuracy.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
-write("\\resizebox{\\columnwidth}{!}{%", file=fn, append=T)
+#write("\\resizebox{\\columnwidth}{!}{%", file=fn, append=T)
 capture.output(latex(real_data_accuracy_table()), file=fn, append=T)
-write("}", file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners on the public ERR050082 and ERR050083 DNA sequening samples.  Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  Both samples are paired-end, but in some experiments (``Unpaired'') we supply only the first end to the aligner.}", file=fn, append=T)
+#write("}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) for various aligners on the public ERR050082 and ERR050083 DNA sequening samples.  We report mean and standard deviation for RCA, expressed in percent, over 5 random trials using distinct pseudo-random seeds.  Both samples are paired-end, but in some experiments (``Unpaired'') we mimic unpaired data by providing only the first end to the aligner.}", file=fn, append=T)
 write("\\label{real_accuracy_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -1369,14 +1370,34 @@ perf <- read.table('real_data/perf.csv', sep=',', quote='', comment.char='', hea
 
 ```{r}
 real_data_perf_table <- function(dataset) {
-  perf %>% filter(data==dataset) %>%
-           select(data, paired, aligner, align_time, overall_time,
-                  pct_increase_a_to_o,
-                  peak_wrapper, peak_children, pct_increase_peak) %>%
-           arrange(paired, aligner)
+  perftmp <- perf
+  levels(perftmp$aligner)[levels(perftmp$aligner)=="bt2"] <- "Bowtie 2"
+  levels(perftmp$aligner)[levels(perftmp$aligner)=="bwamem"] <- "BWA-MEM"
+  levels(perftmp$aligner)[levels(perftmp$aligner)=="snap"] <- "SNAP"
+  perftmp$ja <- perftmp$align_time / 60.0
+  perftmp$oa <- perftmp$overall_time / 60.0
+  perftmp$pc <- perftmp$peak_children / 1024.0 / 1024.0 / 1024.0
+  perftmp$pw <- (perftmp$peak_wrapper + perftmp$peak_children) / 1024.0 / 1024.0 / 1024.0
+  tabular(((Heading() * data) * (Heading("Unpaired") * (!paired) + Heading("Paired") * paired) *
+            Heading() * aligner) ~
+           (Heading() * identity * Justify(r) * Format(sprintf("%.2f")) *
+              (Heading("Time") * ja +
+               Heading("+Qsim") * oa +
+               Heading("\\% inc") * pct_increase_a_to_o +
+               Heading("Memory") * pc +
+               Heading("+Qsim") * pw +
+               Heading("\\% inc") * pct_increase_peak)),
+          data=perftmp)
 }
-kable(real_data_perf_table("ERR050082"), format="markdown")
-kable(real_data_perf_table("ERR050083"), format="markdown")
-kable(real_data_perf_table("ERR050082"), format="latex")
-kable(real_data_perf_table("ERR050083"), format="latex")
+fn <- 'real_performance.tex_snippet'
+write("\\begin{table}", file=fn)
+write("% Add this line right after (or instead of) the first hline", file=fn, append=T)
+write("%  &  &  & \\multicolumn{3}{c}{Time (minutes)} & \\multicolumn{3}{c}{Peak memory (gigabytes)} \\\\\\cline{4-6} \\cline{7-9}", file=fn, append=T)
+write("\\centering", file=fn, append=T)
+write("\\resizebox{\\columnwidth}{!}{%", file=fn, append=T)
+capture.output(latex(real_data_perf_table()), file=fn, append=T)
+write("}", file=fn, append=T)
+write("\\caption{Overhead of the Qsim tool.  Measured as the increase in running time (left) and peak memory footprint (right) from when the aligner runs by itself (``Time'') to when the aligner runs in combination with Qsim (``+Qsim'').  ``\\% inc'' columns give the percent increase.  Times are in minutes and memory footprints are in gigabytes.}", file=fn, append=T)
+write("\\label{real_performance_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
 ```
