@@ -180,142 +180,57 @@ subsample_trials_plot <- function(m_filt, want_cid) {
 
 Start with tables:
 
-```{r tables}
-xtable <- function(x, file = "", ...) {
-  table <- xtable::xtable(x, ...)
-  print(table, floating = F, hline.after = NULL,
-        add.to.row = list(pos = list(-1,0, nrow(x)),
-                          command = c('\\toprule\n ','\\midrule\n  ','\\bottomrule\n')),
-  include.rownames = FALSE, file = file)
-}
-
-oa <- m[m$trial_no == 1,]  # for now
-
-various_lengths_table <- function(want_training, want_paired, want_local) {
-  oatmp <- oa %>% filter(training == want_training & name == 'ill_various_length' &
-                           paired == want_paired & local == want_local)
-  oatmp <- subset(oatmp, select=c(readlen,
-                                  overall_test_auc_diff_pct_round,
-                                  overall_test_mse_diff_pct_round))
-  colnames(oatmp) <- c('Read length', 'RCA', 'RCE')
-  oatmp$RCA <- paste0(formatC(oatmp$RCA, digits=2, format='f', flag='#'), '%')
-  oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
-  oatmp$RCE <- paste0(formatC(oatmp$RCE, digits=2, format='f', flag='#'), '%')
-  oatmp$RCE <- ifelse(oatmp$RCE >= 0.0, paste0('+', oatmp$RCE), oatmp$RCE)
-  xtable(oatmp)
+```{r various_lengths_table}
+various_lengths_table <- function(m, want_training, ...) {
+  mtmp <- m %>% filter(training == want_training & name == 'ill_various_length')
+  mtmp <- subset(mtmp, select=c(paired,
+                                readlen,
+                                local,
+                                overall_test_auc_diff_pct_round,
+                                overall_test_mse_diff_pct_round))
+  colnames(mtmp) <- c('paired', 'readlen', 'local', 'RCA', 'RCE')
+  mtmp$paired <- factor(mtmp$paired, labels=c('Unpaied', 'Paired'))
+  mtmp$local <- factor(mtmp$local, labels=c('End-to-end', 'Local'))
+  mtmp$readlen <- factor(mtmp$readlen)
+  tabular((Heading() * paired * Heading("Read length") * readlen) ~ (Format(sprintf("%.2f")) * Justify(r) * Heading() * local * (RCA + RCE) * (mean + sd)), data=mtmp)
 }
 
 fn <- 'various_lengths.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
-write("% cut the multicolumn/midrule line pairs and paste them down just before the results lines", file=fn, append=T)
-write("% get rid of the bottomrule, end tabular, begin tabular, toprule, header lines separating the chunks of results", file=fn, append=T)
-xt <- various_lengths_table(F, F, F)  # unpaired, end-to-end
-write("\\multicolumn{3}{c}{Unpaired, end-to-end} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-xt <- various_lengths_table(F, F, T)  # unpaired, local
-write("\\multicolumn{3}{c}{Unpaired, local} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-xt <- various_lengths_table(F, T, F)  # paired, end-to-end
-write("\\multicolumn{3}{c}{Paired, end-to-end} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-xt <- various_lengths_table(F, T, T)  # paired, local
-write("\\multicolumn{3}{c}{Paired, local} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for simulations spanning various read lengths.  Reads are either unpaired and paired-end and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
+capture.output(latex(various_lengths_table(m, F)), file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qsim and Bowtie 2 on Mason-simulated Illumina-like samples of various lengths.  Each sample consists of 4 million reads/pairs.  Samples are either unpaired and paired-end, and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
 write("\\label{length_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
+```
 
-various_sensitivities_table <- function(want_training, want_paired, want_local, want_readlen) {
-  oatmp <- oa %>% filter(training == want_training & name == 'various_sensitivities' &
-                           paired == want_paired & local == want_local &
-                           readlen == want_readlen)
-  oatmp <- subset(oatmp, select=c(sensitivity,
-                                  overall_test_auc_diff_pct_round,
-                                  overall_test_mse_diff_pct_round))
-  levels(oatmp$sensitivity)[grepl('^vs', levels(oatmp$sensitivity))] <- "\\texttt{--very-sensitive}"
-  levels(oatmp$sensitivity)[grepl('^s', levels(oatmp$sensitivity))] <- "\\texttt{--sensitive}"
-  levels(oatmp$sensitivity)[grepl('^f', levels(oatmp$sensitivity))] <- "\\texttt{--fast}"
-  levels(oatmp$sensitivity)[grepl('^vf', levels(oatmp$sensitivity))] <- "\\texttt{--very-fast}"
-  colnames(oatmp) <- c('Sensitivity', 'RCA', 'RCE')
-  oatmp$RCA <- paste0(formatC(oatmp$RCA, digits=2, format='f', flag='#'), '%')
-  oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
-  oatmp$RCE <- paste0(formatC(oatmp$RCE, digits=2, format='f', flag='#'), '%')
-  oatmp$RCE <- ifelse(oatmp$RCE >= 0.0, paste0('+', oatmp$RCE), oatmp$RCE)
-  xtable(oatmp)
+```{r various_sensitivities_table}
+various_sensitivities_table <- function(m, want_training, ...) {
+  mtmp <- m %>% filter(training == want_training & name == 'various_sensitivities')
+  mtmp <- subset(mtmp, select=c(paired,
+                                readlen,
+                                local,
+                                sensitivity,
+                                overall_test_auc_diff_pct_round,
+                                overall_test_mse_diff_pct_round))
+  colnames(mtmp) <- c('paired', 'readlen', 'local', 'sensitivity', 'RCA', 'RCE')
+  mtmp$paired <- factor(mtmp$paired, labels=c('Unpaied', 'Paired'))
+  mtmp$local <- factor(mtmp$local, labels=c('End-to-end', 'Local'))
+  mtmp$readlen <- factor(mtmp$readlen)
+  sens <- factor(gsub('[l0-9].*', '', mtmp$sensitivity))
+  sens <- factor(sens, labels=c('--fast', '--sensitive', '--very-fast', '--very-sensitive'))
+  sens <- relevel(sens, '--sensitive')
+  sens <- relevel(sens, '--fast')
+  sens <- relevel(sens, '--very-fast')
+  tabular((Heading() * paired * Heading('Length') * readlen * Heading("Sensitivity") * sens) ~ (Format(sprintf("%.2f")) * Justify(r) * Heading() * local * (RCA + RCE) * (mean + sd)), data=mtmp)
 }
 
 fn <- 'various_sensitivities.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
-write("% cut the multicolumn/midrule line pairs and paste them down just before the results lines", file=fn, append=T)
-write("% get rid of the bottomrule, end tabular, begin tabular, toprule, header lines separating the chunks of results", file=fn, append=T)
-xt <- various_sensitivities_table(F, F, F, 100)
-write("\\multicolumn{3}{c}{Unpaired, end-to-end} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-xt <- various_sensitivities_table(F, F, T, 100)
-write("\\multicolumn{3}{c}{Unpaired, local} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-xt <- various_sensitivities_table(F, T, F, 100)
-write("\\multicolumn{3}{c}{Paired, end-to-end} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-xt <- various_sensitivities_table(F, T, T, 100)
-write("\\multicolumn{3}{c}{Paired, local} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various sensitivity levels for Bowtie 2.  Experiments use 100 nt unpaired or paired-end as indicated.}", file=fn, append=T)
+capture.output(latex(various_sensitivities_table(m, F)), file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qsim and Bowtie 2 at various levels of sensitivity on Mason-simulated Illumina-like samples.  Each simulated sample consists of 4 million reads or pairs.  Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
 write("\\label{sens_tab}", file=fn, append=T)
-write("\\end{table}", file=fn, append=T)
-
-various_aligners_table <- function(want_training, want_paired, want_readlen, ...) {
-  oatmp <- oa %>% filter(training == want_training & name == 'various_aligners' &
-                           paired == want_paired & readlen == want_readlen)
-  oatmp <- subset(oatmp, select=c(aligner,
-                                  local,
-                                  overall_test_auc_diff_pct_round,
-                                  overall_test_mse_diff_pct_round))
-  levels(oatmp$aligner)[levels(oatmp$aligner)=="bt2"] <- "Bowtie 2"
-  levels(oatmp$aligner)[levels(oatmp$aligner)=="bwamem"] <- "BWA-MEM"
-  levels(oatmp$aligner)[levels(oatmp$aligner)=="snap"] <- "SNAP"
-  oatmp$local <- ifelse(oatmp$local, 'local', 'end-to-end')
-  colnames(oatmp) <- c('Aligner', 'Local?', 'RCA', 'RCE')
-  oatmp$RCA <- paste0(formatC(oatmp$RCA, digits=2, format='f', flag='#'), '%')
-  oatmp$RCA <- ifelse(oatmp$RCA >= 0.0, paste0('+', oatmp$RCA), oatmp$RCA)
-  oatmp$RCE <- paste0(formatC(oatmp$RCE, digits=2, format='f', flag='#'), '%')
-  oatmp$RCE <- ifelse(oatmp$RCE >= 0.0, paste0('+', oatmp$RCE), oatmp$RCE)
-  xtable(oatmp, ...)
-}
-
-fn <- 'various_aligners.tex_snippet'
-write("\\begin{table}", file=fn)
-write("\\centering", file=fn, append=T)
-write("% cut the multicolumn/midrule line pairs and paste them down just before the results lines", file=fn, append=T)
-write("% get rid of the bottomrule, end tabular, begin tabular, toprule, header lines separating the chunks of results", file=fn, append=T)
-xt <- various_aligners_table(F, F, 100)
-write("\\multicolumn{4}{c}{Unpaired, 100 nt} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-xt <- various_aligners_table(F, T, 100)
-write("\\multicolumn{4}{c}{Paired, 100 x 100 nt} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-xt <- various_aligners_table(F, F, 250)
-write("\\multicolumn{4}{c}{Unpaired, 250 nt} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-xt <- various_aligners_table(F, T, 250)
-write("\\multicolumn{4}{c}{Paired, 250 x 250 nt} \\\\", file=fn, append=T)
-write("  \\midrule", file=fn, append=T)
-write(xt, file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various read aligners.  Experiments use 100 nt or 250 nt reads and unpaired or paired-end reads as indicated.}", file=fn, append=T)
-write("\\label{aligners_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
 
@@ -335,7 +250,7 @@ various_genomes_table <- function(m, want_training, ...) {
   levels(mtmp$species)[levels(mtmp$species)=="mm"] <- "Mouse (GRCm38)"
   levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea Mays (AGPv3)"
   colnames(mtmp) <- c('aligner', 'species', 'paired', 'readlen', 'RCA', 'RCE')
-  tabular(((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) * (Heading("100 nt") * (readlen == 100) + Heading("250 nt") * (readlen == 250)) * Heading() * aligner) ~ (Format(digits=2) * Heading() * species * (RCE + RCA) * (mean + sd)), data=mtmp)
+  tabular(((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) * (Heading("100 nt") * (readlen == 100) + Heading("250 nt") * (readlen == 250)) * Heading() * aligner) ~ (Format(digits=2) * Heading() * species * (RCA + RCE) * (mean + sd)), data=mtmp)
 }
 
 fn <- 'various_genomes.tex_snippet'
@@ -361,7 +276,7 @@ various_simulators_table <- function(m, want_training, ...) {
   colnames(mtmp) <- c('simulator', 'paired', 'readlen', 'RCA', 'RCE')
   tabular((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) *
           (Heading("100 nt") * (readlen == 100) + Heading("250 nt") * (readlen == 250)) *
-          Heading() * simulator ~ ((RCE + RCA) * (mean + sd)), data=mtmp)
+          Heading() * simulator ~ ((RCA + RCE) * (mean + sd)), data=mtmp)
 }
 
 fn <- 'various_simulators.tex_snippet'
