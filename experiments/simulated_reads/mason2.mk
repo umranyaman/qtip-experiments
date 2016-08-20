@@ -34,7 +34,7 @@ r0_mason_$1.fq.gz: $$(FA) $$(QSIM_EXPERIMENTS_HOME)/software/mason/mason
 	    --out1 $$(@:%.fq.gz=%.fq)
 	rm -f .$$@.fq
 	gzip $$(@:%.fq.gz=%.fq)
-	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason_simulator --version > $$@.version
+	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason_simulator --version > $$@.version || true
 
 endef
 
@@ -67,7 +67,7 @@ r1_mason_$1.fq.gz: $(FA) $$(QSIM_EXPERIMENTS_HOME)/software/mason/mason
 	rm -f .$$(@)_final_1.fq
 	gzip -c .$$(@)_final_2.fq > $$(@:r1_%=r2_%)
 	rm -f .$$(@)_final_2.fq
-	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason_simulator --version > $$@.version
+	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason_simulator --version > $$@.version || true
 
 endef
 
@@ -85,7 +85,7 @@ r0_mason_$1.fq.gz: $$(FA) $$(QSIM_EXPERIMENTS_HOME)/software/mason/mason
 	python $$(QSIM_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$(@:%.fq.gz=%.fq)
 	rm -f .$$@.fq
 	gzip $$(@:%.fq.gz=%.fq)
-	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason_simulator --version > $$@.version
+	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason_simulator --version > $$@.version || true
 
 endef
 

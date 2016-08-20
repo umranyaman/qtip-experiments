@@ -24,7 +24,7 @@ r0_art_$1.fq.gz: $$(FA) $$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina
 	rm -f .$$(@).fq .$$(@).sam
 	head -n `python -c 'print(4 * $4)'` .$$(@).final.fq | gzip -c > $$@
 	rm -f .$$(@).final.fq
-	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina 2>&1 > $$@.version
+	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina 2>&1 > $$@.version || true
 
 endef
 
@@ -42,7 +42,7 @@ r1_art_$1.fq.gz: $(FA) $$(FA) $$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumin
 	head -n `python -c 'print(4 * $4)'` .$$(@).final1.fq | gzip -c > $$@
 	head -n `python -c 'print(4 * $4)'` .$$(@).final2.fq | gzip -c > $$(@:r1_%=r2_%)
 	rm -f .$$(@).final1.fq .$$(@).final2.fq
-	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina 2>&1 > $$@.version
+	$$(QSIM_EXPERIMENTS_HOME)/software/art/art_illumina 2>&1 > $$@.version || true
 
 endef
 
