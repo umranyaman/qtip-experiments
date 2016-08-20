@@ -246,18 +246,18 @@ various_genomes_table <- function(m, want_training, ...) {
   levels(mtmp$aligner)[levels(mtmp$aligner)=="bt2"] <- "Bowtie 2"
   levels(mtmp$aligner)[levels(mtmp$aligner)=="bwamem"] <- "BWA-MEM"
   levels(mtmp$aligner)[levels(mtmp$aligner)=="snap"] <- "SNAP"
-  levels(mtmp$species)[levels(mtmp$species)=="hg"] <- "Human (GRCh37)"
-  levels(mtmp$species)[levels(mtmp$species)=="mm"] <- "Mouse (GRCm38)"
-  levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea Mays (AGPv3)"
+  levels(mtmp$species)[levels(mtmp$species)=="hg"] <- "Human"  # GRCh37
+  levels(mtmp$species)[levels(mtmp$species)=="mm"] <- "Mouse"  # GRCm38
+  levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea mays"  # AGPv3
   colnames(mtmp) <- c('aligner', 'species', 'paired', 'readlen', 'RCA', 'RCE')
-  tabular(((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) * (Heading("100 nt") * (readlen == 100) + Heading("250 nt") * (readlen == 250)) * Heading() * aligner) ~ (Format(digits=2) * Heading() * species * (RCA + RCE) * (mean + sd)), data=mtmp)
+  tabular(((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) * Heading() * species * Heading() * aligner) ~ (Format(sprintf("%.2f")) * (Heading("100 nt") * (readlen == 100) + Heading("250 nt") * (readlen == 250)) * (RCA + RCE) * (mean + sd)), data=mtmp)
 }
 
 fn <- 'various_genomes.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_genomes_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and reference genomes.  Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  The experiments used 100 nt or 250 nt reads and unpaired or paired-end reads as indicated by the row labels.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and reference genomes.  Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated.}", file=fn, append=T)
 write("\\label{genomes_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -283,7 +283,7 @@ fn <- 'various_simulators.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_simulators_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for samples simulated by various simulators.  Bowtie 2 end-to-end alignment was used in all cases. Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  The experiments used 100 nt or 250 nt reads and unpaired or paired-end reads as indicated by the row labels.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for samples simulated by various simulators.  Bowtie 2 end-to-end alignment was used in all cases. Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated}", file=fn, append=T)
 write("\\label{simulators_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
