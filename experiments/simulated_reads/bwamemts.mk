@@ -15,8 +15,8 @@ r0_$1_%.$6/DONE: r0_%.fq.gz
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --U $$< \
 	       -- $3 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS) -t $7
-	-$$(BWA) > $$(shell dirname $$(@))/bwa_version 2>&1
-	-$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version
+	$$(BWA) > $$(shell dirname $$(@))/bwa_version 2>&1 || true
+	$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version || true
 	touch $$(@)
 
 r12_$1_%.$6/DONE: r1_%.fq.gz
@@ -29,8 +29,8 @@ r12_$1_%.$6/DONE: r1_%.fq.gz
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
 	       -- $3 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS) -t $7
-	-$$(BWA) > $$(shell dirname $$(@))/bwa_version 2>&1
-	-$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version
+	$$(BWA) > $$(shell dirname $$(@))/bwa_version 2>&1 || true
+	$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version || true
 	touch $$(@)
 
 endef

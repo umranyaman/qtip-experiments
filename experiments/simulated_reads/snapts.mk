@@ -27,8 +27,8 @@ r0_$1_%.$8/DONE: r0_%.fq.gz
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --U $$< \
 	       -- $3 $$(SNAP_ARGS) -t $9 -- $4 -- $5
-	-$$(SNAP) 2> $$(shell dirname $$(@))/snap_version
-	-$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version
+	$$(SNAP) 2> $$(shell dirname $$(@))/snap_version || true
+	$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version || true
 	touch $$(@)
 
 r12_$1_%.$8/DONE: r1_%.fq.gz
@@ -41,8 +41,8 @@ r12_$1_%.$8/DONE: r1_%.fq.gz
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
 	       -- $3 $$(SNAP_ARGS) -t $9 -- $4 -- $5
-	-$$(SNAP) 2> $$(shell dirname $$(@))/snap_version
-	-$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version
+	$$(SNAP) 2> $$(shell dirname $$(@))/snap_version || true
+	$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version || true
 	touch $$(@)
 
 endef
