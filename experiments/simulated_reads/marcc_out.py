@@ -57,11 +57,15 @@ def write_slurm(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False,
 
 
 def handle_dir(dirname, re_out, mem_gb, hours, dry_run=True, use_scavenger=False):
+    ncores = 8
     with open(os.path.join(dirname, 'Makefile')) as fh:
         in_out = False
         for ln in fh:
             if ln[0] == '#':
                 continue
+            if ln.startswith('NCORES='):
+                ncores = int(ln.split('=')[1])
+                assert ncores > 0
             if re_out.match(ln):
                 in_out = True
             elif in_out:
@@ -69,7 +73,7 @@ def handle_dir(dirname, re_out, mem_gb, hours, dry_run=True, use_scavenger=False
                     in_out = False
                 else:
                     target = ln.split()[0].split('/')[0]
-                    print('  Found a .out target: %s' % target, file=sys.stderr)
+                    print('  Found a .out target: %s, w/ %d cores' % (target, ncores), file=sys.stderr)
                     target_full = os.path.join(dirname, target)
                     if os.path.exists(os.path.join(target_full, 'DONE')):
                         print('  Skipping target %s because of DONE' % target, file=sys.stderr)
@@ -78,7 +82,7 @@ def handle_dir(dirname, re_out, mem_gb, hours, dry_run=True, use_scavenger=False
                         # delete it???
                         pass
                     fn = '.' + target + '.sh'
-                    write_slurm(target, fn, dirname, mem_gb, hours, use_scavenger=use_scavenger)
+                    write_slurm(target, fn, dirname, mem_gb, hours, use_scavenger=use_scavenger, ncores=ncores)
                     print('pushd %s && sbatch %s && popd' % (dirname, fn))
                     if not dry_run:
                         os.system('cd %s && sbatch %s' % (dirname, fn))
