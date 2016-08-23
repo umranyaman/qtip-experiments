@@ -66,7 +66,7 @@ include ../bwamemts.mk
 include ../snapts.mk
 
 NREADS=4000000
-NCORES=8
+NCORES=1
 
 .PHONY: clean
 clean:
