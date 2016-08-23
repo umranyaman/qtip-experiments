@@ -770,6 +770,18 @@ And 250 bp unpaired:
 subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'zm' & !paired & readlen == 250 & aligner == 'bwamem'), T)
 ```
 
+```{r r12_snap100_hg_mason_ill_hg_100_diag}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & paired & readlen == 100 & aligner == 'snap'), T)
+```
+
+```{r r12_snap250_hg_mason_ill_hg_250_diag}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & paired & readlen == 250 & aligner == 'snap'), T)
+```
+
+```{r r12_snap250_zm_mason_ill_zm_250_diag}
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'zm' & paired & readlen == 250 & aligner == 'snap'), T)
+```
+
 #### Various sensitivities:
 
 ```{r various_sensitivities_plot}
@@ -916,6 +928,20 @@ grid_arrange_shared_legend(p_vs_u100re,
                            p_vs_p100re,
                            p_vs_p250re)
 dev.off()
+```
+
+#### Zooming in on r0_bt2vf_mason_ill_250:
+
+```{r r0_bt2vf_mason_ill_250_diag}
+subsample_trials_plot(m %>% filter(name == 'various_sensitivities' & !paired & readlen == 250 & sensitivity == 'vf'), F)
+```
+
+```{r r12_bt2vs250_mason_ill_250_diag}
+subsample_trials_plot(m %>% filter(name == 'various_sensitivities' & paired & readlen == 250 & sensitivity == 'vs250'), T)
+```
+
+```{r r0_bt2vsl_mason_ill_250_diag}
+subsample_trials_plot(m %>% filter(name == 'various_sensitivities' & !paired & readlen == 250 & sensitivity == 'vsl'), F)
 ```
 
 #### Simulators
