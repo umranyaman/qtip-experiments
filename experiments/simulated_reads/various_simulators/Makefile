@@ -109,8 +109,8 @@ $(eval $(call wgsim_ill_unp_reads,ill_250,$(HG_FASTA),250,$(NREADS),7724))
 
 $(eval $(call mason_ill_pair_reads,ill_100,$(HG_FASTA),100,$(NREADS),300,100,7724))
 $(eval $(call mason_ill_pair_reads,ill_250,$(HG_FASTA),250,$(NREADS),750,250,7724))
-$(eval $(call wgsim_ill_pair_reads,ill_100,$(HG_FASTA),100,$(NREADS),300,100,7724))
-$(eval $(call wgsim_ill_pair_reads,ill_250,$(HG_FASTA),250,$(NREADS),750,250,7724))
+$(eval $(call wgsim_ill_pair_reads,ill_100,$(HG_FASTA),100,$(NREADS),300,50,7724))
+$(eval $(call wgsim_ill_pair_reads,ill_250,$(HG_FASTA),250,$(NREADS),750,125,7724))
 
 # For Art, we have to convert desired # reads to a fold coverage.
 # Note: for paired-end, we're specifying *fragment* coverage.
@@ -124,7 +124,7 @@ $(eval $(call art_ill_unp_reads,ill_250,$(HG_FASTA),250,$(NREADS),0.4,7724))
 
 # >>> 4000000 * 300 / 3.1e9
 # 0.3870967741935484
-$(eval $(call art_ill_pair_reads,ill_100,$(HG_FASTA),100,$(NREADS),0.35,300,100,7724))
+$(eval $(call art_ill_pair_reads,ill_100,$(HG_FASTA),100,$(NREADS),0.35,300,50,7724))
 # >>> 4000000 * 750 / 3.1e9
 # 0.967741935483871
-$(eval $(call art_ill_pair_reads,ill_250,$(HG_FASTA),250,$(NREADS),0.9,750,250,7724))
+$(eval $(call art_ill_pair_reads,ill_250,$(HG_FASTA),250,$(NREADS),0.9,750,125,7724))
