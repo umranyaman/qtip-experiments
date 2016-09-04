@@ -199,7 +199,7 @@ fn <- 'various_lengths.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_lengths_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qsim and Bowtie 2 on Mason-simulated Illumina-like samples of various lengths.  Each sample consists of 4 million reads/pairs.  Samples are either unpaired and paired-end, and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 on Mason-simulated Illumina-like samples of various lengths.  Each sample consists of 4 million reads/pairs.  Samples are either unpaired and paired-end, and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
 write("\\label{length_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -229,7 +229,7 @@ fn <- 'various_sensitivities.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_sensitivities_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qsim and Bowtie 2 at various levels of sensitivity on Mason-simulated Illumina-like samples.  Each simulated sample consists of 4 million reads or pairs.  Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 at various levels of sensitivity on Mason-simulated Illumina-like samples.  Each simulated sample consists of 4 million reads or pairs.  Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
 write("\\label{sens_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -1210,9 +1210,10 @@ real_data_accuracy_table <- function() {
   levels(realtmp$aligner)[levels(realtmp$aligner)=="bwamem"] <- "BWA-MEM"
   levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP"
   realtmp$RCA <- realtmp$RCA * 100.0  # convert to percent
-  tabular(((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) *
-            Heading() * aligner) ~
-           (Format(digits=2) * Heading() * data * (RCA) * (mean + sd)),
+  realtmp$loose <- factor(realtmp$loose, labels=c('Strong', 'Weak'))
+  tabular(((Heading() * aligner) *
+            Heading() * loose) ~
+           (Format(digits=2) * (Heading("Unpaired") * (!paired) + Heading("Paired") * paired) * Heading() * data * (RCA) * Heading() * identity),
           data=realtmp)
 }
 fn <- 'real_accuracy.tex_snippet'
@@ -1221,7 +1222,7 @@ write("\\centering", file=fn, append=T)
 #write("\\resizebox{\\columnwidth}{!}{%", file=fn, append=T)
 capture.output(latex(real_data_accuracy_table()), file=fn, append=T)
 #write("}", file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) for various aligners on the public ERR050082 and ERR050083 DNA sequening samples.  We report mean and standard deviation for RCA, expressed in percent, over 5 random trials using distinct pseudo-random seeds.  Both samples are paired-end, but in some experiments (``Unpaired'') we mimic unpaired data by providing only the first end to the aligner.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) for various aligners on the public ERR050082 and ERR050083 DNA sequencing samples.  Both samples are paired-end; in ``Unpaired'' experiments we mimic unpaired data by providing only the first end to the aligner.}", file=fn, append=T)
 write("\\label{real_accuracy_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -1234,7 +1235,7 @@ real_data_plot <- function(
   want_cid)
 {
     xlab <- paste0(if(want_paired) "Paired " else "Unpaired ",
-                   if(want_loose) "loose" else "strict")
+                   want_data)
     realtmp <- real %>% filter(data == want_data &
                                paired == want_paired &
                                loose == want_loose)
@@ -1244,12 +1245,12 @@ real_data_plot <- function(
     levels(realtmp$aligner)[levels(realtmp$aligner)=="bwamem"] <- "BWA-MEM  "
     levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP  "
     realtmp$aligner <- relevel(realtmp$aligner, "BWA-MEM  ")
-    realtmp$aligner <- relevel(realtmp$aligner, "Bowtie 2 end-to-end  ")
+    realtmp$aligner <- relevel(realtmp$aligner, "Bowtie 2  ")
     ggplot(realtmp, aes(x=x, y=y, color=aligner)) +
       geom_abline(intercept = 0, slope = 0) +
       coord_trans(y = logmod_trans()) +
       scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-      labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+      labs(x=xlab, y='') +
       geom_line() +
       theme_bw() +
       guides(colour = guide_legend(override.aes = list(size=1))) +
@@ -1258,46 +1259,24 @@ real_data_plot <- function(
 }
 ```
 
-```{r real_data_plot_err050082}
+```{r real_data_plot}
 # data, paired, loose, cid
-p_rl_err050082_ul <- real_data_plot('ERR050082', F, T, T)
 p_rl_err050082_us <- real_data_plot('ERR050082', F, F, T)
-p_rl_err050082_pl <- real_data_plot('ERR050082', T, T, T)
-p_rl_err050082_ps <- real_data_plot('ERR050082', T, F, T)
-
-# Write to notebook
-grid_arrange_shared_legend(p_rl_err050082_ul,
-                           p_rl_err050082_pl,
-                           p_rl_err050082_us,
-                           p_rl_err050082_ps)
-
-# Write to PDF
-pdf(file="real_human_err050082_cid.pdf", onefile=F)
-grid_arrange_shared_legend(p_rl_err050082_ul,
-                           p_rl_err050082_pl,
-                           p_rl_err050082_us,
-                           p_rl_err050082_ps)
-dev.off()
-```
-
-```{r real_data_plot_err050083}
-# data, paired, loose, cid
-p_rl_err050083_ul <- real_data_plot('ERR050083', F, T, T)
 p_rl_err050083_us <- real_data_plot('ERR050083', F, F, T)
-p_rl_err050083_pl <- real_data_plot('ERR050083', T, T, T)
+p_rl_err050082_ps <- real_data_plot('ERR050082', T, F, T)
 p_rl_err050083_ps <- real_data_plot('ERR050083', T, F, T)
 
 # Write to notebook
-grid_arrange_shared_legend(p_rl_err050083_ul,
-                           p_rl_err050083_pl,
+grid_arrange_shared_legend(p_rl_err050082_us,
                            p_rl_err050083_us,
+                           p_rl_err050082_ps,
                            p_rl_err050083_ps)
 
 # Write to PDF
-pdf(file="real_human_err050083_cid.pdf", onefile=F)
-grid_arrange_shared_legend(p_rl_err050083_ul,
-                           p_rl_err050083_pl,
+pdf(file="real_human_cid.pdf", onefile=F)
+grid_arrange_shared_legend(p_rl_err050082_us,
                            p_rl_err050083_us,
+                           p_rl_err050082_ps,
                            p_rl_err050083_ps)
 dev.off()
 ```
@@ -1323,10 +1302,10 @@ real_data_perf_table <- function(dataset) {
             Heading() * aligner) ~
            (Heading() * identity * Justify(r) * Format(sprintf("%.2f")) *
               (Heading("Time") * ja +
-               Heading("+Qsim") * oa +
+               Heading("+Qtip") * oa +
                Heading("\\% inc") * pct_increase_a_to_o +
                Heading("Memory") * pc +
-               Heading("+Qsim") * pw +
+               Heading("+Qtip") * pw +
                Heading("\\% inc") * pct_increase_peak)),
           data=perftmp)
 }
@@ -1338,7 +1317,7 @@ write("\\centering", file=fn, append=T)
 write("\\resizebox{\\columnwidth}{!}{%", file=fn, append=T)
 capture.output(latex(real_data_perf_table()), file=fn, append=T)
 write("}", file=fn, append=T)
-write("\\caption{Overhead of the Qsim tool.  Measured as the increase in running time (left) and peak memory footprint (right) from when the aligner runs by itself (``Time'') to when the aligner runs in combination with Qsim (``+Qsim'').  ``\\% inc'' columns give the percent increase.  Times are in minutes and memory footprints are in gigabytes.}", file=fn, append=T)
+write("\\caption{Overhead of the Qtip tool.  Measured as the increase in running time (left) and peak memory footprint (right) from when the aligner runs by itself (``Time'') to when the aligner runs in combination with Qtip (``+Qtip'').  ``\\% inc'' columns give the percent increase.  Times are in minutes and memory footprints are in gigabytes.}", file=fn, append=T)
 write("\\label{real_performance_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
