@@ -47,7 +47,7 @@ include ../art.mk
 include ../bowtie2ts.mk
 
 NREADS=4000000
-NCORES=8
+NCORES=1
 
 .PHONY: clean
 clean:
@@ -90,7 +90,7 @@ reads: \
     r1_art_ill_100.fq.gz \
     r1_art_ill_250.fq.gz
 
-MK_QSIM_ARGS=--trials=5 --predict-for-training --keep-intermediates --assess-accuracy
+MK_QSIM_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
