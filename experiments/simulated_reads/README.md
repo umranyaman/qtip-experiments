@@ -3,7 +3,7 @@ Contents
 
 * `marcc_reads.py` generates and optionally submits MARCC SLURM jobs for simulating reads
     * Parses the `Makefiles` in the subdirectories to figure out what jobs to submit
-* `marcc_out.py` generates and optionally submits MARCC SLURM jobs for running Qsim+aligner
+* `marcc_out.py` generates and optionally submits MARCC SLURM jobs for running Qtip+aligner
     * Parses the `Makefiles` in the subdirectories to figure out what jobs to submit
 * `gather.py` parses contents of `.out` subdirectories
 
