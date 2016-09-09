@@ -1,5 +1,5 @@
 ---
-title: "qsim_paper"
+title: "qtip_paper"
 output:
   html_document:
     theme: united
@@ -44,6 +44,10 @@ m$aligner2 <- factor(ifelse(m$local,
 ```
 
 ### Log mod scaling
+
+```{r m_formatting}
+mfmt <- function(n) { paste(n/1e6, 'M', sep='') }
+```
 
 ```{r log_scaling}
 logmod <- function(x) {
@@ -291,15 +295,13 @@ write("\\end{table}", file=fn, append=T)
 #### Various read lengths
 
 ```{r various_lengths_plot}
+
 various_lengths_plot <- function(
   want_paired,
   want_training,
   want_cid,
   want_local,
-  want_trial=1
-#  , want_subsampling_fraction=0.03,
-#  , want_mapq_included=F
-  )
+  want_trial=1)
 {
   xlab <- paste0(if(want_paired) "Paired " else "Unpaired ",
                  if(want_local) "local" else "end-to-end")
@@ -307,17 +309,15 @@ various_lengths_plot <- function(
                        paired == want_paired &
                        local == want_local &
                        training == want_training &
-                       trial_no == want_trial
-#                      & mapq_included == want_mapq_included
-#                      & subsampling_fraction == want_subsampling_fraction
-                       )
+                       trial_no == want_trial)
   mtmp <- explode_curves(mtmp, want_cid)
   mx <- max(abs(mtmp$y))
   ggplot(mtmp, aes(x=x, y=y, color=factor(readlen))) +
     geom_abline(intercept = 0, slope = 0) +
     coord_trans(y = logmod_trans()) +
     scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-    labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+    scale_x_continuous(labels=mfmt) +
+    labs(x=xlab, y="") +
     geom_line() +
     theme_bw() +
     guides(colour = guide_legend(override.aes = list(size=1))) +
@@ -448,10 +448,7 @@ various_aligners_plot <- function(
   want_readlen,
   want_training,
   want_cid,
-  want_trial=1
-#  ,want_subsampling_fraction=0.03
-#  ,want_mapq_included=F
-)
+  want_trial=1)
 {
   xlab <- paste0(want_readlen, " bp ",
                  if(want_paired) "paired " else "unpaired ")
@@ -459,10 +456,7 @@ various_aligners_plot <- function(
                       paired == want_paired &
                       readlen == want_readlen &
                       training == want_training &
-                      trial_no == want_trial
-#                     & mapq_included == want_mapq_included
-#                     & subsampling_fraction == want_subsampling_fraction
-                      )
+                      trial_no == want_trial)
   mtmp <- explode_curves(mtmp, want_cid)
   mx <- max(abs(mtmp$y))
   levels(mtmp$aligner2)[levels(mtmp$aligner2)=="bt2 e2e"] <- "Bowtie 2 end-to-end  "
@@ -476,7 +470,8 @@ various_aligners_plot <- function(
     geom_abline(intercept = 0, slope = 0) +
     coord_trans(y = logmod_trans()) +
     scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-    labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+    scale_x_continuous(labels=mfmt) +
+    labs(x=xlab, y="") +
     theme(axis.title.x = element_text(vjust=-0.6)) +
     geom_line() +
     theme_bw() +
@@ -608,10 +603,7 @@ various_genomes_plot <- function(
   want_readlen,
   want_training,
   want_cid,
-  want_trial=1
-#  ,want_subsampling_fraction=0.03
-#  ,want_mapq_included=F
-)
+  want_trial=1)
 {
     xlab <- paste0(want_readlen, " bp ",
                    if(want_paired) "paired " else "unpaired ")
@@ -619,10 +611,7 @@ various_genomes_plot <- function(
                          paired == want_paired &
                          readlen == want_readlen &
                          training == want_training &
-                         trial_no == want_trial
-#                         & mapq_included == want_mapq_included
-#                         & subsampling_fraction == want_subsampling_fraction
-                         )
+                         trial_no == want_trial)
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
     levels(mtmp$species)[levels(mtmp$species)=="hg"] <- "Human (GRCh37)  "
@@ -635,7 +624,8 @@ various_genomes_plot <- function(
       geom_abline(intercept = 0, slope = 0) +
       coord_trans(y = logmod_trans()) +
       scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-      labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+      scale_x_continuous(labels=mfmt) +
+      labs(x=xlab, y="") +
       geom_line() +
       theme_bw() +
       guides(colour = guide_legend(override.aes = list(size=1))) +
@@ -686,7 +676,7 @@ grid_arrange_shared_legend(p_vg_u100ri,
                            p_vg_p250ri)
 
 # Write to PDF
-pdf(file="various_genomes_cid_training.pdf")
+pdf(file="various_genomes_cid_training.pdf", onefile=F)
 grid_arrange_shared_legend(p_vg_u100ri,
                            p_vg_u250ri,
                            p_vg_p100ri,
@@ -711,7 +701,7 @@ grid_arrange_shared_legend(p_vg_u100ee,
                            p_vg_p250ee)
 
 # Write to PDF
-pdf(file="various_genomes_cse_test.pdf")
+pdf(file="various_genomes_cse_test.pdf", onefile=F)
 grid_arrange_shared_legend(p_vg_u100ee,
                            p_vg_u250ee,
                            p_vg_p100ee,
@@ -736,7 +726,7 @@ grid_arrange_shared_legend(p_vg_u100re,
                            p_vg_p250re)
 
 # Write to PDF
-pdf(file="various_genomes_cse_training.pdf")
+pdf(file="various_genomes_cse_training.pdf", onefile=F)
 grid_arrange_shared_legend(p_vg_u100re,
                            p_vg_u250re,
                            p_vg_p100re,
@@ -791,10 +781,7 @@ various_sensitivities_plot <- function(
   want_readlen,
   want_training,
   want_cid,
-  want_trial=1
-#  , want_subsampling_fraction=0.03,
-#  , want_mapq_included=F
-  )
+  want_trial=1)
 {
   xlab <- paste0(want_readlen, " bp ",
                  if(want_paired) "paired " else "unpaired ",
@@ -804,10 +791,7 @@ various_sensitivities_plot <- function(
                       local == want_local &
                       readlen == want_readlen &
                       training == want_training &
-                      trial_no == want_trial
-#                      & mapq_included == want_mapq_included
-#                      & subsampling_fraction == want_subsampling_fraction
-                      )
+                      trial_no == want_trial)
   levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="vs"] <- "--very-sensitive  "
   levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="s"] <- "--sensitive  "
   levels(mtmp$sensitivity)[levels(mtmp$sensitivity)=="f"] <- "--fast  "
@@ -821,7 +805,8 @@ various_sensitivities_plot <- function(
     geom_abline(intercept = 0, slope = 0) +
     coord_trans(y = logmod_trans()) +
     scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-    labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+    scale_x_continuous(labels=mfmt) +
+    labs(x=xlab, y="") +
     geom_line() +
     theme_bw() +
     guides(colour = guide_legend(override.aes = list(size=1))) +
@@ -952,10 +937,7 @@ various_simulators_plot <- function(
   want_readlen,
   want_training,
   want_cid,
-  want_trial=1
-#  , want_subsampling_fraction=0.03,
-#  , want_mapq_included=F
-  )
+  want_trial=1)
 {
     xlab <- paste0(want_readlen, " bp ",
                    if(want_paired) "paired " else "unpaired ")
@@ -963,10 +945,7 @@ various_simulators_plot <- function(
                          paired == want_paired &
                          readlen == want_readlen &
                          training == want_training &
-                         trial_no == want_trial
-#                         & mapq_included == want_mapq_included
-#                         & subsampling_fraction == want_subsampling_fraction
-                         )
+                         trial_no == want_trial)
     stopifnot(nrow(mtmp) == 3)
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
@@ -977,7 +956,8 @@ various_simulators_plot <- function(
       geom_abline(intercept = 0, slope = 0) +
       coord_trans(y = logmod_trans()) +
       scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-      labs(x=xlab, y=if(want_cid) "CID" else "CSED") +
+      scale_x_continuous(labels=mfmt) +
+      labs(x=xlab, y="") +
       geom_line() +
       theme_bw() +
       guides(colour = guide_legend(override.aes = list(size=1))) +
@@ -1106,17 +1086,11 @@ dev.off()
 mixed_length_plot <- function(
   want_training,
   want_cid,
-  want_trial=1
-#  , want_subsampling_fraction=0.03,
-#  , want_mapq_included=F
-  )
+  want_trial=1)
 {
     mtmp <- m %>% filter(name == '454_mixed_length' &
                          training == want_training &
-                         trial_no == want_trial
-#                         & mapq_included == want_mapq_included
-#                         & subsampling_fraction == want_subsampling_fraction
-                         )
+                         trial_no == want_trial)
     stopifnot(nrow(mtmp) == 2)  # local and end-to-end
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
@@ -1124,7 +1098,8 @@ mixed_length_plot <- function(
       geom_abline(intercept = 0, slope = 0) +
       coord_trans(y = logmod_trans()) +
       scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-      labs(y=if(want_cid) "CID" else "CSED") +
+      scale_x_continuous(labels=mfmt) +
+      labs(y="") +
       geom_line() +
       theme_bw() +
       theme(legend.title=element_blank(),
@@ -1241,7 +1216,7 @@ real_data_plot <- function(
                                loose == want_loose)
     realtmp <- explode_curves(realtmp, want_cid)
     mx <- max(abs(realtmp$y))
-    levels(realtmp$aligner)[levels(realtmp$aligner)=="bt2"] <- "Bowtie 2 end-to-end  "
+    levels(realtmp$aligner)[levels(realtmp$aligner)=="bt2"] <- "Bowtie 2  "
     levels(realtmp$aligner)[levels(realtmp$aligner)=="bwamem"] <- "BWA-MEM  "
     levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP  "
     realtmp$aligner <- relevel(realtmp$aligner, "BWA-MEM  ")
@@ -1250,6 +1225,7 @@ real_data_plot <- function(
       geom_abline(intercept = 0, slope = 0) +
       coord_trans(y = logmod_trans()) +
       scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+      scale_x_continuous(labels=mfmt) +
       labs(x=xlab, y='') +
       geom_line() +
       theme_bw() +
@@ -1259,7 +1235,7 @@ real_data_plot <- function(
 }
 ```
 
-```{r real_data_plot}
+```{r real_data_plot_1}
 # data, paired, loose, cid
 p_rl_err050082_us <- real_data_plot('ERR050082', F, F, T)
 p_rl_err050083_us <- real_data_plot('ERR050083', F, F, T)
