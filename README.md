@@ -1,4 +1,4 @@
-# qsim-experiments
+# qtip-experiments
 
 Scripts for driving all experiments described in the `qtip` manuscript.
 
