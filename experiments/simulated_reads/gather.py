@@ -2,7 +2,7 @@
 
 """
 Gathers results from simulation experiments.  Run this from the
-simulated_reads subdirectory of the qsim-experiments repo.  It descends into
+simulated_reads subdirectory of the qtip-experiments repo.  It descends into
 the various experimental subdirectories and parses the Makefiles it finds.
 
 Outputs:
@@ -114,7 +114,7 @@ def mkdir_quiet(dr):
 
 
 def has_done(dr):
-    """ Return true if directory contains DONE file, indicating qsim finished
+    """ Return true if directory contains DONE file, indicating qtip finished
         running. """
     done_fn = join(dr, 'DONE')
     if not os.path.exists(done_fn):
@@ -205,6 +205,7 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
     odir = join(dest_dirname, combined_target_name, variant)
     for dir_samp in get_immediate_subdirectories(dirname):
 
+        print('dir_samp=' + dir_samp, file=sys.stderr)
         if dir_samp.startswith('sample'):
             rate = dir_samp[6:]
             odir_r = join(odir, 'sample' + rate)
@@ -230,7 +231,7 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
                     continue
                 next_subdirs2 = get_immediate_subdirectories(target_full_sm)
             else:
-                assert dir_mapq.startswith('trial')
+                assert dir_mapq.startswith('trial'), dir_mapq
                 target_full_sm = target_full_s
                 odir_rm = odir_r
                 mapq_included = False
@@ -322,8 +323,8 @@ def go():
                         logging.info('Found a Makefile: %s' % join(dirname, fn))
                         for target, target_full in targets_from_makefile(dirname, makefile_fn):
                             combined_target_name = name + '_' + target[:-4]
-                            logging.info('  Found target dir: %s (normal)' % combined_target_name)
-                            handle_dir(dirname, combined_target_name, 'normal', summary_fn, fh, first)
+                            logging.info('  Found target dir: %s (normal)' % join(dirname, target))
+                            handle_dir(join(dirname, target), combined_target_name, 'normal', summary_fn, fh, first)
                             first = False
 
     # Compress the output directory, which is large because of the CID and CSE curves

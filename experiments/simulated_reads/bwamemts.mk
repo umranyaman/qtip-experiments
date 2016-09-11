@@ -1,13 +1,13 @@
 # Must already have a BWA index of the FASTA reference somewhere
 
-QSIM=python $(QSIM_HOME)/src/qsim
+QTIP=python $(QTIP_HOME)/src/qtip
 BWA_TS_ARGS=--write-orig-mapq
 
 define bwamemts
 
 r0_$1_%.$6/DONE: r0_%.fq.gz
 	mkdir -p $$(shell dirname $$(@)).temp
-	$$(QSIM) --ref $4 \
+	$$(QTIP) --ref $4 \
 	       --bwa-exe $$(BWA) --aligner=bwa-mem \
 	       --index $5 \
 	       $$(BWA_TS_ARGS) $$(TS_ARGS) $2 \
@@ -16,12 +16,12 @@ r0_$1_%.$6/DONE: r0_%.fq.gz
 	       --U $$< \
 	       -- $3 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS) -t $7
 	$$(BWA) > $$(shell dirname $$(@))/bwa_version 2>&1 || true
-	$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version || true
+	$$(QTIP) --version > $$(shell dirname $$(@))/qtip_version || true
 	touch $$(@)
 
 r12_$1_%.$6/DONE: r1_%.fq.gz
 	mkdir -p $$(shell dirname $$(@)).temp
-	$$(QSIM) --ref $4 \
+	$$(QTIP) --ref $4 \
 	       --bwa-exe $$(BWA) --aligner=bwa-mem \
 	       --index $5 \
 	       $$(BWA_TS_ARGS) $$(TS_ARGS) $2 \
@@ -30,7 +30,7 @@ r12_$1_%.$6/DONE: r1_%.fq.gz
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
 	       -- $3 $$(BWA_ARGS) $$(BWA_EXTRA_ARGS) -t $7
 	$$(BWA) > $$(shell dirname $$(@))/bwa_version 2>&1 || true
-	$$(QSIM) --version > $$(shell dirname $$(@))/qsim_version || true
+	$$(QTIP) --version > $$(shell dirname $$(@))/qtip_version || true
 	touch $$(@)
 
 endef

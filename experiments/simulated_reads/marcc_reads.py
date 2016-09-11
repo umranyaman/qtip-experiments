@@ -63,7 +63,7 @@ def handle_dir(dirname, dry_run=True):
                     pbs_lns.append('#SBATCH --time=%d:00:00' % my_hours)
                     pbs_lns.append('#SBATCH --output=' + qsub_basename + '.o')
                     pbs_lns.append('#SBATCH --error=' + qsub_basename + '.e')
-                    pbs_lns.append('export QSIM_EXPERIMENTS_HOME=%s' % os.environ['QSIM_EXPERIMENTS_HOME'])
+                    pbs_lns.append('export QTIP_EXPERIMENTS_HOME=%s' % os.environ['QTIP_EXPERIMENTS_HOME'])
                     pbs_lns.append('cd %s' % os.path.abspath(dirname))
                     pbs_lns.append('make %s' % target)
                     qsub_fullname = os.path.join(dirname, qsub_basename)
@@ -78,8 +78,8 @@ def handle_dir(dirname, dry_run=True):
 
 
 def go():
-    if 'QSIM_EXPERIMENTS_HOME' not in os.environ:
-        raise RuntimeError('Must have QSIM_EXPERIMENTS_HOME set')
+    if 'QTIP_EXPERIMENTS_HOME' not in os.environ:
+        raise RuntimeError('Must have QTIP_EXPERIMENTS_HOME set')
     for dirname, dirs, files in os.walk('.'):
         if 'Makefile' in files and 'IGNORE' not in files:
             print('Found a Makefile: %s' % (os.path.join(dirname, 'Makefile')), file=sys.stderr)

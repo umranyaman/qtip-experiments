@@ -22,13 +22,13 @@
 define mason_ill_unp_reads
 
 # Generate unpaired reads
-r0_mason_$1.fq.gz: $$(FA) $$(QSIM_EXPERIMENTS_HOME)/software/mason/mason
-	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason illumina -hn 2 -i -s $5 -sq -n $3 -N $4 -o .$$@.fq $2
+r0_mason_$1.fq.gz: $$(FA) $$(QTIP_EXPERIMENTS_HOME)/software/mason/mason
+	$$(QTIP_EXPERIMENTS_HOME)/software/mason/mason illumina -hn 2 -i -s $5 -sq -n $3 -N $4 -o .$$@.fq $2
 	rm -f .$$@.fq.sam
-	python $$(QSIM_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$(@:%.fq.gz=%.fq)
+	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$(@:%.fq.gz=%.fq)
 	rm -f .$$@.fq
 	gzip $$(@:%.fq.gz=%.fq)
-	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason illumina --version > $$@.version || true
+	$$(QTIP_EXPERIMENTS_HOME)/software/mason/mason illumina --version > $$@.version || true
 
 endef
 
@@ -39,16 +39,16 @@ endef
 define mason_ill_pair_reads
 
 # Generate paired-end reads
-r1_mason_$1.fq.gz: $(FA) $$(QSIM_EXPERIMENTS_HOME)/software/mason/mason
-	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason illumina -hn 2 -i -s $7 -sq -mp -rn 2 -ll $5 -le $6 -n $3 -N $4 -o .$$@.fq $2
+r1_mason_$1.fq.gz: $(FA) $$(QTIP_EXPERIMENTS_HOME)/software/mason/mason
+	$$(QTIP_EXPERIMENTS_HOME)/software/mason/mason illumina -hn 2 -i -s $7 -sq -mp -rn 2 -ll $5 -le $6 -n $3 -N $4 -o .$$@.fq $2
 	rm -f .$$@.fq.sam
-	python $$(QSIM_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$(@)_1.fq --in2 .$$(@)_2.fq --out1 .$$(@)_final_1.fq --out2 .$$(@)_final_2.fq
+	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$(@)_1.fq --in2 .$$(@)_2.fq --out1 .$$(@)_final_1.fq --out2 .$$(@)_final_2.fq
 	rm -f .$$(@)_1.fq .$$(@)_2.fq
 	gzip -c .$$(@)_final_1.fq > $$@
 	rm -f .$$(@)_final_1.fq
 	gzip -c .$$(@)_final_2.fq > $$(@:r1_%=r2_%)
 	rm -f .$$(@)_final_2.fq
-	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason illumina --version > $$@.version || true
+	$$(QTIP_EXPERIMENTS_HOME)/software/mason/mason illumina --version > $$@.version || true
 
 endef
 
@@ -59,15 +59,15 @@ endef
 define mason_fff_unp_reads
 
 # Generate unpaired reads
-r0_mason_$1.fq.gz: $$(FA) $$(QSIM_EXPERIMENTS_HOME)/software/mason/mason
-	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason 454 -hn 2 -i -s $6 -sq -N $5 -nm $3 -ne $4 -nu -o .$$@.fq $2
+r0_mason_$1.fq.gz: $$(FA) $$(QTIP_EXPERIMENTS_HOME)/software/mason/mason
+	$$(QTIP_EXPERIMENTS_HOME)/software/mason/mason 454 -hn 2 -i -s $6 -sq -N $5 -nm $3 -ne $4 -nu -o .$$@.fq $2
 	rm -f .$$@.fq.sam
-	python $$(QSIM_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$(@:%.fq.gz=%.fq)
+	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$(@:%.fq.gz=%.fq)
 	rm -f .$$@.fq
 	gzip $$(@:%.fq.gz=%.fq)
-	$$(QSIM_EXPERIMENTS_HOME)/software/mason/mason 454 --version > $$@.version || true
+	$$(QTIP_EXPERIMENTS_HOME)/software/mason/mason 454 --version > $$@.version || true
 
 endef
 
-$(QSIM_EXPERIMENTS_HOME)/software/mason/mason:
-	$(MAKE) -C $(QSIM_EXPERIMENTS_HOME)/software/mason
+$(QTIP_EXPERIMENTS_HOME)/software/mason/mason:
+	$(MAKE) -C $(QTIP_EXPERIMENTS_HOME)/software/mason
