@@ -10,9 +10,9 @@
 # 2. $QTIP_EXPERIMENTS_HOME/experiments/refs must have relevant references and indexes
 # 3. $QTIP_EXPERIMENTS_HOME/software/mason/mason must have been built
 
-HG_FASTA_NAME=hg19.fa
+HG_FASTA_NAME=hg38.fa
 MM_FASTA_NAME=mm10.fa
-ZM_FASTA_NAME=zm_AGPv3.fa
+ZM_FASTA_NAME=zm_AGPv4.fa
 HG_INDEX_BASE=$(HG_FASTA_NAME)
 MM_INDEX_BASE=$(MM_FASTA_NAME)
 ZM_INDEX_BASE=$(ZM_FASTA_NAME)

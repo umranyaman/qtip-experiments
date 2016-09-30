@@ -10,7 +10,7 @@
 # 2. $QTIP_EXPERIMENTS_HOME/experiments/refs must have relevant references and indexes
 # 3. $QTIP_EXPERIMENTS_HOME/software/mason/mason must have been built
 
-HG_FASTA_NAME=hg19.fa
+HG_FASTA_NAME=hg38.fa
 HG_INDEX_BASE=$(HG_FASTA_NAME)
 
 ifeq (,$(QTIP_EXPERIMENTS_HOME))
@@ -98,7 +98,7 @@ reads: \
 MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy
 
 #
-# Make bowtie2 rule.  Use --sensitive, hg19, and prefix rules with "bt2s"
+# Make bowtie2 rule.  Use --sensitive, hg38, and prefix rules with "bt2s"
 #
 $(eval $(call bt2ts,bt2s,$(MK_QTIP_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2sl,$(MK_QTIP_ARGS),--sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))

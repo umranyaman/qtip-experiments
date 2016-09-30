@@ -7,11 +7,11 @@
 
 # Prerequisites:
 # 1. TS_HOME (root of repo) must be set
-# 2. TS_REFS (containing hg19.fa) must be set
-# 3. TS_INDEXES (containing hg19.fa.*.bt2) must be set
+# 2. TS_REFS (containing hg38.fa) must be set
+# 3. TS_INDEXES (containing hg38.fa.*.bt2) must be set
 # 4. $TS_HOME/software/mason/mason must have been built
 
-HG_FASTA_NAME=hg19.fa
+HG_FASTA_NAME=hg38.fa
 HG_INDEX_BASE=$(HG_FASTA_NAME)
 
 ifeq (,$(TS_HOME))
