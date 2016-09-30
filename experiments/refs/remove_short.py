@@ -15,13 +15,14 @@ if len(sys.argv) > 1:
 
 def handle_entry():
     if length < max_len:
-        print('Ref %s has length %d' % (name, length), file=sys.stderr)
+        print('length(%s) = %d, UNDER THERSHOLD' % (name, length), file=sys.stderr)
         if short_fh is not None:
             print('>' + name, file=short_fh)
             print('\n'.join(buf), file=short_fh)
     else:
         print('>' + name)
         print('\n'.join(buf))
+        print('length(%s) = %d, pass' % (name, length), file=sys.stderr)
 
 
 for ln in sys.stdin:
