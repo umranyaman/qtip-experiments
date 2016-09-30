@@ -1,47 +1,48 @@
 #!/bin/sh
 
-[ -z "$TS_HOME" ] && echo "Set TS_HOME" && exit 1
+[ -z "$QTIP_HOME" ] && echo "Set QTIP_HOME" && exit 1
+[ -z "$QTIP_EXPERIMENTS_HOME" ] && echo "Set QTIP_EXPERIMENTS_HOME" && exit 1
 
 #
-# hg19
+# hg38
 #
 
-cat > .hg19.bt2.sh <<EOF
+cat > .hg38.bt2.sh <<EOF
 #!/bin/bash -l
 #SBATCH --nodes=1
 #SBATCH --mem=8G
 #SBATCH --partition=shared
 #SBATCH --time=10:00:00
-#SBATCH --output=.hg19.bt2.sh.o
-#SBATCH --error=.hg19.bt2.sh.e
-$TS_HOME/software/bowtie2/bowtie2-build --bmax 537647674 --dcv 1024 $TS_REFS/hg19.fa hg19.fa
+#SBATCH --output=.hg38.bt2.sh.o
+#SBATCH --error=.hg38.bt2.sh.e
+$QTIP_HOME/software/bowtie2/bowtie2-build --bmax 537647674 --dcv 1024 $QTIP_EXPERIMENTS_HOME/experiments/refs/hg38.fa hg38.fa
 EOF
-echo sbatch .hg19.bt2.sh
+echo sbatch .hg38.bt2.sh
 
-cat > .hg19.bwa.sh <<EOF
+cat > .hg38.bwa.sh <<EOF
 #!/bin/bash -l
 #SBATCH --nodes=1
 #SBATCH --mem=8G
 #SBATCH --partition=shared
 #SBATCH --time=10:00:00
-#SBATCH --output=.hg19.bwa.sh.o
-#SBATCH --error=.hg19.bwa.sh.e
-$TS_HOME/software/bwa/bwa index $TS_REFS/hg19.fa
-mv $TS_REFS/hg19.fa.* .
+#SBATCH --output=.hg38.bwa.sh.o
+#SBATCH --error=.hg38.bwa.sh.e
+$QTIP_HOME/software/bwa/bwa index $QTIP_EXPERIMENTS_HOME/experiments/refs/hg38.fa
+mv $TS_REFS/hg38.fa.* .
 EOF
-echo sbatch .hg19.bwa.sh
+echo sbatch .hg38.bwa.sh
 
-cat > .hg19.snap.sh <<EOF
+cat > .hg38.snap.sh <<EOF
 #!/bin/bash -l
 #SBATCH --nodes=1
 #SBATCH --mem=60G
 #SBATCH --partition=shared
 #SBATCH --time=2:00:00
-#SBATCH --output=.hg19.snap.sh.o
-#SBATCH --error=.hg19.snap.sh.e
-$TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/hg19.fa hg19.fa.snap -bSpace
+#SBATCH --output=.hg38.snap.sh.o
+#SBATCH --error=.hg38.snap.sh.e
+$QTIP_HOME/software/snap/snap/snap-aligner index $QTIP_EXPERIMENTS_HOME/experiments/refs/hg38.fa hg38.fa.snap -bSpace
 EOF
-echo sbatch .hg19.snap.sh
+echo sbatch .hg38.snap.sh
 
 #
 # mm10
@@ -55,7 +56,7 @@ cat > .mm10.bt2.sh <<EOF
 #SBATCH --time=10:00:00
 #SBATCH --output=.mm10.bt2.sh.o
 #SBATCH --error=.mm10.bt2.sh.e
-$TS_HOME/software/bowtie2/bowtie2-build --bmax 537647674 --dcv 1024 $TS_REFS/mm10.fa mm10.fa
+$QTIP_HOME/software/bowtie2/bowtie2-build --bmax 537647674 --dcv 1024 $QTIP_EXPERIMENTS_HOME/experiments/refs/mm10.fa mm10.fa
 EOF
 echo sbatch .mm10.bt2.sh
 
@@ -67,7 +68,7 @@ cat > .mm10.bwa.sh <<EOF
 #SBATCH --time=10:00:00
 #SBATCH --output=.mm10.bwa.sh.o
 #SBATCH --error=.mm10.bwa.sh.e
-$TS_HOME/software/bwa/bwa index $TS_REFS/mm10.fa
+$QTIP_HOME/software/bwa/bwa index $QTIP_EXPERIMENTS_HOME/experiments/refs/mm10.fa
 mv $TS_REFS/mm10.fa.* .
 EOF
 echo sbatch .mm10.bwa.sh
@@ -80,47 +81,47 @@ cat > .mm10.snap.sh <<EOF
 #SBATCH --time=2:00:00
 #SBATCH --output=.mm10.snap.sh.o
 #SBATCH --error=.mm10.snap.sh.e
-$TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/mm10.fa mm10.fa.snap -bSpace
+$QTIP_HOME/software/snap/snap/snap-aligner index $QTIP_EXPERIMENTS_HOME/experiments/refs/mm10.fa mm10.fa.snap -bSpace
 EOF
 echo sbatch .mm10.snap.sh
 
 #
-# zm_AGPv3
+# zm_AGPv4
 #
 
-cat > .zm_AGPv3.bt2.sh <<EOF
+cat > .zm_AGPv4.bt2.sh <<EOF
 #!/bin/bash -l
 #SBATCH --nodes=1
 #SBATCH --mem=8G
 #SBATCH --partition=shared
 #SBATCH --time=10:00:00
-#SBATCH --output=.zm_AGPv3.bt2.sh.o
-#SBATCH --error=.zm_AGPv3.bt2.sh.e
-$TS_HOME/software/bowtie2/bowtie2-build --bmax 537647674 --dcv 1024 $TS_REFS/zm_AGPv3.fa zm_AGPv3.fa
+#SBATCH --output=.zm_AGPv4.bt2.sh.o
+#SBATCH --error=.zm_AGPv4.bt2.sh.e
+$QTIP_HOME/software/bowtie2/bowtie2-build --bmax 537647674 --dcv 1024 $QTIP_EXPERIMENTS_HOME/experiments/refs/zm_AGPv4.fa zm_AGPv4.fa
 EOF
-echo sbatch .zm_AGPv3.bt2.sh
+echo sbatch .zm_AGPv4.bt2.sh
 
-cat > .zm_AGPv3.bwa.sh <<EOF
+cat > .zm_AGPv4.bwa.sh <<EOF
 #!/bin/bash -l
 #SBATCH --nodes=1
 #SBATCH --mem=8G
 #SBATCH --partition=shared
 #SBATCH --time=10:00:00
-#SBATCH --output=.zm_AGPv3.bwa.sh.o
-#SBATCH --error=.zm_AGPv3.bwa.sh.e
-$TS_HOME/software/bwa/bwa index $TS_REFS/zm_AGPv3.fa
-mv $TS_REFS/zm_AGPv3.fa.* .
+#SBATCH --output=.zm_AGPv4.bwa.sh.o
+#SBATCH --error=.zm_AGPv4.bwa.sh.e
+$QTIP_HOME/software/bwa/bwa index $QTIP_EXPERIMENTS_HOME/experiments/refs/zm_AGPv4.fa
+mv $QTIP_EXPERIMENTS_HOME/experiments/refs/zm_AGPv4.fa.* .
 EOF
-echo sbatch .zm_AGPv3.bwa.sh
+echo sbatch .zm_AGPv4.bwa.sh
 
-cat > .zm_AGPv3.snap.sh <<EOF
+cat > .zm_AGPv4.snap.sh <<EOF
 #!/bin/bash -l
 #SBATCH --nodes=1
 #SBATCH --mem=60G
 #SBATCH --partition=shared
 #SBATCH --time=2:00:00
-#SBATCH --output=.zm_AGPv3.snap.sh.o
-#SBATCH --error=.zm_AGPv3.snap.sh.e
-$TS_HOME/software/snap/snap/snap-aligner index $TS_REFS/zm_AGPv3.fa zm_AGPv3.fa.snap -bSpace
+#SBATCH --output=.zm_AGPv4.snap.sh.o
+#SBATCH --error=.zm_AGPv4.snap.sh.e
+$QTIP_HOME/software/snap/snap/snap-aligner index $QTIP_EXPERIMENTS_HOME/experiments/refs/zm_AGPv4.fa zm_AGPv4.fa.snap -bSpace
 EOF
-echo sbatch .zm_AGPv3.snap.sh
+echo sbatch .zm_AGPv4.snap.sh
