@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-__author__ = 'langmead'
-
+from __future__ import print_function
 import sys
 
 name = None
@@ -9,14 +8,26 @@ length = 0
 max_len = 10000
 first = True
 buf = []
+short_fh = None
+if len(sys.argv) > 1:
+    short_fh = open(sys.argv[1], 'w')
+
+
+def handle_entry():
+    if length < max_len:
+        print('Ref %s has length %d' % (name, length), file=sys.stderr)
+        if short_fh is not None:
+            print('>' + name, file=short_fh)
+            print('\n'.join(buf), file=short_fh)
+    else:
+        print('>' + name)
+        print('\n'.join(buf))
+
+
 for ln in sys.stdin:
     if ln[0] == '>':
         if not first:
-            if length < max_len:
-                print >> sys.stderr, 'Ref %s has length %d' % (name, length)
-            else:
-                print '>' + name
-                print '\n'.join(buf)
+            handle_entry()
             buf = []
         first = False
         length = 0
@@ -27,8 +38,7 @@ for ln in sys.stdin:
         buf.append(ln)
 
 if not first:
-    if length < max_len:
-        print >> sys.stderr, 'Ref %s has length %d' % (name, length)
-    else:
-        print '>%s' % name
-        print '\n'.join(buf)
+    handle_entry()
+
+if short_fh is not None:
+    short_fh.close()

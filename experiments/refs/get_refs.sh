@@ -12,7 +12,7 @@ ZM_URL=ftp://ftp.ensemblgenomes.org/pub/plants/release-21/fasta/zea_mays/dna/$ZM
 if [ ! -f $GRCh37_FA ] ; then
     rm -f $GRCh37_FA.gz
     wget $GRCh37_URL
-    gzip -dc $GRCh37_FA.gz | python remove_short.py > $GRCh37_FA
+    gzip -dc $GRCh37_FA.gz | python remove_short.py $GRCh37_FA.short > $GRCh37_FA
     samtools faidx $GRCh37_FA
 fi
 ln -s -f $GRCh37_FA hg19.fa
@@ -21,7 +21,7 @@ ln -s -f $GRCh37_FA.fai hg19.fa.fai
 if [ ! -f $GRCm38_FA ] ; then
     rm -f $GRCm38_FA.gz
     wget $GRCm38_URL
-    gzip -dc $GRCm38_FA.gz | python remove_short.py > $GRCm38_FA
+    gzip -dc $GRCm38_FA.gz | python remove_short.py $GRCm38_FA.short > $GRCm38_FA
     samtools faidx $GRCm38_FA
 fi
 ln -s -f $GRCm38_FA mm10.fa
@@ -30,7 +30,7 @@ ln -s -f $GRCm38_FA.fai mm10.fa.fai
 if [ ! -f $ZM_FA ] ; then
     rm -f $ZM_FA.gz
     wget $ZM_URL
-    gzip -dc $ZM_FA.gz | python remove_short.py > $ZM_FA
+    gzip -dc $ZM_FA.gz | python remove_short.py $ZM_FA.short > $ZM_FA
     samtools faidx $ZM_FA
 fi
 ln -s -f $ZM_FA zm_AGPv3.fa
