@@ -21,7 +21,7 @@ ZM_URL=ftp://ftp.ensemblgenomes.org/pub/plants/release-32/fasta/zea_mays/dna/$ZM
 if [ ! -f $GRCh38_FA ] ; then
     rm -f $GRCh38_FA.gz
     wget $GRCh38_URL
-    gzip -dc $GRCh38_FA.gz | python remove_short.py $GRCh38_FA.short > $GRCh38_FA
+    gzip -dc $GRCh38_FA.gz | pypy remove_short.py $GRCh38_FA.short > $GRCh38_FA 2> $GRCh38_FA.lengths
     samtools faidx $GRCh38_FA
 fi
 ln -s -f $GRCh38_FA hg38.fa
@@ -30,7 +30,7 @@ ln -s -f $GRCh38_FA.fai hg38.fa.fai
 if [ ! -f $GRCm38_FA ] ; then
     rm -f $GRCm38_FA.gz
     wget $GRCm38_URL
-    gzip -dc $GRCm38_FA.gz | python remove_short.py $GRCm38_FA.short > $GRCm38_FA
+    gzip -dc $GRCm38_FA.gz | pypy remove_short.py $GRCm38_FA.short > $GRCm38_FA 2> $GRCm38_FA.lengths
     samtools faidx $GRCm38_FA
 fi
 ln -s -f $GRCm38_FA mm10.fa
@@ -39,7 +39,7 @@ ln -s -f $GRCm38_FA.fai mm10.fa.fai
 if [ ! -f $ZM_FA ] ; then
     rm -f $ZM_FA.gz
     wget $ZM_URL
-    gzip -dc $ZM_FA.gz | python remove_short.py $ZM_FA.short > $ZM_FA
+    gzip -dc $ZM_FA.gz | pypy remove_short.py $ZM_FA.short > $ZM_FA 2> $ZM_FA.lengths
     samtools faidx $ZM_FA
 fi
 ln -s -f $ZM_FA zm_AGPv4.fa
