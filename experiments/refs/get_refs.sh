@@ -15,8 +15,6 @@ GRCm38_URL=ftp://ftp.ensembl.org/pub/release-75/fasta/mus_musculus/dna/$GRCm38_F
 
 # http://plants.ensembl.org/Zea_mays/Info/Index
 
-ftp://ftp.ensemblgenomes.org/pub/plants/release-32/fasta/zea_mays/dna/Zea_mays.AGPv4.dna.toplevel.fa.gz
-
 ZM_FA=Zea_mays.AGPv4.dna.toplevel.fa
 ZM_URL=ftp://ftp.ensemblgenomes.org/pub/plants/release-32/fasta/zea_mays/dna/$ZM_FA.gz
 
