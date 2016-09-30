@@ -15,7 +15,7 @@ if len(sys.argv) > 1:
 
 def handle_entry():
     filt = length < max_len
-    print('length(%s) = %d, %s' % (name, length, 'pass' if filt else 'TOO SHORT'), file=sys.stderr)
+    print('length(%s) = %d, %s' % (name, length, 'TOO SHORT' if filt else 'pass'), file=sys.stderr)
     if filt:
         if short_fh is not None:
             print('>' + name, file=short_fh)
