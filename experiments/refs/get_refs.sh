@@ -26,8 +26,8 @@ if [ ! -f $GRCh38_FA ] ; then
     gzip -dc $GRCh38_FA.gz | python remove_short.py $GRCh38_FA.short > $GRCh38_FA
     samtools faidx $GRCh38_FA
 fi
-ln -s -f $GRCh38_FA hg19.fa
-ln -s -f $GRCh38_FA.fai hg19.fa.fai
+ln -s -f $GRCh38_FA hg38.fa
+ln -s -f $GRCh38_FA.fai hg38.fa.fai
 
 if [ ! -f $GRCm38_FA ] ; then
     rm -f $GRCm38_FA.gz
