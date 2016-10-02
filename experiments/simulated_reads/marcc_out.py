@@ -26,11 +26,12 @@ def write_slurm(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False,
     if 'r12' in rule and 'various_genomes' in rule:
         my_hours *= 3
         my_hours /= 2
-    if 'r12' in rule and '250_mason' in rule:
+    if 'r12' in rule and 'ill_250' in rule:
         my_hours *= 3
         my_hours /= 2
-    if 'r12' in rule and '500_mason' in rule:
+    if 'ill_500' in rule:
         my_hours *= 2
+        my_mem_gb = int(round(1.5 * my_mem_gb))
     if '_bwamem' in rule:
         my_mem_gb = max(my_mem_gb, 12)
     if '_snap' in rule:
