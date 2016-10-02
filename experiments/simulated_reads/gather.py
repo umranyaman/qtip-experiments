@@ -116,9 +116,7 @@ def mkdir_quiet(dr):
 def has_done(dr):
     """ Return true if directory contains DONE file, indicating qtip finished
         running. """
-    done_fn = join(dr, 'DONE')
-    if not os.path.exists(done_fn):
-        raise RuntimeError('Directory "%s" does not contain DONE file' % dr)
+    return os.path.exists(join(dr, 'DONE'))
 
 
 def copyfiles(fglob, dest, prefix=''):
@@ -196,8 +194,10 @@ def targets_from_makefile(dirname, fn):
                     if target.endswith('/DONE'):
                         target = target[:-5]
                     target_full = join(dirname, target)
-                    has_done(target_full)
-                    yield target, target_full
+                    if has_done(target_full):
+                        yield target, target_full
+                    else:
+                        print("%s does not have DONE file" % target_full, file=sys.stderr)
 
 
 def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first):
