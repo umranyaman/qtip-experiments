@@ -17,10 +17,12 @@
 # -nm  Read length mean
 # -ne  Read length error (stddev for normal, interval for uniform)
 
-MASON=$(QSIM_EXPERIMENTS_HOME)/software/mason/mason
-BT2=$(QSIM_EXPERIMENTS_HOME)/software/bowtie2/bowtie2
+MASON=$(QTIP_EXPERIMENTS_HOME)/software/mason/mason
+BT2=$(QTIP_EXPERIMENTS_HOME)/software/bowtie2/bowtie2
 NTHREADS=8
 SHELL=/bin/bash
+ASM_HUMAN=hg38
+ASM_MOUSE=mm10
 
 .PHONY: all
 all: r0_mason_human_mixture_100.fq \
@@ -49,17 +51,34 @@ all: r0_mason_human_mixture_100.fq \
 
 RENAME=awk '{ln += 1; if(ln % 4 == 1) { n += 1; print "@r"n } else {print}}'
 
-r0_%.sam: r0_%.fq
+r0_mason_human_%.sam: r0_mason_human_%.fq
 	$(BT2) \
-	    -x $(QSIM_EXPERIMENTS_HOME)/experiments/refs/hg19.fa \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
 	    -p $(NTHREADS) \
 	    -U $< \
 	    -t \
 	    -S $@ 2> >(tee $@.stats)
 
-r12_%.sam: r1_%.fq
+r0_mason_mouse_%.sam: r0_mason_mouse_%.fq
 	$(BT2) \
-	    -x $(QSIM_EXPERIMENTS_HOME)/experiments/refs/hg19.fa \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_MOUSE).fa \
+	    -p $(NTHREADS) \
+	    -U $< \
+	    -t \
+	    -S $@ 2> >(tee $@.stats)
+
+r12_mason_human_%.sam: r12_mason_human_%.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    -p $(NTHREADS) \
+	    -1 $< \
+	    -2 $(<:r1%=r2%) \
+	    -t \
+	    -S $@ 2> >(tee $@.stats)
+
+r12_mason_mouse_%.sam: r12_mason_mouse_%.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_MOUSE).fa \
 	    -p $(NTHREADS) \
 	    -1 $< \
 	    -2 $(<:r1%=r2%) \
@@ -262,21 +281,21 @@ r0_mason_$(1)_100_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
 	$$(MASON) illumina -hn 2 -i -s 453 -sq -n 100 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
 	rm -f .$$@.fq.sam
-	python $$(QSIM_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$@
+	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$@
 	rm -f .$$@.fq
 
 r0_mason_$(1)_250_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
 	$$(MASON) illumina -hn 2 -i -s 278 -sq -n 250 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
 	rm -f .$$@.fq.sam
-	python $$(QSIM_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$@
+	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$@
 	rm -f .$$@.fq
 
 r1_mason_$(1)_100_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
 	$$(MASON) illumina -hn 2 -i -s 645 -sq -mp -rn 2 -ll 250 -le 100 -n 100 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
 	rm -f .$$@.fq.sam
-	python $$(QSIM_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$(@)_1.fq --in2 .$$(@)_2.fq --out1 .$$(@)_final_1.fq --out2 .$$(@)_final_2.fq
+	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$(@)_1.fq --in2 .$$(@)_2.fq --out1 .$$(@)_final_1.fq --out2 .$$(@)_final_2.fq
 	rm -f .$$(@)_1.fq .$$(@)_2.fq
 	mv .$$(@)_final_1.fq $$@
 	mv .$$(@)_final_2.fq $$(@:r1_%=r2_%)
@@ -285,7 +304,7 @@ r1_mason_$(1)_250_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
 	$$(MASON) illumina -hn 2 -i -s 502 -sq -mp -rn 2 -ll 500 -le 200 -n 250 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
 	rm -f .$$@.fq.sam
-	python $$(QSIM_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$(@)_1.fq --in2 .$$(@)_2.fq --out1 .$$(@)_final_1.fq --out2 .$$(@)_final_2.fq
+	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$(@)_1.fq --in2 .$$(@)_2.fq --out1 .$$(@)_final_1.fq --out2 .$$(@)_final_2.fq
 	rm -f .$$(@)_1.fq .$$(@)_2.fq
 	mv .$$(@)_final_1.fq $$@
 	mv .$$(@)_final_2.fq $$(@:r1_%=r2_%)
