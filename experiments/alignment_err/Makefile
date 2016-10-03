@@ -25,14 +25,17 @@ ASM_HUMAN=hg38
 ASM_MOUSE=mm10
 
 .PHONY: all
-all: r0_mason_human_mixture_100.sam \
-     r0_mason_human_mixture_250.sam \
-     r1_mason_human_mixture_100.sam \
-     r1_mason_human_mixture_250.sam \
-     r0_mason_mouse_mixture_100.sam \
-     r0_mason_mouse_mixture_250.sam \
-     r1_mason_mouse_mixture_100.sam \
-     r1_mason_mouse_mixture_250.sam
+all: alignments
+
+.PHONY: alignments
+alignments: r0_mason_human_mixture_100.sam \
+            r0_mason_human_mixture_250.sam \
+            r1_mason_human_mixture_100.sam \
+            r1_mason_human_mixture_250.sam \
+            r0_mason_mouse_mixture_100.sam \
+            r0_mason_mouse_mixture_250.sam \
+            r1_mason_mouse_mixture_100.sam \
+            r1_mason_mouse_mixture_250.sam
 
 # 93% 1 target species (human or mouse)
 #  1% 1 other mammal (either human or mouse, whichever isn't target)
@@ -67,7 +70,7 @@ r0_mason_mouse_%.sam: r0_mason_mouse_%.fq
 	    -t \
 	    -S $@ 2> >(tee $@.stats)
 
-r12_mason_human_%.sam: r12_mason_human_%.fq
+r1_mason_human_%.sam: r1_mason_human_%.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
 	    -p $(NTHREADS) \
@@ -76,7 +79,7 @@ r12_mason_human_%.sam: r12_mason_human_%.fq
 	    -t \
 	    -S $@ 2> >(tee $@.stats)
 
-r12_mason_mouse_%.sam: r12_mason_mouse_%.fq
+r1_mason_mouse_%.sam: r1_mason_mouse_%.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_MOUSE).fa \
 	    -p $(NTHREADS) \
