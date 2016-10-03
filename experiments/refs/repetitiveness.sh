@@ -17,3 +17,11 @@ cat *.fa | grep -av '^>' | tee >(tr -cd ACGTN | wc -c | tee ../hg19_upper.txt | 
                                  tr -cd acgtn | wc -c | tee ../hg19_lower.txt | xargs echo "hg19 lower"
 cd ..
 rm -rf hg19
+
+mkdir -p hg38
+cd hg38
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
+gzip -dc hg38.fa.gz | grep -av '^>' | tee >(tr -cd ACGTN | wc -c | tee ../hg38_upper.txt | xargs echo "hg38 upper") | \
+                                            tr -cd acgtn | wc -c | tee ../hg38_lower.txt | xargs echo "hg38 lower"
+cd ..
+rm -rf hg38
