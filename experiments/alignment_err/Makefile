@@ -25,7 +25,29 @@ ASM_HUMAN=hg38
 ASM_MOUSE=mm10
 
 .PHONY: all
-all: alignments
+all: corstats
+
+.PHONY: corstats
+corstats: r0_mason_human_mixture_100.corstats \
+          r0_mason_human_mixture_250.corstats \
+          r1_mason_human_mixture_100.corstats \
+          r1_mason_human_mixture_250.corstats \
+          r0_mason_mouse_mixture_100.corstats \
+          r0_mason_mouse_mixture_250.corstats \
+          r1_mason_mouse_mixture_100.corstats \
+          r1_mason_mouse_mixture_250.corstats
+
+r0_mason_human_%.corstats: r0_mason_human_%.sam
+	pypy evaluate.py human < $< > $@
+
+r1_mason_human_%.corstats: r1_mason_human_%.sam
+	pypy evaluate.py human < $< > $@
+
+r0_mason_mouse_%.corstats: r0_mason_mouse_%.sam
+	pypy evaluate.py mouse < $< > $@
+
+r1_mason_mouse_%.corstats: r1_mason_mouse_%.sam
+	pypy evaluate.py mouse < $< > $@
 
 .PHONY: alignments
 alignments: r0_mason_human_mixture_100.sam \
@@ -60,7 +82,7 @@ r0_mason_human_%.sam: r0_mason_human_%.fq
 	    -p $(NTHREADS) \
 	    -U $< \
 	    -t \
-	    -S $@ 2> >(tee $@.stats)
+	    -S $@ 2> >(tee $@.alstats)
 
 r0_mason_mouse_%.sam: r0_mason_mouse_%.fq
 	$(BT2) \
@@ -68,7 +90,7 @@ r0_mason_mouse_%.sam: r0_mason_mouse_%.fq
 	    -p $(NTHREADS) \
 	    -U $< \
 	    -t \
-	    -S $@ 2> >(tee $@.stats)
+	    -S $@ 2> >(tee $@.alstats)
 
 r1_mason_human_%.sam: r1_mason_human_%.fq
 	$(BT2) \
@@ -77,7 +99,7 @@ r1_mason_human_%.sam: r1_mason_human_%.fq
 	    -1 $< \
 	    -2 $(<:r1%=r2%) \
 	    -t \
-	    -S $@ 2> >(tee $@.stats)
+	    -S $@ 2> >(tee $@.alstats)
 
 r1_mason_mouse_%.sam: r1_mason_mouse_%.fq
 	$(BT2) \
@@ -86,7 +108,7 @@ r1_mason_mouse_%.sam: r1_mason_mouse_%.fq
 	    -1 $< \
 	    -2 $(<:r1%=r2%) \
 	    -t \
-	    -S $@ 2> >(tee $@.stats)
+	    -S $@ 2> >(tee $@.alstats)
 
 READS_UNP_100=../simulated_reads/various_genomes/r0_mason_ill_hg_100.fq.gz \
               ../simulated_reads/various_genomes/r0_mason_ill_mm_100.fq.gz \
