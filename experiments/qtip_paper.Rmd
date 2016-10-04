@@ -193,7 +193,7 @@ various_lengths_table <- function(m, want_training, ...) {
                                 overall_test_auc_diff_pct_round,
                                 overall_test_mse_diff_pct_round))
   colnames(mtmp) <- c('paired', 'readlen', 'local', 'RCA', 'RCE')
-  mtmp$paired <- factor(mtmp$paired, labels=c('Unpaied', 'Paired'))
+  mtmp$paired <- factor(mtmp$paired, labels=c('Unpaired', 'Paired'))
   mtmp$local <- factor(mtmp$local, labels=c('End-to-end', 'Local'))
   mtmp$readlen <- factor(mtmp$readlen)
   tabular((Heading() * paired * Heading("Read length") * readlen) ~ (Format(sprintf("%.2f")) * Justify(r) * Heading() * local * (RCA + RCE) * (mean + sd)), data=mtmp)
@@ -203,7 +203,7 @@ fn <- 'various_lengths.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_lengths_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 on Mason-simulated Illumina-like samples of various lengths.  Each sample consists of 4 million reads/pairs.  Samples are either unpaired and paired-end, and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 on Mason-simulated Illumina-like samples of various lengths.  Relative change is expressed as a percent.  Each sample consists of 4 million reads/pairs.  Samples are either unpaired and paired-end, and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.  Results are means and standard deviations over \numtrials random trials starting from the input modeling step.}", file=fn, append=T)
 write("\\label{length_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -218,7 +218,7 @@ various_sensitivities_table <- function(m, want_training, ...) {
                                 overall_test_auc_diff_pct_round,
                                 overall_test_mse_diff_pct_round))
   colnames(mtmp) <- c('paired', 'readlen', 'local', 'sensitivity', 'RCA', 'RCE')
-  mtmp$paired <- factor(mtmp$paired, labels=c('Unpaied', 'Paired'))
+  mtmp$paired <- factor(mtmp$paired, labels=c('Unpaired', 'Paired'))
   mtmp$local <- factor(mtmp$local, labels=c('End-to-end', 'Local'))
   mtmp$readlen <- factor(mtmp$readlen)
   sens <- factor(gsub('[l0-9].*', '', mtmp$sensitivity))
@@ -233,7 +233,7 @@ fn <- 'various_sensitivities.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_sensitivities_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 at various levels of sensitivity on Mason-simulated Illumina-like samples.  Each simulated sample consists of 4 million reads or pairs.  Bowtie 2 is run in either end-to-end or local alignment mode as indicated.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 at various levels of sensitivity on Mason-simulated Illumina-like samples.  Relative change is expressed as a percent.  Each simulated sample consists of 4 million reads or pairs.  Bowtie 2 is run in either end-to-end or local alignment mode as indicated.  Results are means and standard deviations over \numtrials random trials starting from the input modeling step.}", file=fn, append=T)
 write("\\label{sens_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -261,7 +261,7 @@ fn <- 'various_genomes.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_genomes_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and reference genomes.  Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and reference genomes, expressed as percent change.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated.  Results are means and standard deviations over \numtrials random trials starting from the input modeling step.}", file=fn, append=T)
 write("\\label{genomes_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -287,7 +287,7 @@ fn <- 'various_simulators.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_simulators_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for samples simulated by various simulators.  Bowtie 2 end-to-end alignment was used in all cases. Values reported are the mean and standard deviation for RCA and RCE over 5 random trials, with a distinct pseudo-random seed used in each trial.  Mean RCE and RCA are expressed in percent.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for samples simulated by various simulators.  Bowtie 2 end-to-end alignment was used in all cases. Relative change is expressed as a percent.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated. Results are means and standard deviations over \numtrials random trials starting from the input modeling step.}", file=fn, append=T)
 write("\\label{simulators_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -424,175 +424,6 @@ grid_arrange_shared_legend(p_vl_uree,
                            p_vl_pree,
                            p_vl_prel)
 dev.off()
-```
-
-<!-- ##### Diagnostics -->
-
-<!-- Zooming in on BT2 50 bp end-to-end CID: -->
-
-<!-- ```{r various_lengths_plot_bt2_50_ee} -->
-<!-- subsample_trials_plot(m %>% filter(name == 'ill_various_length' & !local & !paired & readlen == 50), T) -->
-<!-- ``` -->
-
-<!-- And local: -->
-
-<!-- ```{r various_lengths_plot_bt2_50_loc} -->
-<!-- subsample_trials_plot(m %>% filter(name == 'ill_various_length' & local & !paired & readlen == 50), T) -->
-<!-- ``` -->
-
-#### Aligners
-
-```{r various_aligners_plot}
-various_aligners_plot <- function(
-  want_paired,
-  want_readlen,
-  want_training,
-  want_cid,
-  want_trial=1)
-{
-  xlab <- paste0(want_readlen, " bp ",
-                 if(want_paired) "paired " else "unpaired ")
-  mtmp <- m %>% filter(name == 'various_aligners' &
-                      paired == want_paired &
-                      readlen == want_readlen &
-                      training == want_training &
-                      trial_no == want_trial)
-  mtmp <- explode_curves(mtmp, want_cid)
-  mx <- max(abs(mtmp$y))
-  levels(mtmp$aligner2)[levels(mtmp$aligner2)=="bt2 e2e"] <- "Bowtie 2 end-to-end  "
-  levels(mtmp$aligner2)[levels(mtmp$aligner2)=="bt2 local"] <- "Bowtie 2 local  "
-  levels(mtmp$aligner2)[levels(mtmp$aligner2)=="bwamem"] <- "BWA-MEM  "
-  levels(mtmp$aligner2)[levels(mtmp$aligner2)=="snap"] <- "SNAP  "
-  mtmp$aligner2 <- relevel(mtmp$aligner2, "BWA-MEM  ")
-  mtmp$aligner2 <- relevel(mtmp$aligner2, "Bowtie 2 local  ")
-  mtmp$aligner2 <- relevel(mtmp$aligner2, "Bowtie 2 end-to-end  ")
-  ggplot(mtmp, aes(x=x, y=y, color=aligner2)) +
-    geom_abline(intercept = 0, slope = 0) +
-    coord_trans(y = logmod_trans()) +
-    scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-    scale_x_continuous(labels=mfmt) +
-    labs(x=xlab, y="") +
-    theme(axis.title.x = element_text(vjust=-0.6)) +
-    geom_line() +
-    theme_bw() +
-    guides(colour = guide_legend(override.aes = list(size=1))) +
-    theme(legend.title=element_blank(), legend.key = element_blank(),
-          legend.text=element_text(size=12))
-}
-```
-
-```{r various_aligners_plot_cid_test}
-
-## Test ##
-
-# params: paired, readlen, training, cid
-p_va_u100ei <- various_aligners_plot(F, 100, F, T)
-p_va_u250ei <- various_aligners_plot(F, 250, F, T)
-p_va_p100ei <- various_aligners_plot(T, 100, F, T)
-p_va_p250ei <- various_aligners_plot(T, 250, F, T)
-
-# Write to notebook
-grid_arrange_shared_legend(p_va_u100ei,
-                           p_va_u250ei,
-                           p_va_p100ei,
-                           p_va_p250ei)
-
-# Write to PDF
-pdf(file="various_aligners_cid_test.pdf", onefile=F)
-grid_arrange_shared_legend(p_va_u100ei,
-                           p_va_u250ei,
-                           p_va_p100ei,
-                           p_va_p250ei)
-dev.off()
-```
-
-```{r various_aligners_plot_cid_train}
-
-## Training ##
-
-# params: paired, readlen, training, cid
-p_va_u100ri <- various_aligners_plot(F, 100, T, T)
-p_va_u250ri <- various_aligners_plot(F, 250, T, T)
-p_va_p100ri <- various_aligners_plot(T, 100, T, T)
-p_va_p250ri <- various_aligners_plot(T, 250, T, T)
-
-# Write to notebook
-grid_arrange_shared_legend(p_va_u100ri,
-                           p_va_u250ri,
-                           p_va_p100ri,
-                           p_va_p250ri)
-
-# Write to PDF
-pdf(file="various_aligners_cid_training.pdf", onefile=F)
-grid_arrange_shared_legend(p_va_u100ri,
-                           p_va_u250ri,
-                           p_va_p100ri,
-                           p_va_p250ri)
-dev.off()
-```
-
-```{r various_aligners_plot_cse_test}
-
-## Test ##
-
-# params: paired, readlen, training, cid
-p_va_u100ee <- various_aligners_plot(F, 100, F, F)
-p_va_u250ee <- various_aligners_plot(F, 250, F, F)
-p_va_p100ee <- various_aligners_plot(T, 100, F, F)
-p_va_p250ee <- various_aligners_plot(T, 250, F, F)
-
-# Write to notebook
-grid_arrange_shared_legend(p_va_u100ee,
-                           p_va_u250ee,
-                           p_va_p100ee,
-                           p_va_p250ee)
-
-# Write to PDF
-pdf(file="various_aligners_cse_test.pdf", onefile=F)
-grid_arrange_shared_legend(p_va_u100ee,
-                           p_va_u250ee,
-                           p_va_p100ee,
-                           p_va_p250ee)
-dev.off()
-```
-
-```{r various_aligners_plot_cse_train}
-
-## Training ##
-
-# params: paired, readlen, training, cid
-p_va_u100re <- various_aligners_plot(F, 100, T, F)
-p_va_u250re <- various_aligners_plot(F, 250, T, F)
-p_va_p100re <- various_aligners_plot(T, 100, T, F)
-p_va_p250re <- various_aligners_plot(T, 250, T, F)
-
-# Write to notebook
-grid_arrange_shared_legend(p_va_u100re,
-                           p_va_u250re,
-                           p_va_p100re,
-                           p_va_p250re)
-
-# Write to PDF
-pdf(file="various_aligners_cse_training.pdf", onefile=F)
-grid_arrange_shared_legend(p_va_u100re,
-                           p_va_u250re,
-                           p_va_p100re,
-                           p_va_p250re)
-dev.off()
-```
-
-##### Diagnostics
-
-Zooming in on BWA-MEM unpaired 100bp:
-
-```{r various_aligners_plot_bwamem100_unp}
-subsample_trials_plot(m %>% filter(name == 'various_aligners' & !paired & readlen == 100 & aligner == 'bwamem'), T)
-```
-
-And 250bp:
-
-```{r various_aligners_plot_bwamem250_unp}
-subsample_trials_plot(m %>% filter(name == 'various_aligners' & !paired & readlen == 250 & aligner == 'bwamem'), T)
 ```
 
 #### Genomes
@@ -1066,98 +897,84 @@ grid_arrange_shared_legend(p_vi_u100re,
 dev.off()
 ```
 
-<!-- ##### Diagnostics -->
-
-<!-- Zooming in on BT2 100 Art: -->
-
-<!-- ```{r various_simulators_plot_bt2_100_unp_art} -->
-<!-- subsample_trials_plot(m %>% filter(name == 'various_simulators' & !paired & readlen == 100 & sim == 'art'), T) -->
-<!-- ``` -->
-
-<!-- And now 100 x 100 paired-end: -->
-
-<!-- ```{r various_simulators_plot_bt2_100_pe_art} -->
-<!-- subsample_trials_plot(m %>% filter(name == 'various_simulators' & paired & readlen == 100 & sim == 'art'), T) -->
-<!-- ``` -->
-
 #### Mixed length
 
-```{r mixed_length_plot}
-mixed_length_plot <- function(
-  want_training,
-  want_cid,
-  want_trial=1)
-{
-    mtmp <- m %>% filter(name == '454_mixed_length' &
-                         training == want_training &
-                         trial_no == want_trial)
-    stopifnot(nrow(mtmp) == 2)  # local and end-to-end
-    mtmp <- explode_curves(mtmp, want_cid)
-    mx <- max(abs(mtmp$y))
-    ggplot(mtmp, aes(x=x, y=y, color=local)) +
-      geom_abline(intercept = 0, slope = 0) +
-      coord_trans(y = logmod_trans()) +
-      scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-      scale_x_continuous(labels=mfmt) +
-      labs(y="") +
-      geom_line() +
-      theme_bw() +
-      theme(legend.title=element_blank(),
-            axis.title.x = element_text(vjust=-0.4))
-}
-```
+#```{r mixed_length_plot}
+#mixed_length_plot <- function(
+#  want_training,
+#  want_cid,
+#  want_trial=1)
+#{
+#    mtmp <- m %>% filter(name == '454_mixed_length' &
+#                         training == want_training &
+#                         trial_no == want_trial)
+#    stopifnot(nrow(mtmp) == 2)  # local and end-to-end
+#    mtmp <- explode_curves(mtmp, want_cid)
+#    mx <- max(abs(mtmp$y))
+#    ggplot(mtmp, aes(x=x, y=y, color=local)) +
+#      geom_abline(intercept = 0, slope = 0) +
+#      coord_trans(y = logmod_trans()) +
+#      scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+#      scale_x_continuous(labels=mfmt) +
+#      labs(y="") +
+#      geom_line() +
+#      theme_bw() +
+#      theme(legend.title=element_blank(),
+#            axis.title.x = element_text(vjust=-0.4))
+#}
+#```
 
-```{r mixed_length_cid_test}
+#```{r mixed_length_cid_test}
+#
+### Test ##
+#
+## Write to notebook
+#mixed_length_plot(F, T)
+#
+## Write to PDF
+#pdf(file="mixed_length_cid_test.pdf", onefile=F)
+#mixed_length_plot(F, T)
+#dev.off()
+#```
 
-## Test ##
+#```{r mixed_length_cse_test}
+#
+### Test ##
+#
+## Write to notebook
+#mixed_length_plot(F, F)
+#
+## Write to PDF
+#pdf(file="mixed_length_cse_test.pdf", onefile=F)
+#mixed_length_plot(F, F)
+#dev.off()
+#```
 
-# Write to notebook
-mixed_length_plot(F, T)
+#```{r mixed_length_cid_training}
+#
+### Training ##
+#
+## Write to notebook
+#mixed_length_plot(T, T)
+#
+## Write to PDF
+#pdf(file="mixed_length_cid_training.pdf", onefile=F)
+#mixed_length_plot(T, T)
+#dev.off()
+#```
 
-# Write to PDF
-pdf(file="mixed_length_cid_test.pdf", onefile=F)
-mixed_length_plot(F, T)
-dev.off()
-```
-
-```{r mixed_length_cse_test}
-
-## Test ##
-
-# Write to notebook
-mixed_length_plot(F, F)
-
-# Write to PDF
-pdf(file="mixed_length_cse_test.pdf", onefile=F)
-mixed_length_plot(F, F)
-dev.off()
-```
-
-```{r mixed_length_cid_training}
-
-## Training ##
-
-# Write to notebook
-mixed_length_plot(T, T)
-
-# Write to PDF
-pdf(file="mixed_length_cid_training.pdf", onefile=F)
-mixed_length_plot(T, T)
-dev.off()
-```
-
-```{r mixed_length_cse_training}
-
-## Training ##
-
-# Write to notebook
-mixed_length_plot(T, F)
-
-# Write to PDF
-pdf(file="mixed_length_cse_training.pdf", onefile=F)
-mixed_length_plot(T, F)
-dev.off()
-```
+#```{r mixed_length_cse_training}
+#
+### Training ##
+#
+## Write to notebook
+#mixed_length_plot(T, F)
+#
+## Write to PDF
+#pdf(file="mixed_length_cse_training.pdf", onefile=F)
+#mixed_length_plot(T, F)
+#dev.off()
+#```
 
 ### Real reads
 
