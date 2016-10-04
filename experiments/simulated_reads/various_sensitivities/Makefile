@@ -44,6 +44,8 @@ include ../bowtie2ts.mk
 
 NREADS=4000000
 NCORES=1
+NCORES_S=2
+NCORES_VS=4
 
 .PHONY: clean
 clean:
@@ -105,31 +107,31 @@ MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-ac
 #
 $(eval $(call bt2ts,bt2vf,$(MK_QTIP_ARGS),--very-fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2f,$(MK_QTIP_ARGS),--fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s,$(MK_QTIP_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vs,$(MK_QTIP_ARGS),--very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s,$(MK_QTIP_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_S)))
+$(eval $(call bt2ts,bt2vs,$(MK_QTIP_ARGS),--very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_VS)))
 
 $(eval $(call bt2ts,bt2vfl,$(MK_QTIP_ARGS),--very-fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2fl,$(MK_QTIP_ARGS),--fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2sl,$(MK_QTIP_ARGS),--sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vsl,$(MK_QTIP_ARGS),--very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl,$(MK_QTIP_ARGS),--sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_S)))
+$(eval $(call bt2ts,bt2vsl,$(MK_QTIP_ARGS),--very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_VS)))
 
 $(eval $(call bt2ts,bt2vf100,$(MK_QTIP_ARGS),-I 200 -X 400 --very-fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2vf250,$(MK_QTIP_ARGS),-I 500 -X 1000 --very-fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2f100,$(MK_QTIP_ARGS),-I 200 -X 400 --fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2f250,$(MK_QTIP_ARGS),-I 500 -X 1000 --fast,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vs100,$(MK_QTIP_ARGS),-I 200 -X 400 --very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vs250,$(MK_QTIP_ARGS),-I 500 -X 1000 --very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_S)))
+$(eval $(call bt2ts,bt2s250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_S)))
+$(eval $(call bt2ts,bt2vs100,$(MK_QTIP_ARGS),-I 200 -X 400 --very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_VS)))
+$(eval $(call bt2ts,bt2vs250,$(MK_QTIP_ARGS),-I 500 -X 1000 --very-sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_VS)))
 
 $(eval $(call bt2ts,bt2vfl100,$(MK_QTIP_ARGS),-I 200 -X 400 --very-fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2vfl250,$(MK_QTIP_ARGS),-I 500 -X 1000 --very-fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2fl100,$(MK_QTIP_ARGS),-I 200 -X 400 --fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2fl250,$(MK_QTIP_ARGS),-I 500 -X 1000 --fast-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2sl100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2sl250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vsl100,$(MK_QTIP_ARGS),-I 200 -X 400 --very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2vsl250,$(MK_QTIP_ARGS),-I 500 -X 1000 --very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2sl100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_S)))
+$(eval $(call bt2ts,bt2sl250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_S)))
+$(eval $(call bt2ts,bt2vsl100,$(MK_QTIP_ARGS),-I 200 -X 400 --very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_VS)))
+$(eval $(call bt2ts,bt2vsl250,$(MK_QTIP_ARGS),-I 500 -X 1000 --very-sensitive-local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_VS)))
 
 $(eval $(call mason_ill_unp_reads,ill_100,$(HG_FASTA),100,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_250,$(HG_FASTA),250,$(NREADS),7724))

@@ -44,6 +44,8 @@ include ../bowtie2ts.mk
 
 NREADS=4000000
 NCORES=1
+NCORES_250=4
+NCORES_500=8
 
 .PHONY: outs
 outs: outs_bt2
@@ -109,10 +111,10 @@ $(eval $(call bt2ts,bt2s100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA
 $(eval $(call bt2ts,bt2sl100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s150,$(MK_QTIP_ARGS),-I 300 -X 600 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2sl150,$(MK_QTIP_ARGS),-I 300 -X 600 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2sl250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s500,$(MK_QTIP_ARGS),-I 1000 -X 2000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2sl500,$(MK_QTIP_ARGS),-I 1000 -X 2000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_250)))
+$(eval $(call bt2ts,bt2sl250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_250)))
+$(eval $(call bt2ts,bt2s500,$(MK_QTIP_ARGS),-I 1000 -X 2000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_500)))
+$(eval $(call bt2ts,bt2sl500,$(MK_QTIP_ARGS),-I 1000 -X 2000 --sensitive --local,$(HG_FASTA),$(HG_INDEX),out,$(NCORES_500)))
 
 $(eval $(call mason_ill_unp_reads,ill_50,$(HG_FASTA),50,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_100,$(HG_FASTA),100,$(NREADS),7724))
