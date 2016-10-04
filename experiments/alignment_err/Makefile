@@ -40,13 +40,19 @@ corstats: r0_mason_human_mixture_100.corstats \
 r0_mason_human_%.corstats: r0_mason_human_%.sam
 	pypy evaluate.py human < $< > $@
 
-r1_mason_human_%.corstats: r1_mason_human_%.sam
-	pypy evaluate.py human < $< > $@
-
 r0_mason_mouse_%.corstats: r0_mason_mouse_%.sam
 	pypy evaluate.py mouse < $< > $@
 
-r1_mason_mouse_%.corstats: r1_mason_mouse_%.sam
+r1_mason_human_mixture_100.corstats: r1_mason_human_mixture_100.sam
+	pypy evaluate.py human < $< > $@
+
+r1_mason_human_mixture_250.corstats: r1_mason_human_mixture_250.sam
+	pypy evaluate.py human < $< > $@
+
+r1_mason_mouse_mixture_100.corstats: r1_mason_mouse_mixture_100.sam
+	pypy evaluate.py mouse < $< > $@
+
+r1_mason_mouse_mixture_250.corstats: r1_mason_mouse_mixture_250.sam
 	pypy evaluate.py mouse < $< > $@
 
 .PHONY: alignments
