@@ -5,12 +5,17 @@ The `qsim` manuscript demonstrates how `qsim`-predicted mapping qualities improv
 
 ### Human
 
-We use real data to demonstrate `qsim` performance.  Primarily we use two human samples from the [1000 Genomes project](http://www.1000genomes.org):
+We use real data to demonstrate `qsim` performance.  Primarily we use two
+human samples from the [1000 Genomes project](http://www.1000genomes.org):
 
 * [ERR050082](http://www.ebi.ac.uk/ena/data/view/ERR050082)
     * 42,245,074 paired-end 100 x 100 nt reads
+    * NA06985, CEPH, female
 * [ERR050083](http://www.ebi.ac.uk/ena/data/view/ERR050083)
     * 66,391,067 paired-end 100 x 100 nt reads
+    * NA11881, CEPH, male
+
+Would be nice to know the sex here.
 
 ### Maize
 
