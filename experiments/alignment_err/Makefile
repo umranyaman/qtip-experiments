@@ -19,7 +19,7 @@
 
 MASON=$(QTIP_EXPERIMENTS_HOME)/software/mason/mason
 BT2=$(QTIP_EXPERIMENTS_HOME)/software/bowtie2/bowtie2
-NTHREADS=8
+NTHREADS=24
 SHELL=/bin/bash
 ASM_HUMAN=hg38
 ASM_MOUSE=mm10
@@ -94,23 +94,47 @@ r0_mason_mouse_%.sam: r0_mason_mouse_%.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r1_mason_human_%.sam: r1_mason_human_%.fq
+r0_mason_human_mixture_100.sam: r0_mason_human_mixture_100.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
 	    --sam-no-qname-trunc \
 	    -p $(NTHREADS) \
 	    -1 $< \
 	    -2 $(<:r1%=r2%) \
+	    -I 200 -X 400 \
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r1_mason_mouse_%.sam: r1_mason_mouse_%.fq
+r0_mason_human_mixture_250.sam: r0_mason_human_mixture_250.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    --sam-no-qname-trunc \
+	    -p $(NTHREADS) \
+	    -1 $< \
+	    -2 $(<:r1%=r2%) \
+	    -I 500 -X 1000 \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r0_mason_mouse_mixture_100.sam: r0_mason_mouse_mixture_100.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_MOUSE).fa \
 	    --sam-no-qname-trunc \
 	    -p $(NTHREADS) \
 	    -1 $< \
 	    -2 $(<:r1%=r2%) \
+	    -I 200 -X 400 \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r0_mason_mouse_mixture_250.sam: r0_mason_mouse_mixture_250.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_MOUSE).fa \
+	    --sam-no-qname-trunc \
+	    -p $(NTHREADS) \
+	    -1 $< \
+	    -2 $(<:r1%=r2%) \
+	    -I 500 -X 1000 \
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
@@ -318,13 +342,13 @@ r0_mason_$(1)_250_10k.fq: $(2) $(MASON)
 
 r1_mason_$(1)_100_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
-	$$(MASON) illumina -hn 2 -i -s 645 -sq -mp -rn 2 -ll 250 -le 100 -n 100 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
+	$$(MASON) illumina -hn 2 -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
 	mv .$$(@)_1.fq $$@
 	mv .$$(@)_2.fq $$(@:r1_%=r2_%)
 
 r1_mason_$(1)_250_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
-	$$(MASON) illumina -hn 2 -i -s 502 -sq -mp -rn 2 -ll 500 -le 200 -n 250 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
+	$$(MASON) illumina -hn 2 -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
 	mv .$$(@)_1.fq $$@
 	mv .$$(@)_2.fq $$(@:r1_%=r2_%)
 
