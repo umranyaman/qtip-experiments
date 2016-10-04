@@ -79,6 +79,7 @@ RENAME=awk '{ln += 1; if(ln % 4 == 1) { n += 1; print "@r"n } else {print}}'
 r0_mason_human_%.sam: r0_mason_human_%.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    --sam-no-qname-trunc \
 	    -p $(NTHREADS) \
 	    -U $< \
 	    -t \
@@ -87,6 +88,7 @@ r0_mason_human_%.sam: r0_mason_human_%.fq
 r0_mason_mouse_%.sam: r0_mason_mouse_%.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_MOUSE).fa \
+	    --sam-no-qname-trunc \
 	    -p $(NTHREADS) \
 	    -U $< \
 	    -t \
@@ -95,6 +97,7 @@ r0_mason_mouse_%.sam: r0_mason_mouse_%.fq
 r1_mason_human_%.sam: r1_mason_human_%.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    --sam-no-qname-trunc \
 	    -p $(NTHREADS) \
 	    -1 $< \
 	    -2 $(<:r1%=r2%) \
@@ -104,6 +107,7 @@ r1_mason_human_%.sam: r1_mason_human_%.fq
 r1_mason_mouse_%.sam: r1_mason_mouse_%.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_MOUSE).fa \
+	    --sam-no-qname-trunc \
 	    -p $(NTHREADS) \
 	    -1 $< \
 	    -2 $(<:r1%=r2%) \
@@ -305,34 +309,24 @@ define reads
 r0_mason_$(1)_100_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
 	$$(MASON) illumina -hn 2 -i -s 453 -sq -n 100 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
-	rm -f .$$@.fq.sam
-	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$@
-	rm -f .$$@.fq
+	mv .$$@.fq $$@
 
 r0_mason_$(1)_250_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
 	$$(MASON) illumina -hn 2 -i -s 278 -sq -n 250 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
-	rm -f .$$@.fq.sam
-	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$@.fq --out1 $$@
-	rm -f .$$@.fq
+	mv .$$@.fq $$@
 
 r1_mason_$(1)_100_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
 	$$(MASON) illumina -hn 2 -i -s 645 -sq -mp -rn 2 -ll 250 -le 100 -n 100 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
-	rm -f .$$@.fq.sam
-	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$(@)_1.fq --in2 .$$(@)_2.fq --out1 .$$(@)_final_1.fq --out2 .$$(@)_final_2.fq
-	rm -f .$$(@)_1.fq .$$(@)_2.fq
-	mv .$$(@)_final_1.fq $$@
-	mv .$$(@)_final_2.fq $$(@:r1_%=r2_%)
+	mv .$$(@)_1.fq $$@
+	mv .$$(@)_2.fq $$(@:r1_%=r2_%)
 
 r1_mason_$(1)_250_10k.fq: $(2) $(MASON)
 	cp $$< $$(<:%.fna=%.fa)
 	$$(MASON) illumina -hn 2 -i -s 502 -sq -mp -rn 2 -ll 500 -le 200 -n 250 -N 10000 -o .$$@.fq $$(<:%.fna=%.fa)
-	rm -f .$$@.fq.sam
-	python $$(QTIP_EXPERIMENTS_HOME)/bin/mason_convert.py --in1 .$$(@)_1.fq --in2 .$$(@)_2.fq --out1 .$$(@)_final_1.fq --out2 .$$(@)_final_2.fq
-	rm -f .$$(@)_1.fq .$$(@)_2.fq
-	mv .$$(@)_final_1.fq $$@
-	mv .$$(@)_final_2.fq $$(@:r1_%=r2_%)
+	mv .$$(@)_1.fq $$@
+	mv .$$(@)_2.fq $$(@:r1_%=r2_%)
 
 endef
 
