@@ -100,7 +100,7 @@ r0_mason_mouse_%.sam: r0_mason_mouse_%.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r0_mason_human_mixture_100.sam: r0_mason_human_mixture_100.fq
+r1_mason_human_mixture_100.sam: r1_mason_human_mixture_100.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
 	    --sam-no-qname-trunc \
@@ -111,7 +111,7 @@ r0_mason_human_mixture_100.sam: r0_mason_human_mixture_100.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r0_mason_human_mixture_250.sam: r0_mason_human_mixture_250.fq
+r1_mason_human_mixture_250.sam: r1_mason_human_mixture_250.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
 	    --sam-no-qname-trunc \
@@ -122,7 +122,7 @@ r0_mason_human_mixture_250.sam: r0_mason_human_mixture_250.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r0_mason_mouse_mixture_100.sam: r0_mason_mouse_mixture_100.fq
+r1_mason_mouse_mixture_100.sam: r1_mason_mouse_mixture_100.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_MOUSE).fa \
 	    --sam-no-qname-trunc \
@@ -133,7 +133,7 @@ r0_mason_mouse_mixture_100.sam: r0_mason_mouse_mixture_100.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r0_mason_mouse_mixture_250.sam: r0_mason_mouse_mixture_250.fq
+r1_mason_mouse_mixture_250.sam: r1_mason_mouse_mixture_250.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_MOUSE).fa \
 	    --sam-no-qname-trunc \
