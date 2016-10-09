@@ -1,11 +1,11 @@
 Real data
 ---------
 
-The `qsim` manuscript demonstrates how `qsim`-predicted mapping qualities improve performance when analyzing real data.
+The `qtip` manuscript demonstrates how `qtip`-predicted mapping qualities improve performance when analyzing real data.
 
 ### Human
 
-We use real data to demonstrate `qsim` performance.  Primarily we use two
+We use real data to demonstrate `qtip` performance.  Primarily we use two
 human samples from the [1000 Genomes project](http://www.1000genomes.org):
 
 * [ERR050082](http://www.ebi.ac.uk/ena/data/view/ERR050082)
@@ -34,18 +34,20 @@ Steps:
 * Download FASTQ reads (`get_real_reads.sh`)
 * Align FASTQ reads with various tools, producing SAM files (`sbatch_align.sh` / `Makefile`)
 * Sort and compare groups of SAM files, compiling CSV correct/incorrect information & ROC tables (`sbatch_multialign.sh` / `Makefile`)
-* Generate table of `qsim` overhead measurements (`tabulate.py`)
+* Generate table of `qtip` overhead measurements (`perf_tabulate.py > perf.csv`)
+* Generate table of `qtip` accuracy measurements (`overall_tabulate.py`)
 
-From directory containing the `qsim` and `qsim-experiments` repo clones:
+From directory containing the `qtip` and `qtip-experiments` repo clones:
 
 ```
-pushd qsim-experiments/experiments/real_data
+pushd qtip-experiments/experiments/real_data
 sh get_real_reads.sh  # might want to submit to your DRM
 sh sbatch_align.sh
 # copy and paste all the alignment jobs to submit them
 # ...when those are done, proceed
 sh sbatch_multialign.sh
 # copy and paste all the alignment jobs to submit them
-python tabulate.py
+python perf_tabulate.py > perf.csv
+python overall_tabulate.py
 popd
 ```
