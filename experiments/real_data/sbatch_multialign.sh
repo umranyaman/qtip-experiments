@@ -19,7 +19,7 @@ cat >.${dat}.${pe} <<EOF
 #!/bin/sh
 ${PART1}
 ${PART2}
-#SBATCH --time=12:00:00
+#SBATCH --time=18:00:00
 #SBATCH --mem=4G
 #SBATCH --output=.${dat}.${pe}.csv.o
 #SBATCH --error=.${dat}.${pe}.csv.e
