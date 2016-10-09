@@ -7,6 +7,19 @@
 # hg38
 #
 
+cat > .hg38.fa2b.sh <<EOF
+#!/bin/bash -l
+#SBATCH --nodes=1
+#SBATCH --mem=8G
+#SBATCH --partition=shared
+#SBATCH --time=2:00:00
+#SBATCH --output=.hg38.fa2b.sh.o
+#SBATCH --error=.hg38.fa2b.sh.e
+samtools faidx hg38.fa
+faToTwoBit hg38.fa hg38.2bit
+EOF
+echo sbatch .hg38.fa2b.sh
+
 cat > .hg38.bt2.sh <<EOF
 #!/bin/bash -l
 #SBATCH --nodes=1
@@ -48,6 +61,19 @@ echo sbatch .hg38.snap.sh
 # mm10
 #
 
+cat > .mm10.fa2b.sh <<EOF
+#!/bin/bash -l
+#SBATCH --nodes=1
+#SBATCH --mem=8G
+#SBATCH --partition=shared
+#SBATCH --time=10:00:00
+#SBATCH --output=.mm10.fa2b.sh.o
+#SBATCH --error=.mm10.fa2b.sh.e
+samtools faidx mm10.fa
+faToTwoBit mm10.fa mm10.2bit
+EOF
+echo sbatch .mm10.fa2b.sh
+
 cat > .mm10.bt2.sh <<EOF
 #!/bin/bash -l
 #SBATCH --nodes=1
@@ -88,6 +114,19 @@ echo sbatch .mm10.snap.sh
 #
 # zm_AGPv4
 #
+
+cat > .zm_AGPv4.fa2b.sh <<EOF
+#!/bin/bash -l
+#SBATCH --nodes=1
+#SBATCH --mem=8G
+#SBATCH --partition=shared
+#SBATCH --time=10:00:00
+#SBATCH --output=.zm_AGPv4.fa2b.sh.o
+#SBATCH --error=.zm_AGPv4.fa2b.sh.e
+samtools faidx zm_AGPv4.fa
+faToTwoBit zm_AGPv4.fa zm_AGPv4.2bit
+EOF
+echo sbatch .zm_AGPv4.fa2b.sh
 
 cat > .zm_AGPv4.bt2.sh <<EOF
 #!/bin/bash -l
