@@ -30,7 +30,7 @@ def roc_file_to_string(roc_fn, inner_sep=':', outer_sep=';'):
 
 
 def parse_fn(fn):
-    """ ERR050083_1.bwamem-qsim_loose_dec.unp.roc.csv """
+    """ ERR050083_1.bwamem-qtip_loose_dec.unp.roc.csv """
     ptoks = fn.split('.')
     data = ptoks[0][:-2]
     paired = 'T' if ptoks[2] == 'pair' else 'F'
@@ -41,7 +41,7 @@ def parse_fn(fn):
 
 
 print(','.join(["data", "paired", "aligner", "local", "loose", "roc_round", "roc_orig"]))
-for fn in glob.glob('*-qsim_*int.*.roc.csv'):
+for fn in glob.glob('*-qtip_*int.*.roc.csv'):
     roc_str = roc_file_to_string(fn)
     roc_orig_str = roc_file_to_string(fn.replace('_int.', '_orig.'))
     data, paired, aligner, local, loose = parse_fn(fn)
