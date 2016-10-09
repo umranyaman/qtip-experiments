@@ -6,7 +6,7 @@ AR=$(NM).tar.gz
 URL=http://downloads.sourceforge.net/project/gemsim/$(AR)
 
 $(NM): $(AR)
-	tar jxvf $<
+	tar zxvf $<
 
 $(AR):
 	wget $(URL)

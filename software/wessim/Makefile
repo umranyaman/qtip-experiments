@@ -5,7 +5,7 @@ AR=$(NM).tar.gz
 URL=https://github.com/sak042/$(NM)/archive/$(AR)
 
 $(NM): $(AR)
-	tar jxvf $<
+	tar zxvf $<
 	mv $(NM)-$(NM) $@
 
 $(AR):
