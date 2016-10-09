@@ -203,7 +203,7 @@ fn <- 'various_lengths.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_lengths_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 on Mason-simulated Illumina-like samples of various lengths.  Relative change is expressed as a percent.  Each sample consists of 4 million reads/pairs.  Samples are either unpaired and paired-end, and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.  Results are means and standard deviations over \numtrials random trials starting from the input modeling step.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 on Mason-simulated Illumina-like samples of various lengths.  Relative change is expressed as a percent.  Each sample consists of 4 million reads/pairs.  Samples are either unpaired and paired-end, and Bowtie 2 is run in either end-to-end or local alignment mode as indicated.  Results are means and standard deviations over \\numtrials random trials, repeated starting from the input modeling step.}", file=fn, append=T)
 write("\\label{length_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -233,7 +233,7 @@ fn <- 'various_sensitivities.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_sensitivities_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 at various levels of sensitivity on Mason-simulated Illumina-like samples.  Relative change is expressed as a percent.  Each simulated sample consists of 4 million reads or pairs.  Bowtie 2 is run in either end-to-end or local alignment mode as indicated.  Results are means and standard deviations over \numtrials random trials starting from the input modeling step.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) when running Qtip and Bowtie 2 at various levels of sensitivity on Mason-simulated Illumina-like samples.  Relative change is expressed as a percent.  Each simulated sample consists of 4 million reads or pairs.  Bowtie 2 is run in either end-to-end or local alignment mode as indicated.  Results are means and standard deviations over \\numtrials random trials, repeated starting from the input modeling step.}", file=fn, append=T)
 write("\\label{sens_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -261,7 +261,7 @@ fn <- 'various_genomes.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_genomes_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and reference genomes, expressed as percent change.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated.  Results are means and standard deviations over \numtrials random trials starting from the input modeling step.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and reference genomes, expressed as percent change.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated.  Results are means and standard deviations over \\numtrials random trials, repeated starting from the input modeling step.}", file=fn, append=T)
 write("\\label{genomes_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -287,7 +287,7 @@ fn <- 'various_simulators.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
 capture.output(latex(various_simulators_table(m, F)), file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for samples simulated by various simulators.  Bowtie 2 end-to-end alignment was used in all cases. Relative change is expressed as a percent.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated. Results are means and standard deviations over \numtrials random trials starting from the input modeling step.}", file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for samples simulated by various simulators.  Bowtie 2 end-to-end alignment was used in all cases. Relative change is expressed as a percent.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated. Results are means and standard deviations over \\numtrials random trials, repeated starting from the input modeling step.}", file=fn, append=T)
 write("\\label{simulators_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -1114,3 +1114,31 @@ write("\\caption{Overhead of the Qtip tool.  Measured as the increase in running
 write("\\label{real_performance_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
+
+### Alignment error simulation
+
+```{r}
+ae <- read.table('alignment_err/results.csv', sep=',', quote='', comment.char='', header=T)
+```
+
+```{r}
+ae$paired <- factor(ae$paired, labels=c('Unpaired', 'Paired'))
+ae$species <- factor(ae$species, labels=c('Human', 'Mouse'))
+ae$rdlen <- factor(ae$rdlen)
+ae$type <- factor(ae$type, labels=c('Category 1', 'Category 2', 'Category 3'))
+aetab <- tabular(
+  (Heading() * species * Heading() * rdlen * Heading() * paired) ~
+  (
+    (Heading() * identity * Justify(r) * Format(sprintf("%.3f"))) *
+    (Heading() * type * (Heading("Reads") * pct_total + Heading("Errors") * pct_error))
+  ), data=ae)
+
+fn <- 'aln_error.tex_snippet'
+write("\\begin{table}", file=fn)
+write("\\centering", file=fn, append=T)
+capture.output(latex(aetab), file=fn, append=T)
+write("\\caption{Prevalence of errors of different categories when analyzing Mason-simulated samples using Bowtie 2. Columns labeled Reads give the percent of all the reads, both correctly and incorrectly aligned, having that error category. Columns labeled Errors give the percent of the errors having that error category.}", file=fn, append=T)
+write("\\label{aln_error_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
+```
+
