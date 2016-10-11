@@ -69,7 +69,7 @@ def cigar_to_list(cigar_string):
     return zip(spl[2::2], map(int, spl[1::2]))
 
 
-def parse_sam_loc_mapq(st, used_qsim=True):
+def parse_sam_loc_mapq(st, used_qtip=True):
     toks = st.split('\t')
     flags = int(toks[1])
     if (flags & 4) != 0:
@@ -80,7 +80,7 @@ def parse_sam_loc_mapq(st, used_qsim=True):
     lclip = 0 if clist[0][0] != 'S' else clist[0][1]
     mapq = int(toks[4])  # predicted mapq
     mapq_orig, mapq_prec = 0.0, 0.0
-    if used_qsim:
+    if used_qtip:
         # now need to go get the original mapq
         mapq_re_ma = mapq_re.search(st)
         if mapq_re_ma is None:
@@ -288,7 +288,7 @@ def go(args):
         # note: the vs & vsl files may not have any predicted MAPQ info
         parsed_sam = []
         for ln, nm in zip(lns, names):
-            parsed_sam.append(parse_sam_loc_mapq(ln, nm.endswith("-qsim")))
+            parsed_sam.append(parse_sam_loc_mapq(ln, nm.endswith("-qtip")))
         if any(map(lambda x: x is None, parsed_sam)):
             continue  # at least one tool failed to align the read
         sim = same_alns_tiered(parsed_sam, better_tiers, equal_tiers, args['wiggle'])
@@ -336,7 +336,7 @@ if __name__ == "__main__":
     _parser = argparse.ArgumentParser(
         description='Take a set of SAM files output by different read '
                     'alignment tools running on the same input reads.  The SAM'
-                    'files should come from the Qsim system, and should '
+                    'files should come from the Qtip system, and should '
                     'include the predicted and old MAPQs.')
 
     if '--version' in sys.argv:
