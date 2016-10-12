@@ -1,16 +1,17 @@
-TS_BWA_HOME=$(QTIP_HOME)/software/bwa
-TS_SNAP_HOME=$(QTIP_HOME)/software/snap
-TS_BT2_HOME=$(QTIP_HOME)/software/bowtie2
+BWA_HOME=$(QTIP_HOME)/software/bwa
+SNAP_HOME=$(QTIP_HOME)/software/snap
+BT2_HOME=$(QTIP_HOME)/software/bowtie2
 INDEXES=$(QTIP_EXPERIMENTS_HOME)/experiments/refs
+HG_FA=$(INDEXES)/hg38.fa
 PYTHON=python -O
 
-BT2_QTIP_ARGS=--aligner bowtie2 --bt2-exe $(TS_BT2_HOME)/bowtie2 --index $(INDEXES)/hg38.fa
+BT2_QTIP_ARGS=--aligner bowtie2 --bt2-exe $(BT2_HOME)/bowtie2 --index $(HG_FA)
 BT2_ARGS=
 BT2_PAIR_ARGS=-X 750
-BWA_QTIP_ARGS=--aligner bwa-mem --bwa-exe $(TS_BWA_HOME)/bwa --index $(INDEXES)/hg38.fa
+BWA_QTIP_ARGS=--aligner bwa-mem --bwa-exe $(BWA_HOME)/bwa --index $(HG_FA)
 BWA_ARGS=
 BWA_PAIR_ARGS=
-SNAP_QTIP_ARGS=--aligner snap --snap-exe $(TS_SNAP_HOME)/snap-aligner --index $(INDEXES)/hg38.fa.snap
+SNAP_QTIP_ARGS=--aligner snap --snap-exe $(SNAP_HOME)/snap-aligner --index $(HG_FA).snap
 SNAP_ARGS=
 SNAP_PAIR_ARGS=
 
@@ -18,7 +19,7 @@ NTHREADS=1
 NTHREADS_VS=16
 
 $(shell mkdir -p temp)
-ARGS=--ref $(INDEXES)/hg38.fa --write-orig-mapq --write-precise-mapq --seed 346 --temp-directory temp
+ARGS=--ref $(HG_FA) --write-orig-mapq --write-precise-mapq --seed 346 --temp-directory temp
 EXTRA_ARGS=
 
 #
@@ -109,8 +110,8 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # ###############
 
 %.bt2vs.unp.sam: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg38.fa \
+	$(BT2_HOME)/bowtie2 \
+		-x $(INDEXES)/hg38.fa \
 		-p $(NTHREADS_VS) \
 		-U $< \
 		--very-sensitive \
@@ -118,8 +119,8 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-S $@
 
 %.bt2vs.pair.sam: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg38.fa \
+	$(BT2_HOME)/bowtie2 \
+		-x $(INDEXES)/hg38.fa \
 		-p $(NTHREADS_VS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive \
@@ -132,8 +133,8 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #####################
 
 %.bt2vsl.unp.sam: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg38.fa \
+	$(BT2_HOME)/bowtie2 \
+		-x $(HG_FA) \
 		-p $(NTHREADS_VS) \
 		-U $< \
 		--very-sensitive-local \
@@ -141,8 +142,8 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		-S $@
 
 %.bt2vsl.pair.sam: %.fastq
-	$(TS_BT2_HOME)/bowtie2 \
-		-x $(TS_INDEXES)/hg38.fa \
+	$(BT2_HOME)/bowtie2 \
+		-x $(HG_FA) \
 		-p $(NTHREADS_VS) \
 		-1 $< -2 $(<:_1.fastq=_2.fastq) \
 		--very-sensitive-local \
