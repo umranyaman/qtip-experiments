@@ -59,6 +59,17 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS) $(BWA_ARGS)
 
+%.ext_bwa.unp.sam: %.fastq
+	$(PYTHON) $(QTIP_HOME)/src/qtip \
+		$(BWA_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		--U $< \
+		--keep-intermediates \
+		--write-orig-mapq \
+		--write-precise-mapq \
+		--keep-ztz \
+		--output-directory $@ \
+		-- -t $(NTHREADS_VS) $(BWA_ARGS)
+
 %.bwa.pair.sam: %.fastq
 	$(PYTHON) $(QTIP_HOME)/src/qtip \
 		$(BWA_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \

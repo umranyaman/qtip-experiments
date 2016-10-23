@@ -23,6 +23,10 @@ fi
 for dat in ERR050082_1 ERR050083_1 ; do
 for pe in unp pair ; do
 
+#
+# Very sensitive runs
+#
+
 for ext in bt2vs.${pe}.sam bt2vsl.${pe}.sam ; do
 
 cat >.${dat}.${ext} <<EOF
@@ -38,6 +42,10 @@ echo "sbatch .${dat}.${ext}"
 
 done
 
+#
+# Bowtie 2 and BWA runs
+#
+
 for ext in bwa.${pe}.sam bt2.${pe}.sam ; do
 
 cat >.${dat}.${ext} <<EOF
@@ -50,7 +58,22 @@ ${PART2}
 EOF
 echo "sbatch .${dat}.${ext}"
 
+cat >.ext_${dat}.ext_${ext} <<EOF
+#!/bin/sh
+${PART1}
+${PART2}
+#SBATCH --time=8:00:00
+#SBATCH --mem=12G
+#SBATCH --cpus-per-task=16
+/usr/bin/time -v make ${dat}.ext_${ext}
+EOF
+echo "sbatch .${dat}.ext_${ext}"
+
 done
+
+#
+# SNAP runs
+#
 
 for ext in snap.${pe}.sam ; do
 
