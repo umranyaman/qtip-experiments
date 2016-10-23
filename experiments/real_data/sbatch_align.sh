@@ -63,7 +63,7 @@ cat >.${dat}.ext_${ext} <<EOF
 ${PART1}
 ${PART2}
 #SBATCH --time=8:00:00
-#SBATCH --mem=12G
+#SBATCH --mem=24G
 #SBATCH --cpus-per-task=16
 /usr/bin/time -v make ${dat}.ext_${ext}
 EOF
