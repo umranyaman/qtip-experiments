@@ -58,7 +58,7 @@ ${PART2}
 EOF
 echo "sbatch .${dat}.${ext}"
 
-cat >.ext_${dat}.ext_${ext} <<EOF
+cat >.${dat}.ext_${ext} <<EOF
 #!/bin/sh
 ${PART1}
 ${PART2}
