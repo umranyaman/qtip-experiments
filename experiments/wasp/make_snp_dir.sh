@@ -6,25 +6,9 @@
 #SBATCH --partition=shared
 #SBATCH --nodes=1
 
-DBSNP_RELEASE=144
-SNP_FILE=snp${DBSNP_RELEASE}Common.txt
-UCSC_COMMON_SNP=http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/${SNP_FILE}
+ENSEMBL_REL=85
+URL=ftp://ftp.ensembl.org/pub/release-${ENSEMBL_REL}/variation/vcf/homo_sapiens/Homo_sapiens.vcf.gz
 
 mkdir -p snps
-
-cat >.snpize.awk <<EOF
-\$11 == "genomic" && \$12 == "single" {
-    rf=\$8;
-    alt=substr(\$10,1,1);
-    if(rf == alt) {
-        alt=substr(\$10,3,1);
-    }
-    print \$3,rf,alt > "snps/"\$2".snps.txt"
-}
-EOF
-
-curl $UCSC_COMMON_SNP | \
-    gzip -dc |
-    awk -v FS='\t' -f .snpize.awk
-
+curl ${URL} | gzip -dc | awk '$1 !~ /^#/ && length($4) == 1 && length($5) == 1 && $4 != $5 {print $2,$4,$5 > "snps/chr"$1".snps.txt"}'
 gzip snps/*.txt
