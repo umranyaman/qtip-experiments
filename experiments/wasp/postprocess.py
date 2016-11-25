@@ -67,7 +67,7 @@ def remove_args(bt2_args, exclude):
 def align_fastq(fastq_fn, bt2_args, threads, ofn):
     if not os.path.exists(fastq_fn):
         raise RuntimeError('No such FASTQ as "%s"' % fastq_fn)
-    ofn += '.fastq'
+    ofn += '.sam'
     ofn = join(os.path.dirname(ofn), '.' + os.path.basename(ofn))
     cmd = [bowtie2_exe] + remove_args(bt2_args, ['-U', '-1', '-2', '-S', '-p'])
     cmd += ['-U', fastq_fn, '-S', ofn, '-p', str(threads)]
@@ -76,6 +76,7 @@ def align_fastq(fastq_fn, bt2_args, threads, ofn):
     ret = os.system(cmd)
     if ret != 0:
         raise RuntimeError('Bowite2 process returned %d' % ret)
+    return ofn
 
 
 # Scan the resulting BAM together with the original BAM
@@ -83,6 +84,8 @@ def scan_remapped_bam(remapped_sam_fn):
     hist = defaultdict(lambda: [0, 0])  # read name -> [# correct, # incorrect]
     with open(remapped_sam_fn) as fh:
         for ln in fh:
+            if ln[0] == '@':
+                continue
             toks = ln.split('\t')
             words = toks[0].split(".")
 
@@ -104,10 +107,9 @@ def scan_remapped_bam(remapped_sam_fn):
             # assume first tokens make up original read name
             coord_str, num_str, total_str = words[-3:]
             orig_name = ".".join(words[0:-3])
-            pos = int(toks[3])
-            flags = int(toks[1])
+            flags, pos = int(toks[1]), int(toks[3])
             next_reference_start = int(toks[7])
-            correct_map = False
+            correct_map = int(coord_str) == pos
 
             if '-' in coord_str:
                 # paired end read, coordinate gives expected positions for each end
@@ -121,19 +123,9 @@ def scan_remapped_bam(remapped_sam_fn):
                 # only use left end of reads, but check that right end is in
                 # correct location
                 if pos < next_reference_start:
-                    if pos1 == pos + 1 and pos2 == next_reference_start + 1:
-                        # both reads mapped to correct location
-                        correct_map = True
+                    correct_map = pos1 == pos + 1 and pos2 == next_reference_start + 1
                 else:
-                    # this is right end of read
-                    continue
-            else:
-                # single end read
-                pos = int(coord_str)
-
-                if pos == pos + 1:
-                    # read maps to correct location
-                    correct_map = True
+                    continue  # this is right end of read
 
             hist[orig_name][0 if correct_map else 1] += 1
 
@@ -161,7 +153,7 @@ def tabulate(bam_fn, out_fn, hist):
                 if orig_mapq is None:
                     raise RuntimeError('Could not parse original mapq from this line: ' + ln)
                 orig_mapq = orig_mapq.group(1)
-                print(','.join[mapq, orig_mapq, str(cor), str(incor)], file=ofh)
+                print(','.join([mapq, orig_mapq, str(cor), str(incor)]), file=ofh)
 
 
 def add_args(parser):
@@ -176,9 +168,9 @@ def go(args):
     bt2_args = args_from_bam(args.bam)
     print('  Bowtie2 arguments: ' + str(bt2_args), file=sys.stderr)
     print('Aligning overlap FASTQ', file=sys.stderr)
-    align_fastq(args.fastq, bt2_args, args.threads, args.output)
+    remap_sam_fn = align_fastq(args.fastq, bt2_args, args.threads, args.output)
     print('Scanning alignments', file=sys.stderr)
-    hist = scan_remapped_bam(args.output)
+    hist = scan_remapped_bam(remap_sam_fn)
     print('Tabulating', file=sys.stderr)
     tabulate(args.bam, args.output, hist)
 
