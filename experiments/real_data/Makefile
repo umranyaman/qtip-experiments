@@ -67,6 +67,8 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 		--write-orig-mapq \
 		--write-precise-mapq \
 		--keep-ztz \
+		--assess-accuracy \
+		--predict-for-training \
 		--output-directory $@ \
 		-- -t $(NTHREADS_VS) $(BWA_ARGS)
 
