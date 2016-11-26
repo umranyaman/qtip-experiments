@@ -1,0 +1,7 @@
+#!gmake
+
+NM=WASP
+URL=https://github.com/bmvdgeijn/$(NM).git
+
+wasp-github:
+	git clone -- $(URL) $@
