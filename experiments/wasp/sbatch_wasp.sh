@@ -15,6 +15,9 @@ for dat in ERR050082_1 ERR050083_1 ; do
 for pe in unp pair ; do
 for ext in bwa bt2 snap ; do
 
+PE_ARG=
+[ "${pe}" = "pair" ] && PE_ARG="--is_paired_end"
+
 cat >.${dat}.${ext}.${pe}.wasp.sh <<EOF
 #!/bin/sh
 
@@ -27,7 +30,7 @@ ${PART2}
 #SBATCH --mem=4G
 
 mkdir -p ${dat}.${ext}.${pe}.sorted.bam.out
-$FIND_SNPS --is_sorted --output_dir ${dat}.${ext}.${pe}.sorted.bam.out --snp_dir snps ../real_data/${dat}.${ext}.${pe}.sorted.bam
+$FIND_SNPS --is_sorted ${PE_ARG} --output_dir ${dat}.${ext}.${pe}.sorted.bam.out --snp_dir snps ../real_data/${dat}.${ext}.${pe}.sorted.bam
 EOF
 echo "sbatch .${dat}.${ext}.${pe}.wasp.sh"
 
