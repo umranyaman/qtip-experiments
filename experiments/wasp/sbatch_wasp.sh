@@ -1,7 +1,6 @@
 #!/bin/sh
 
-WASP_VER=0.2.1
-WASP_DIR="../../software/wasp/WASP-${WASP_VER}"
+WASP_DIR="../../software/wasp/wasp-github"
 FIND_SNPS="python ${WASP_DIR}/mapping/find_intersecting_snps.py"
 
 if [ "$1" = "scavenger" ] ; then
