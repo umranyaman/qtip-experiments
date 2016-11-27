@@ -48,8 +48,10 @@ def args_from_bam(bam_fn):
         if ln[0] != '@':
             raise RuntimeError('Could not parse command line arguments from input bam')
         toks = ln.split('\t')
-        if toks[-1].startswith('CL:"'):
+        if toks[-1].startswith('CL:'):
             cmd = toks[-1][4:-1]
+            if cmd.endswith('"'):
+                cmd = cmd[:-1]
             cmd = cmd.split(' ')
             cmd = cmd[1:]
             if cmd[0] == '--wrapper':
