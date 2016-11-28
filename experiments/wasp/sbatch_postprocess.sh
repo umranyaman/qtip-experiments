@@ -40,7 +40,7 @@ fi
 
 python postprocess.py \
     --bam ../real_data/${P}.sorted.bam \
-    ${FASTQ1} ${FASTQ2} \
+    \${FASTQ1} \${FASTQ2} \
     --threads ${NTHREADS} \
     --output ${P}.csv
 EOF
