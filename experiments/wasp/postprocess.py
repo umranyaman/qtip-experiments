@@ -10,9 +10,6 @@ with fields giving (a) the original MAPQ, (b) the Qtip-predicted MAPQs
 incorrectly.
 
 Assumes samtools is in the PATH.
-
-TODO: Only works with Bowtie 2 right now
-TODO: Has not been tested with paired-end data yet
 """
 
 from __future__ import print_function
@@ -30,6 +27,8 @@ if 'QTIP_EXPERIMENTS_HOME' not in os.environ:
 qtip_exp = os.environ['QTIP_EXPERIMENTS_HOME']
 
 bowtie2_exe = join(qtip_exp, 'software', 'bowtie2', 'bowtie2')
+bwa_exe = join(qtip_exp, 'software', 'bwa', 'bwa')
+snap_exe = join(qtip_exp, 'software', 'snap', 'snap-aligner')
 
 
 def is_exe(fp):
@@ -38,6 +37,10 @@ def is_exe(fp):
 
 if not is_exe(bowtie2_exe):
     raise RuntimeError('No bowtie2 exe at: "%s"' % bowtie2_exe)
+if not is_exe(bwa_exe):
+    raise RuntimeError('No bwa exe at: "%s"' % bwa_exe)
+if not is_exe(snap_exe):
+    raise RuntimeError('No snap exe at: "%s"' % snap_exe)
 
 
 def args_from_bam(bam_fn):
@@ -47,16 +50,20 @@ def args_from_bam(bam_fn):
     for ln in proc.stdout:
         if ln[0] != '@':
             raise RuntimeError('Could not parse command line arguments from input bam')
-        toks = ln.split('\t')
-        if toks[-1].startswith('CL:'):
-            cmd = toks[-1][4:-1]
-            if cmd.endswith('"'):
-                cmd = cmd[:-1]
-            cmd = cmd.split(' ')
-            cmd = cmd[1:]
-            if cmd[0] == '--wrapper':
-                cmd = cmd[2:]
-            return cmd
+        cmd, myid = None, None
+        for tok in ln.split('\t'):
+            if tok.startswith('ID:'):
+                myid = tok[3:]
+            if tok.startswith('CL:'):
+                cmd = tok[4:-1]
+                if cmd.endswith('"'):
+                    cmd = cmd[:-1]
+                cmd = cmd.split(' ')
+                cmd = cmd[1:]
+                if cmd[0] == '--wrapper':
+                    cmd = cmd[2:]
+            if cmd is not None and myid is not None:
+                return myid, cmd
 
 
 def remove_args(bt2_args, exclude):
@@ -66,18 +73,52 @@ def remove_args(bt2_args, exclude):
     return bt2_args
 
 
-def align_fastq(fastq_fn, bt2_args, threads, ofn):
-    if not os.path.exists(fastq_fn):
-        raise RuntimeError('No such FASTQ as "%s"' % fastq_fn)
-    ofn += '.sam'
-    ofn = join(os.path.dirname(ofn), '.' + os.path.basename(ofn))
+def align_fastq_bwa(fastq1_fn, fastq2_fn, bwa_args, threads, ofn):
+    while bwa_args[-1].endswith('fastq') or bwa_args[-1].endswith('fq'):
+        bwa_args = bwa_args[:-1]
+    cmd = [bwa_exe] + remove_args(bwa_args, ['-t']) + ['-t', str(threads), fastq1_fn]
+    if fastq2_fn is not None:
+        cmd.append(fastq2_fn)
+    cmd.extend(['>', ofn])
+    cmd = ' '.join(cmd)
+    print('  BWA command: ' + cmd, file=sys.stderr)
+    ret = os.system(cmd)
+    if ret != 0:
+        raise RuntimeError('BWA process returned %d' % ret)
+    return ofn
+
+
+def align_fastq_bowtie2(fastq1_fn, fastq2_fn, bt2_args, threads, ofn):
     cmd = [bowtie2_exe] + remove_args(bt2_args, ['-U', '-1', '-2', '-S', '-p'])
-    cmd += ['-U', fastq_fn, '-S', ofn, '-p', str(threads)]
+    if fastq2_fn is None:
+        cmd.extend(['-U', fastq1_fn])
+    else:
+        cmd.extend(['-1', fastq1_fn, '-2', fastq2_fn])
+    cmd.extend(['-S', ofn, '-p', str(threads)])
     cmd = ' '.join(cmd)
     print('  Bowtie2 command: ' + cmd, file=sys.stderr)
     ret = os.system(cmd)
     if ret != 0:
         raise RuntimeError('Bowite2 process returned %d' % ret)
+    return ofn
+
+
+def align_fastq_snap(fastq1_fn, fastq2_fn, snap_args, threads, ofn):
+    assert '-o' in snap_args
+    cmd = [snap_exe] + remove_args(snap_args, ['-fastq', '-sam', '-t'])
+    assert '-o' in snap_args
+    if fastq2_fn is None:
+        cmd = cmd[0:2] + ['-fastq', fastq1_fn] + cmd[2:]
+    else:
+        cmd = cmd[0:2] + ['-fastq', fastq1_fn, fastq2_fn] + cmd[2:]
+    oidx = cmd.index('-o')
+    cmd = cmd[0:oidx+1] + ['-sam', ofn] + cmd[oidx+1:]
+    cmd.extend(['-t', str(threads)])
+    cmd = ' '.join(cmd)
+    print('  SNAP command: ' + cmd, file=sys.stderr)
+    ret = os.system(cmd)
+    if ret != 0:
+        raise RuntimeError('SNAP process returned %d' % ret)
     return ofn
 
 
@@ -141,6 +182,7 @@ def scan_remapped_bam(remapped_sam_fn):
 # - # derived reads that aligned incorrectly
 def tabulate(bam_fn, out_fn, hist):
     mapq_re = re.compile('Zm:[iZ]:([0-9]+)')
+    tab = defaultdict(int)
     with open(out_fn, 'wb') as ofh:
         proc = subprocess.Popen(['samtools', 'view', '-h', bam_fn], stdout=subprocess.PIPE)
         for ln in proc.stdout:
@@ -149,13 +191,16 @@ def tabulate(bam_fn, out_fn, hist):
             toks = ln.split('\t')
             qname = toks[0]
             if qname in hist:
-                mapq = toks[4]
+                mapq = int(toks[4])
                 cor, incor = hist[qname]
                 orig_mapq = mapq_re.search(ln)
                 if orig_mapq is None:
                     raise RuntimeError('Could not parse original mapq from this line: ' + ln)
-                orig_mapq = orig_mapq.group(1)
-                print(','.join([mapq, orig_mapq, str(cor), str(incor)]), file=ofh)
+                orig_mapq = int(orig_mapq.group(1))
+                tab[(mapq, orig_mapq, cor, incor)] += 1
+    for k, v in tab.items():
+        mapq, orig_mapq, cor, incor = k
+        print(','.join(map(str, [mapq, orig_mapq, cor, incor, v])))
 
 
 def add_args(parser):
@@ -167,10 +212,26 @@ def add_args(parser):
 
 def go(args):
     print('Getting arguments from BAM', file=sys.stderr)
-    bt2_args = args_from_bam(args.bam)
-    print('  Bowtie2 arguments: ' + str(bt2_args), file=sys.stderr)
+    aligner, aligner_args = args_from_bam(args.bam)
+    print('  Aligner arguments: ' + str(aligner_args), file=sys.stderr)
     print('Aligning overlap FASTQ', file=sys.stderr)
-    remap_sam_fn = align_fastq(args.fastq, bt2_args, args.threads, args.output)
+    ofn = args.output
+    fastq1_fn = args.fastq
+    if not os.path.exists(fastq1_fn):
+        raise RuntimeError('No such FASTQ as "%s"' % fastq1_fn)
+    fastq2_fn = args.fastq2
+    if fastq2_fn is not None and not os.path.exists(fastq2_fn):
+        raise RuntimeError('No such FASTQ as "%s"' % fastq2_fn)
+    ofn += '.sam'
+    ofn = join(os.path.dirname(ofn), '.' + os.path.basename(ofn))
+    if aligner == 'SNAP':
+        remap_sam_fn = align_fastq_snap(fastq1_fn, fastq2_fn, aligner_args, args.threads, ofn)
+    elif aligner == 'bowtie2':
+        remap_sam_fn = align_fastq_bowtie2(fastq1_fn, fastq2_fn, aligner_args, args.threads, ofn)
+    elif aligner == 'bwa':
+        remap_sam_fn = align_fastq_bwa(fastq1_fn, fastq2_fn, aligner_args, args.threads, ofn)
+    else:
+        raise RuntimeError('Unknown aligner ID: "%s"' % aligner)
     print('Scanning alignments', file=sys.stderr)
     hist = scan_remapped_bam(remap_sam_fn)
     print('Tabulating', file=sys.stderr)
