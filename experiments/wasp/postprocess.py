@@ -51,7 +51,7 @@ def args_from_bam(bam_fn):
         if ln[0] != '@':
             raise RuntimeError('Could not parse command line arguments from input bam')
         cmd, myid = None, None
-        for tok in ln.split('\t'):
+        for tok in ln.rstrip().split('\t'):
             if tok.startswith('ID:'):
                 myid = tok[3:]
             if tok.startswith('CL:'):
