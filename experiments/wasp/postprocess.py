@@ -113,9 +113,9 @@ def align_fastq_snap(fastq1_fn, fastq2_fn, snap_args, threads, ofn):
     assert '-o' in snap_args
     format_arg = '-compressedFastq' if fastq1_fn.endswith('.gz') else '-fastq'
     if fastq2_fn is None:
-        cmd = cmd[0:2] + [format_arg, fastq1_fn] + cmd[2:]
+        cmd = cmd[0:3] + [format_arg, fastq1_fn] + cmd[3:]
     else:
-        cmd = cmd[0:2] + [format_arg, fastq1_fn, fastq2_fn] + cmd[2:]
+        cmd = cmd[0:3] + [format_arg, fastq1_fn, fastq2_fn] + cmd[3:]
     oidx = cmd.index('-o')
     cmd = cmd[0:oidx+1] + ['-sam', ofn] + cmd[oidx+1:]
     cmd.extend(['-t', str(threads)])
