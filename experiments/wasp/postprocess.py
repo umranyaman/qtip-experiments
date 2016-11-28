@@ -59,7 +59,9 @@ def args_from_bam(bam_fn):
                 if cmd.endswith('"'):
                     cmd = cmd[:-1]
                 cmd = cmd.split(' ')
-                cmd = cmd[1:]
+                # snap doesn't put the binary in the CL: field
+                if myid != 'SNAP':
+                    cmd = cmd[1:]
                 if cmd[0] == '--wrapper':
                     cmd = cmd[2:]
             if cmd is not None and myid is not None:
