@@ -189,24 +189,24 @@ def scan_remapped_bam(remapped_sam_fn):
 def tabulate(bam_fn, out_fn, hist):
     mapq_re = re.compile('Zm:[iZ]:([0-9]+)')
     tab = defaultdict(int)
+    proc = subprocess.Popen(['samtools', 'view', '-h', bam_fn], stdout=subprocess.PIPE)
+    for ln in proc.stdout:
+        if ln[0] == '@':
+            continue
+        toks = ln.split('\t')
+        qname = toks[0]
+        if qname in hist:
+            mapq = int(toks[4])
+            cor, incor = hist[qname]
+            orig_mapq = mapq_re.search(ln)
+            if orig_mapq is None:
+                raise RuntimeError('Could not parse original mapq from this line: ' + ln)
+            orig_mapq = int(orig_mapq.group(1))
+            tab[(mapq, orig_mapq, cor, incor)] += 1
     with open(out_fn, 'wb') as ofh:
-        proc = subprocess.Popen(['samtools', 'view', '-h', bam_fn], stdout=subprocess.PIPE)
-        for ln in proc.stdout:
-            if ln[0] == '@':
-                continue
-            toks = ln.split('\t')
-            qname = toks[0]
-            if qname in hist:
-                mapq = int(toks[4])
-                cor, incor = hist[qname]
-                orig_mapq = mapq_re.search(ln)
-                if orig_mapq is None:
-                    raise RuntimeError('Could not parse original mapq from this line: ' + ln)
-                orig_mapq = int(orig_mapq.group(1))
-                tab[(mapq, orig_mapq, cor, incor)] += 1
-    for k, v in tab.items():
-        mapq, orig_mapq, cor, incor = k
-        print(','.join(map(str, [mapq, orig_mapq, cor, incor, v])))
+        for k, v in tab.items():
+            mapq, orig_mapq, cor, incor = k
+            print(','.join(map(str, [mapq, orig_mapq, cor, incor, v])), file=ofh)
 
 
 def add_args(parser):
