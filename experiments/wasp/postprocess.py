@@ -66,10 +66,10 @@ def args_from_bam(bam_fn):
                 return myid, cmd
 
 
-def remove_args(bt2_args, exclude):
+def remove_args(bt2_args, exclude, num_to_remove=1):
     for i in range(len(bt2_args)-1, -1, -1):
         if bt2_args[i] in exclude:
-            bt2_args = bt2_args[:i] + bt2_args[i+2:]
+            bt2_args = bt2_args[:i] + bt2_args[i+1+num_to_remove:]
     return bt2_args
 
 
@@ -105,12 +105,13 @@ def align_fastq_bowtie2(fastq1_fn, fastq2_fn, bt2_args, threads, ofn):
 
 def align_fastq_snap(fastq1_fn, fastq2_fn, snap_args, threads, ofn):
     assert '-o' in snap_args
-    cmd = [snap_exe] + remove_args(snap_args, ['-fastq', '-sam', '-t'])
+    cmd = [snap_exe] + remove_args(remove_args(snap_args, ['-sam', '-t']), ['-fastq'], 2)
     assert '-o' in snap_args
+    format_arg = '-compressedFastq' if fastq1_fn.endswith('.gz') else '-fastq'
     if fastq2_fn is None:
-        cmd = cmd[0:2] + ['-fastq', fastq1_fn] + cmd[2:]
+        cmd = cmd[0:2] + [format_arg, fastq1_fn] + cmd[2:]
     else:
-        cmd = cmd[0:2] + ['-fastq', fastq1_fn, fastq2_fn] + cmd[2:]
+        cmd = cmd[0:2] + [format_arg, fastq1_fn, fastq2_fn] + cmd[2:]
     oidx = cmd.index('-o')
     cmd = cmd[0:oidx+1] + ['-sam', ofn] + cmd[oidx+1:]
     cmd.extend(['-t', str(threads)])
@@ -204,10 +205,16 @@ def tabulate(bam_fn, out_fn, hist):
 
 
 def add_args(parser):
-    parser.add_argument('--bam', metavar='path', type=str, required=True, help='Input BAM file')
-    parser.add_argument('--fastq', metavar='path', type=str, required=True, help='WASP "remap" FASTQ file')
-    parser.add_argument('--output', metavar='path', type=str, required=True, help='Place output table here')
-    parser.add_argument('--threads', type=int, default=16, help='Use -p with Bowtie 2')
+    parser.add_argument('--bam', metavar='path', type=str, required=True,
+                        help='Input BAM file; aligner and arguments are inferred from this')
+    parser.add_argument('--fastq', metavar='path', type=str, required=True,
+                        help='WASP "remap" FASTQ file')
+    parser.add_argument('--fastq2', metavar='path', type=str, required=False,
+                        help='WASP "remap" FASTQ file (end 2 for paired-end)')
+    parser.add_argument('--threads', metavar='N', type=int, default=16,
+                        help='Use N simultaneous threads when aligning remap FASTQs')
+    parser.add_argument('--output', metavar='path', type=str, required=True,
+                        help='Place output table here')
 
 
 def go(args):

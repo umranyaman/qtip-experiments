@@ -30,12 +30,17 @@ ${PART2}
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=${NTHREADS}
 
-if [ ! -f ${P}.sorted.bam.out/${P}.sorted.remap.fq ] ; then
-    gzip -dc ${P}.sorted.bam.out/${P}.sorted.remap.fq*.gz > ${P}.sorted.bam.out/${P}.sorted.remap.fq
+FASTQ1="--fastq ${P}.sorted.bam.out/${P}.sorted.remap.fq.gz"
+FASTQ2=""
+
+if [ -f "${P}.sorted.bam.out/${P}.sorted.remap.fq2.gz" ] ; then
+    FASTQ1="--fastq  ${P}.sorted.bam.out/${P}.sorted.remap.fq1.gz"
+    FASTQ2="--fastq2 ${P}.sorted.bam.out/${P}.sorted.remap.fq2.gz"
 fi
+
 python postprocess.py \
     --bam ../real_data/${P}.sorted.bam \
-    --fastq ${P}.sorted.bam.out/${P}.sorted.remap.fq \
+    ${FASTQ1} ${FASTQ2} \
     --threads ${NTHREADS} \
     --output ${P}.csv
 EOF
