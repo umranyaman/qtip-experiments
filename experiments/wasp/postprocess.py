@@ -119,6 +119,7 @@ def align_fastq_snap(fastq1_fn, fastq2_fn, snap_args, threads, ofn):
     oidx = cmd.index('-o')
     cmd = cmd[0:oidx+1] + ['-sam', ofn] + cmd[oidx+1:]
     cmd.extend(['-t', str(threads)])
+    cmd.extend(['-xf', '4.0'])
     cmd = ' '.join(cmd)
     print('  SNAP command: ' + cmd, file=sys.stderr)
     ret = os.system(cmd)
