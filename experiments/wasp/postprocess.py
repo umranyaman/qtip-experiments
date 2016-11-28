@@ -55,7 +55,7 @@ def args_from_bam(bam_fn):
             if tok.startswith('ID:'):
                 myid = tok[3:]
             if tok.startswith('CL:'):
-                cmd = tok[3:-1]
+                cmd = tok[3:]
                 if cmd.startswith('"'):
                     cmd = cmd[1:]
                 if cmd.endswith('"'):
