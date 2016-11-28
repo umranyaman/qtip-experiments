@@ -129,7 +129,7 @@ def align_fastq_snap(fastq1_fn, fastq2_fn, snap_args, threads, ofn):
 
 
 # Scan the resulting BAM together with the original BAM
-def scan_remapped_bam(remapped_sam_fn):
+def scan_remapped_bam(remapped_sam_fn, keep=False):
     hist = defaultdict(lambda: [0, 0])  # read name -> [# correct, # incorrect]
     with open(remapped_sam_fn) as fh:
         for ln in fh:
@@ -158,7 +158,6 @@ def scan_remapped_bam(remapped_sam_fn):
             orig_name = ".".join(words[0:-3])
             flags, pos = int(toks[1]), int(toks[3])
             next_reference_start = int(toks[7])
-            correct_map = int(coord_str) == pos
 
             if '-' in coord_str:
                 # paired end read, coordinate gives expected positions for each end
@@ -175,8 +174,13 @@ def scan_remapped_bam(remapped_sam_fn):
                     correct_map = pos1 == pos + 1 and pos2 == next_reference_start + 1
                 else:
                     continue  # this is right end of read
+            else:
+                correct_map = int(coord_str) == pos
 
             hist[orig_name][0 if correct_map else 1] += 1
+
+    if not keep:
+        os.remove(remapped_sam_fn)
 
     return hist
 
@@ -267,7 +271,7 @@ if __name__ == "__main__":
                     'given a WASP remap FASTQ file, construct a table '
                     'giving original and predicted MAPQs together with '
                     'the number of remapped reads that aligned '
-                    'correctly and uncorrectly')
+                    'correctly and incorrectly')
 
     add_args(_parser)
     _parser.add_argument('--profile', action='store_const', const=True, default=False, help='Print profiling info')
