@@ -18,7 +18,7 @@ for pe in unp pair ; do
 for ext in bwa bt2 snap ; do
 
 MEMGB=6
-[ "${ext}" = "bwa" ] && MEMGB=8
+[ "${ext}" = "bwa" ] && MEMGB=12
 [ "${ext}" = "snap" ] && MEMGB=50
 
 P="${dat}.${ext}.${pe}"
