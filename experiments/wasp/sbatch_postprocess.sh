@@ -17,6 +17,10 @@ for dat in ERR050082_1 ERR050083_1 ; do
 for pe in unp pair ; do
 for ext in bwa bt2 snap ; do
 
+MEMGB=6
+[ "${ext}" = "bwa" ] && MEMGB=8
+[ "${ext}" = "snap" ] && MEMGB=40
+
 P="${dat}.${ext}.${pe}"
 cat >.${P}.postproc.sh <<EOF
 #!/bin/sh
@@ -27,7 +31,7 @@ cat >.${P}.postproc.sh <<EOF
 ${PART1}
 ${PART2}
 #SBATCH --time=4:00:00
-#SBATCH --mem=4G
+#SBATCH --mem=${MEMGB}G
 #SBATCH --cpus-per-task=${NTHREADS}
 
 FASTQ1="--fastq ${P}.sorted.bam.out/${P}.sorted.remap.fq.gz"
