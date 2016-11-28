@@ -19,7 +19,7 @@ for ext in bwa bt2 snap ; do
 
 MEMGB=6
 [ "${ext}" = "bwa" ] && MEMGB=8
-[ "${ext}" = "snap" ] && MEMGB=40
+[ "${ext}" = "snap" ] && MEMGB=50
 
 P="${dat}.${ext}.${pe}"
 cat >.${P}.postproc.sh <<EOF
