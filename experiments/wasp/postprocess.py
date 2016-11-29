@@ -157,6 +157,8 @@ def scan_remapped_bam(remapped_sam_fn, keep=False):
             coord_str, num_str, total_str = words[-3:]
             orig_name = ".".join(words[0:-3])
             flags, pos = int(toks[1]), int(toks[3])
+            if flags >= 2048:
+                continue
             next_reference_start = int(toks[7])
 
             if '-' in coord_str:
@@ -199,6 +201,9 @@ def tabulate(bam_fn, out_fn, hist):
             continue
         toks = ln.split('\t')
         qname = toks[0]
+        flags = int(toks[1])
+        if flags >= 2048:
+            continue
         if qname in hist:
             mapq = int(toks[4])
             cor, incor = hist[qname]
