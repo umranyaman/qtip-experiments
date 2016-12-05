@@ -67,7 +67,9 @@ def args_from_bam(bam_fn):
                 if cmd[0] == '--wrapper':
                     cmd = cmd[2:]
             if cmd is not None and myid is not None:
+                proc.terminate()
                 return myid, cmd
+    raise RuntimeError('should not be here')
 
 
 def remove_args(bt2_args, exclude, num_to_remove=1):
@@ -128,11 +130,30 @@ def align_fastq_snap(fastq1_fn, fastq2_fn, snap_args, threads, ofn):
     return ofn
 
 
+def print_update(nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright):
+    print('  ---', file=sys.stderr)
+    print('  # secondary: %d' % nsecondary, file=sys.stderr)
+    print('  # not paired or proper: %d' % nnot_proper_pair, file=sys.stderr)
+    print('  # left: %d, # right: %d' % (nleft, nright), file=sys.stderr)
+    if ncor + nincor > 0:
+        pct = float(ncor)*100.0/(ncor+nincor)
+        print('  # correct: %d (%0.2f%%), # incorrect: %d' % (ncor, pct, nincor), file=sys.stderr)
+
+
 # Scan the resulting BAM together with the original BAM
 def scan_remapped_bam(remapped_sam_fn, keep=False):
     hist = defaultdict(lambda: [0, 0])  # read name -> [# correct, # incorrect]
+    n, nsecondary, nnot_proper_pair, nleft, nright = 0, 0, 0, 0, 0
+    ncor, nincor = 0, 0
+    nival = 10
+    nival_fact = 1.25
     with open(remapped_sam_fn) as fh:
         for ln in fh:
+            n += 1
+            if n == nival:
+                print_update(nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright)
+                nival = int(nival * nival_fact + 0.5)
+
             if ln[0] == '@':
                 continue
             toks = ln.split('\t')
@@ -158,6 +179,7 @@ def scan_remapped_bam(remapped_sam_fn, keep=False):
             orig_name = ".".join(words[0:-3])
             flags, pos = int(toks[1]), int(toks[3])
             if flags >= 2048:
+                nsecondary += 1
                 continue
             next_reference_start = int(toks[7])
 
@@ -166,6 +188,7 @@ def scan_remapped_bam(remapped_sam_fn, keep=False):
                 c1, c2 = coord_str.split("-")
 
                 if (flags & 3) != 3:
+                    nnot_proper_pair += 1
                     continue  # not paired or not proper pair
 
                 pos1, pos2 = int(c1), int(c2)
@@ -173,18 +196,24 @@ def scan_remapped_bam(remapped_sam_fn, keep=False):
                 # only use left end of reads, but check that right end is in
                 # correct location
                 if pos < next_reference_start:
-                    correct_map = pos1 == pos + 1 and pos2 == next_reference_start + 1
+                    correct_map = (pos1 == pos + 1 and pos2 == next_reference_start + 1)
+                    nleft += 1
                 else:
+                    nright += 1
                     continue  # this is right end of read
             else:
                 correct_map = int(coord_str) == pos
 
             hist[orig_name][0 if correct_map else 1] += 1
+            if correct_map:
+                ncor += 1
+            else:
+                nincor += 1
 
     if not keep:
         os.remove(remapped_sam_fn)
 
-    return hist
+    return hist, nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright
 
 
 # Output a file with one line per input alignment:
@@ -212,6 +241,9 @@ def tabulate(bam_fn, out_fn, hist):
                 raise RuntimeError('Could not parse original mapq from this line: ' + ln)
             orig_mapq = int(orig_mapq.group(1))
             tab[(mapq, orig_mapq, cor, incor)] += 1
+    ret = proc.wait()
+    if ret != 0:
+        raise RuntimeError('samtools returned %d' % ret)
     with open(out_fn, 'wb') as ofh:
         for k, v in tab.items():
             mapq, orig_mapq, cor, incor = k
@@ -254,8 +286,8 @@ def go(args):
     else:
         raise RuntimeError('Unknown aligner ID: "%s"' % aligner)
     print('Scanning alignments', file=sys.stderr)
-    hist = scan_remapped_bam(remap_sam_fn)
-    print('Tabulating', file=sys.stderr)
+    hist, nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright = scan_remapped_bam(remap_sam_fn)
+    print_update(nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright)
     tabulate(args.bam, args.output, hist)
 
 
