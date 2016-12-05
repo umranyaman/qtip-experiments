@@ -32,6 +32,9 @@ EXTRA_ARGS=
 all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
      ERR050083_1.unp.csv ERR050083_1.pair.csv
 
+.PHONY: all_new
+all_new: new_ERR050082_1.unp.csv ERR050083_1.unp.csv
+
 %.unp.csv: %.bt2vs.unp.sam %.bt2vsl.unp.sam %.bwa.unp.sam %.bt2.unp.sam %.snap.unp.sam
 	pypy multi_aligner.py \
 	    --sam $^ \
@@ -51,6 +54,19 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #######
 # BWA-MEM
 # #######
+
+new_%.bwa.unp.sam: new_%.fastq
+	$(PYTHON) $(QTIP_HOME)/src/qtip \
+		$(BWA_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		--U $< \
+		--keep-intermediates \
+		--write-orig-mapq \
+		--write-precise-mapq \
+		--keep-ztz \
+		--assess-accuracy \
+		--predict-for-training \
+		--output-directory $@ \
+		-- -t $(NTHREADS_VS) $(BWA_ARGS)
 
 %.bwa.unp.sam: %.fastq
 	$(PYTHON) $(QTIP_HOME)/src/qtip \
@@ -84,6 +100,19 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # Bowtie2
 # #######
 
+new_%.bt2.unp.sam: new_%.fastq
+	$(PYTHON) $(QTIP_HOME)/src/qtip \
+		$(BT2_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		--U $< \
+		--keep-intermediates \
+		--write-orig-mapq \
+		--write-precise-mapq \
+		--keep-ztz \
+		--assess-accuracy \
+		--predict-for-training \
+		--output-directory $@ \
+		-- -p $(NTHREADS) $(BT2_ARGS)
+
 %.bt2.unp.sam: %.fastq
 	$(PYTHON) $(QTIP_HOME)/src/qtip \
 		$(BT2_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
@@ -102,6 +131,19 @@ all: ERR050082_1.unp.csv ERR050082_1.pair.csv \
 # #######
 # SNAP
 # #######
+
+new_%.snap.unp.sam: new_%.fastq
+	$(PYTHON) $(QTIP_HOME)/src/qtip \
+		$(SNAP_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
+		--U $< \
+		--keep-intermediates \
+		--write-orig-mapq \
+		--write-precise-mapq \
+		--keep-ztz \
+		--assess-accuracy \
+		--predict-for-training \
+		--output-directory $@ \
+		-- -t $(NTHREADS) $(SNAP_ARGS)
 
 %.snap.unp.sam: %.fastq
 	$(PYTHON) $(QTIP_HOME)/src/qtip \

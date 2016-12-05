@@ -58,6 +58,17 @@ ${PART2}
 EOF
 echo "sbatch .${dat}.${ext}"
 
+cat >.new_${dat}.${ext} <<EOF
+#!/bin/sh
+${PART1}
+${PART2}
+#SBATCH --time=8:00:00
+#SBATCH --mem=24G
+#SBATCH --cpus-per-task=16
+/usr/bin/time -v make new_${dat}.${ext}
+EOF
+echo "sbatch .new_${dat}.${ext}"
+
 cat >.${dat}.ext_${ext} <<EOF
 #!/bin/sh
 ${PART1}
