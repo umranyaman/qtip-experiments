@@ -58,6 +58,7 @@ ${PART2}
 EOF
 echo "sbatch .${dat}.${ext}"
 
+if [ "${pe}" = "unp" ] ; then
 cat >.new_${dat}.${ext} <<EOF
 #!/bin/sh
 ${PART1}
@@ -68,6 +69,7 @@ ${PART2}
 /usr/bin/time -v make new_${dat}.${ext}
 EOF
 echo "sbatch .new_${dat}.${ext}"
+fi
 
 cat >.${dat}.ext_${ext} <<EOF
 #!/bin/sh
