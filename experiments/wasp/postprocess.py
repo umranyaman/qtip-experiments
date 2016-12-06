@@ -35,14 +35,6 @@ def is_exe(fp):
     return os.path.isfile(fp) and os.access(fp, os.X_OK)
 
 
-if not is_exe(bowtie2_exe):
-    raise RuntimeError('No bowtie2 exe at: "%s"' % bowtie2_exe)
-if not is_exe(bwa_exe):
-    raise RuntimeError('No bwa exe at: "%s"' % bwa_exe)
-if not is_exe(snap_exe):
-    raise RuntimeError('No snap exe at: "%s"' % snap_exe)
-
-
 def args_from_bam(bam_fn):
     if not os.path.exists(bam_fn):
         raise RuntimeError('No such BAM as "%s"' % bam_fn)
@@ -196,7 +188,8 @@ def scan_remapped_bam(remapped_sam_fn, keep=False):
                 # only use left end of reads, but check that right end is in
                 # correct location
                 if pos < next_reference_start:
-                    correct_map = (pos1 == pos + 1 and pos2 == next_reference_start + 1)
+                    correct_map = (pos1 == pos and pos2 == next_reference_start)
+                    #print('%s: pos1 (%d) == pos (%d) + 1 and pos2 (%d) == next_reference_start (%d) + 1' % ('Correct' if correct_map else 'INCORRECT', pos1, pos, pos2, next_reference_start))
                     nleft += 1
                 else:
                     nright += 1
@@ -261,32 +254,45 @@ def add_args(parser):
                         help='Use N simultaneous threads when aligning remap FASTQs')
     parser.add_argument('--output', metavar='path', type=str, required=True,
                         help='Place output table here')
+    parser.add_argument('--skip', action='store_const', const=True, default=False,
+                        help='Skip over alignment')
+    parser.add_argument('--keep', action='store_const', const=True, default=False,
+                        help='Keep SAM file')
 
 
 def go(args):
-    print('Getting arguments from BAM', file=sys.stderr)
-    aligner, aligner_args = args_from_bam(args.bam)
-    print('  Aligner arguments: ' + str(aligner_args), file=sys.stderr)
-    print('Aligning overlap FASTQ', file=sys.stderr)
-    ofn = args.output
-    fastq1_fn = args.fastq
-    if not os.path.exists(fastq1_fn):
-        raise RuntimeError('No such FASTQ as "%s"' % fastq1_fn)
-    fastq2_fn = args.fastq2
-    if fastq2_fn is not None and not os.path.exists(fastq2_fn):
-        raise RuntimeError('No such FASTQ as "%s"' % fastq2_fn)
-    ofn += '.sam'
-    ofn = join(os.path.dirname(ofn), '.' + os.path.basename(ofn))
-    if aligner == 'SNAP':
-        remap_sam_fn = align_fastq_snap(fastq1_fn, fastq2_fn, aligner_args, args.threads, ofn)
-    elif aligner == 'bowtie2':
-        remap_sam_fn = align_fastq_bowtie2(fastq1_fn, fastq2_fn, aligner_args, args.threads, ofn)
-    elif aligner == 'bwa':
-        remap_sam_fn = align_fastq_bwa(fastq1_fn, fastq2_fn, aligner_args, args.threads, ofn)
+    if not args.skip:
+        print('Getting arguments from BAM', file=sys.stderr)
+        aligner, aligner_args = args_from_bam(args.bam)
+        print('  Aligner arguments: ' + str(aligner_args), file=sys.stderr)
+        print('Aligning overlap FASTQ', file=sys.stderr)
+        ofn = args.output
+        fastq1_fn = args.fastq
+        if not os.path.exists(fastq1_fn):
+            raise RuntimeError('No such FASTQ as "%s"' % fastq1_fn)
+        fastq2_fn = args.fastq2
+        if fastq2_fn is not None and not os.path.exists(fastq2_fn):
+            raise RuntimeError('No such FASTQ as "%s"' % fastq2_fn)
+        ofn += '.sam'
+        ofn = join(os.path.dirname(ofn), '.' + os.path.basename(ofn))
+        if aligner == 'SNAP':
+            if not is_exe(snap_exe):
+                raise RuntimeError('No snap exe at: "%s"' % snap_exe)
+            remap_sam_fn = align_fastq_snap(fastq1_fn, fastq2_fn, aligner_args, args.threads, ofn)
+        elif aligner == 'bowtie2':
+            if not is_exe(bowtie2_exe):
+                raise RuntimeError('No bowtie2 exe at: "%s"' % bowtie2_exe)
+            remap_sam_fn = align_fastq_bowtie2(fastq1_fn, fastq2_fn, aligner_args, args.threads, ofn)
+        elif aligner == 'bwa':
+            remap_sam_fn = align_fastq_bwa(fastq1_fn, fastq2_fn, aligner_args, args.threads, ofn)
+        else:
+            if not is_exe(bwa_exe):
+                raise RuntimeError('No bwa exe at: "%s"' % bwa_exe)
+            raise RuntimeError('Unknown aligner ID: "%s"' % aligner)
+        print('Scanning alignments', file=sys.stderr)
     else:
-        raise RuntimeError('Unknown aligner ID: "%s"' % aligner)
-    print('Scanning alignments', file=sys.stderr)
-    hist, nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright = scan_remapped_bam(remap_sam_fn)
+        remap_sam_fn = args.bam
+    hist, nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright = scan_remapped_bam(remap_sam_fn, keep=args.keep or args.skip)
     print_update(nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright)
     tabulate(args.bam, args.output, hist)
 
