@@ -90,6 +90,19 @@ done
 
 for ext in snap.${pe}.sam ; do
 
+if [ "${pe}" = "unp" ] ; then
+cat >.new_${dat}.${ext} <<EOF
+#!/bin/sh
+${PART1}
+${PART2}
+#SBATCH --time=8:00:00
+#SBATCH --mem=60G
+#SBATCH --cpus-per-task=16
+/usr/bin/time -v make new_${dat}.${ext}
+EOF
+echo "sbatch .new_${dat}.${ext}"
+fi
+
 cat >.${dat}.${ext} <<EOF
 #!/bin/sh
 ${PART1}
