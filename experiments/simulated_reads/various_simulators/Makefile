@@ -90,7 +90,7 @@ reads: \
     r1_art_ill_100.fq.gz \
     r1_art_ill_250.fq.gz
 
-MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy
+MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy --skip-rewrite
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg38, and prefix rules with "bt2s"

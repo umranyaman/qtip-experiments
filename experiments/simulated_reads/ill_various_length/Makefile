@@ -97,7 +97,7 @@ reads: \
     r1_mason_ill_250.fq.gz \
     r1_mason_ill_500.fq.gz
 
-MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy
+MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy --skip-rewrite
 
 #
 # Make bowtie2 rule.  Use --sensitive, hg38, and prefix rules with "bt2s"
