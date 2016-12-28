@@ -67,6 +67,7 @@ new_%.bwa.unp.sam: new_%.fastq
 		--predict-for-training \
 		--output-directory $@ \
 		--trials 10 \
+		--skip-rewrite \
 		-- -t $(NTHREADS_VS) $(BWA_ARGS)
 
 %.bwa.unp.sam: %.fastq
@@ -113,6 +114,7 @@ new_%.bt2.unp.sam: new_%.fastq
 		--predict-for-training \
 		--output-directory $@ \
 		--trials 10 \
+		--skip-rewrite \
 		-- -p $(NTHREADS) $(BT2_ARGS)
 
 %.bt2.unp.sam: %.fastq
@@ -146,6 +148,7 @@ new_%.snap.unp.sam: new_%.fastq
 		--predict-for-training \
 		--output-directory $@ \
 		--trials 10 \
+		--skip-rewrite \
 		-- -t $(NTHREADS) $(SNAP_ARGS)
 
 %.snap.unp.sam: %.fastq
