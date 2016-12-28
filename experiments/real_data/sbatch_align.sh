@@ -58,16 +58,18 @@ ${PART2}
 EOF
 echo "sbatch .${dat}.${ext}"
 
-cat >.${dat}.ext_${ext} <<EOF
-#!/bin/sh
-${PART1}
-${PART2}
-#SBATCH --time=8:00:00
-#SBATCH --mem=24G
-#SBATCH --cpus-per-task=16
-/usr/bin/time -v make ${dat}.ext_${ext}
-EOF
-echo "sbatch .${dat}.ext_${ext}"
+# This could be useful for studying how the model fit, etc
+
+#cat >.${dat}.ext_${ext} <<EOF
+##!/bin/sh
+#${PART1}
+#${PART2}
+##SBATCH --time=8:00:00
+##SBATCH --mem=24G
+##SBATCH --cpus-per-task=16
+#/usr/bin/time -v make ${dat}.ext_${ext}
+#EOF
+#echo "sbatch .${dat}.ext_${ext}"
 
 done
 
