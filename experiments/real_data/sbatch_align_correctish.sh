@@ -22,6 +22,9 @@ for ext in bwa.${pe}.sam bt2.${pe}.sam ; do
 
 cat >.new_${dat}.${ext} <<EOF
 #!/bin/sh
+#SBATCH --job-name=al_cor_${dat}_${ext}
+#SBATCH --output=al_cor_${dat}_${ext}.out
+#SBATCH --error=al_cor_${dat}_${ext}.err
 ${PART1}
 ${PART2}
 #SBATCH --time=8:00:00
@@ -41,6 +44,9 @@ for ext in snap.${pe}.sam ; do
 
 cat >.new_${dat}.${ext} <<EOF
 #!/bin/sh
+#SBATCH --job-name=al_cor_${dat}_${ext}
+#SBATCH --output=al_cor_${dat}_${ext}.out
+#SBATCH --error=al_cor_${dat}_${ext}.err
 ${PART1}
 ${PART2}
 #SBATCH --time=8:00:00
