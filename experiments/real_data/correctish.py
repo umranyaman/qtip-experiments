@@ -12,7 +12,6 @@ Iterate through all the SAM files in tandem.  Take one of the results round-robi
 from __future__ import print_function
 import os
 import sys
-import gzip
 from operator import itemgetter
 
 
@@ -190,7 +189,7 @@ def handle_sams(sam_fns, fastq_fns, output_fns):
                                  fastq_lines, [ofh1, ofh2])
                 nreads += 1
                 if nreads == nreads_ival:
-                    print('Processed %d reads' % nreads)
+                    print('Processed %d reads' % nreads, file=sys.stderr)
                     nreads_ival = int(nreads_ival * nreads_ival_frac) + 1
 
 
