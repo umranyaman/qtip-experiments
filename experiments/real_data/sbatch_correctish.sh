@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Does this need sbatch_sort.sh to have run first?
+
+# Run after sbatch_align.sh and before sbatch_align_correctish.sh
+
 if [ "$1" = "scavenger" ] ; then
 PART1="#SBATCH --partition=scavenger"
 PART2="#SBATCH --qos=scavenger"
@@ -12,6 +16,9 @@ for dat in ERR050082 ERR050083 ; do
 
 cat >.${dat}.correctish.sh <<EOF
 #!/bin/sh
+#SBATCH --job-name=correctish
+#SBATCH --output=correctish-%A.out
+#SBATCH --error=correctish-%A.err
 ${PART1}
 ${PART2}
 #SBATCH --time=8:00:00
