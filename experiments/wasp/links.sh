@@ -26,27 +26,27 @@ for rdlen in 100 250 ; do
             # Unpaired
             FN="r0_${aln}_${genome}_mason_ill_${genome}_${rdlen}"
             if [ ! -f "${FN}.trial0.sam" ] ; then
-                echo "  * Making link to ../simulated_data/various_genomes/${FN}.out/trial0/final.sam..."
-                if [ ! -f "../simulated_data/various_genomes/${FN}.out/trial0/final.sam" ] ; then
-                    echo "  ERROR: ../simulated_data/various_genomes/${FN}.out/trial0/final.sam does not exist"
+                echo "  * Making link to ../simulated_reads/various_genomes/${FN}.out/trial0/final.sam..."
+                if [ ! -f "../simulated_reads/various_genomes/${FN}.out/trial0/final.sam" ] ; then
+                    echo "  ERROR: ../simulated_reads/various_genomes/${FN}.out/trial0/final.sam does not exist"
                     exit 1
                 fi
-                ln -s -f ../simulated_data/various_genomes/${FN}.out/trial0/final.sam ${FN}.trial0.sam
+                ln -s -f ../simulated_reads/various_genomes/${FN}.out/trial0/final.sam ${FN}.trial0.sam
             else
-                echo "  Link to ../simulated_data/various_genomes/${FN}.out/trial0/final.sam already present"
+                echo "  Link to ../simulated_reads/various_genomes/${FN}.out/trial0/final.sam already present"
             fi
 
             # Paired
             FN="r12_${aln}${rdlen}_${genome}_mason_ill_${genome}_${rdlen}"
             if [ ! -f "${FN}.trial0.sam" ] ; then
-                echo "  * Making link to ../simulated_data/various_genomes/${FN}.out/trial0/final.sam..."
-                if [ ! -f "../simulated_data/various_genomes/${FN}.out/trial0/final.sam" ] ; then
-                    echo "  ERROR: ../simulated_data/various_genomes/${FN}.out/trial0/final.sam does not exist"
+                echo "  * Making link to ../simulated_reads/various_genomes/${FN}.out/trial0/final.sam..."
+                if [ ! -f "../simulated_reads/various_genomes/${FN}.out/trial0/final.sam" ] ; then
+                    echo "  ERROR: ../simulated_reads/various_genomes/${FN}.out/trial0/final.sam does not exist"
                     exit 1
                 fi
-                ln -s -f ../simulated_data/various_genomes/${FN}.out/trial0/final.sam ${FN}.trial0.sam
+                ln -s -f ../simulated_reads/various_genomes/${FN}.out/trial0/final.sam ${FN}.trial0.sam
             else
-                echo "  Link to ../simulated_data/various_genomes/${FN}.out/trial0/final.sam already present"
+                echo "  Link to ../simulated_reads/various_genomes/${FN}.out/trial0/final.sam already present"
             fi
         done
     done
