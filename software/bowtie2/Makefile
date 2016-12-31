@@ -2,12 +2,12 @@
 # bowtie2
 #
 
-USER=BenLangmead
 VER=2.3.0
 NM=bowtie2
 NMVER=$(NM)-$(VER)
 AR=$(NMVER)-source.zip
-URL=https://github.com/$(USER)/$(NM)/releases/download/v$(VER)/$(AR)
+SF_PROJ=bowtie-bio
+URL=http://downloads.sourceforge.net/project/$(SF_PROJ)/$(NM)/$(VER)/$(AR)
 
 .PHONY: all
 all: $(NM) $(NM)-build
@@ -27,7 +27,6 @@ $(NM)-dir/bowtie2-align-s: $(NM)-dir
 $(NM)-dir: $(AR)
 	unzip $<
 	mv $(NMVER) $@
-	cd $@ && patch -p1 < ../bowtie2_$(VER)_mapq.diff
 
 $(AR):
 	wget $(URL)
