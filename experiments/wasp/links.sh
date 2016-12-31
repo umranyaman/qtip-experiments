@@ -7,6 +7,10 @@ for pa in unp pair ; do
             FN="ERR05008${dat}_1.${aln}.${pa}.sam"
             if [ ! -f "${FN}" ] ; then
                 echo "  * Making link to ../real_data/${FN}..."
+                if [ ! -f "../real_data/${FN}" ] ; then
+                    echo "  ERROR: ../real_data/${FN} does not exist"
+                    exit 1
+                fi
                 ln -s -f ../real_data/${FN} ${FN}
             else
                 echo "  Link to ../real_data/${FN} already present"
@@ -23,6 +27,10 @@ for rdlen in 100 250 ; do
             FN="r0_${aln}_${genome}_mason_ill_${genome}_${rdlen}"
             if [ ! -f "${FN}.trial0.sam" ] ; then
                 echo "  * Making link to ../simulated_data/various_genomes/${FN}.out/trial0/final.sam..."
+                if [ ! -f "../simulated_data/various_genomes/${FN}.out/trial0/final.sam" ] ; then
+                    echo "  ERROR: ../simulated_data/various_genomes/${FN}.out/trial0/final.sam does not exist"
+                    exit 1
+                fi
                 ln -s -f ../simulated_data/various_genomes/${FN}.out/trial0/final.sam ${FN}.trial0.sam
             else
                 echo "  Link to ../simulated_data/various_genomes/${FN}.out/trial0/final.sam already present"
@@ -32,6 +40,10 @@ for rdlen in 100 250 ; do
             FN="r12_${aln}${rdlen}_${genome}_mason_ill_${genome}_${rdlen}"
             if [ ! -f "${FN}.trial0.sam" ] ; then
                 echo "  * Making link to ../simulated_data/various_genomes/${FN}.out/trial0/final.sam..."
+                if [ ! -f "../simulated_data/various_genomes/${FN}.out/trial0/final.sam" ] ; then
+                    echo "  ERROR: ../simulated_data/various_genomes/${FN}.out/trial0/final.sam does not exist"
+                    exit 1
+                fi
                 ln -s -f ../simulated_data/various_genomes/${FN}.out/trial0/final.sam ${FN}.trial0.sam
             else
                 echo "  Link to ../simulated_data/various_genomes/${FN}.out/trial0/final.sam already present"
