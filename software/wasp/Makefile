@@ -1,5 +1,8 @@
 #!gmake
 
+# Check for new versions here:
+# https://github.com/bmvdgeijn/WASP/releases
+
 NM=WASP
 VER=0.2.1
 AR=v$(VER).tar.gz
