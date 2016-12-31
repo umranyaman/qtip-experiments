@@ -151,7 +151,8 @@ reads: \
     r1_mason_ill_zm_100.fq.gz \
     r1_mason_ill_zm_250.fq.gz
 
-MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy --skip-rewrite
+# Note: don't add --skip-rewrite since WASP experiments need the rewritten SAM
+MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy
 
 , := ,
 
