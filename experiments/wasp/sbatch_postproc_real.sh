@@ -1,8 +1,5 @@
 #!/bin/sh
 
-WASP_DIR="../../software/wasp/wasp-github"
-FIND_SNPS="python ${WASP_DIR}/mapping/find_intersecting_snps.py"
-
 if [ "$1" = "scavenger" ] ; then
 PART1="#SBATCH --partition=scavenger"
 PART2="#SBATCH --qos=scavenger"
@@ -27,6 +24,8 @@ cat >.${P}.postproc.sh <<EOF
 
 #SBATCH
 #SBATCH --job-name=Postprocess
+#SBATCH --output=.Postprocess.${P}.out
+#SBATCH --error=.Postprocess.${P}.err
 #SBATCH --nodes=1
 ${PART1}
 ${PART2}
@@ -34,16 +33,16 @@ ${PART2}
 #SBATCH --mem=${MEMGB}G
 #SBATCH --cpus-per-task=${NTHREADS}
 
-FASTQ1="--fastq ${P}.sorted.bam.out/${P}.sorted.remap.fq.gz"
+FASTQ1="--fastq ${P}.wasp_out/${P}.sorted.remap.fq.gz"
 FASTQ2=""
 
-if [ -f "${P}.sorted.bam.out/${P}.sorted.remap.fq2.gz" ] ; then
-    FASTQ1="--fastq  ${P}.sorted.bam.out/${P}.sorted.remap.fq1.gz"
-    FASTQ2="--fastq2 ${P}.sorted.bam.out/${P}.sorted.remap.fq2.gz"
+if [ -f "${P}.wasp_out/${P}.sorted.remap.fq2.gz" ] ; then
+    FASTQ1="--fastq  ${P}.wasp_out/${P}.sorted.remap.fq1.gz"
+    FASTQ2="--fastq2 ${P}.wasp_out/${P}.sorted.remap.fq2.gz"
 fi
 
 python postprocess.py \
-    --bam ../real_data/${P}.sorted.bam \
+    --bam ${P}.sorted.bam \
     \${FASTQ1} \${FASTQ2} \
     --threads ${NTHREADS} \
     --output ${P}.csv
