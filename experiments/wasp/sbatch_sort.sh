@@ -34,7 +34,6 @@ EOF
     done
 done
 
-echo "Making simulated data links..."
 for rdlen in 100 250 ; do
     for genome in hg mm ; do
         for aln in bt2s snap bwamem ; do
