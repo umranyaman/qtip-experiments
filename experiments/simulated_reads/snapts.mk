@@ -13,7 +13,7 @@
 
 QTIP=python $(QTIP_HOME)/src/qtip
 SNAP_ARGS+=-=
-SNAP_TS_ARGS=--write-orig-mapq
+SNAP_QTIP_ARGS=--write-orig-mapq --write-precise-mapq
 
 define snapts
 
@@ -22,7 +22,7 @@ r0_$1_%.$8/DONE: r0_%.fq.gz
 	$$(QTIP) --ref $6 \
 	       --snap-exe $$(SNAP) --aligner snap \
 	       --index $7.snap \
-	       $$(SNAP_TS_ARGS) $$(TS_ARGS) $2 \
+	       $$(SNAP_QTIP_ARGS) $$(TS_ARGS) $2 \
 	       --output-directory $$(shell dirname $$(@)) \
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --U $$< \
@@ -36,7 +36,7 @@ r12_$1_%.$8/DONE: r1_%.fq.gz
 	$$(QTIP) --ref $6 \
 	       --snap-exe $$(SNAP) --aligner snap \
 	       --index $7.snap \
-	       $$(SNAP_TS_ARGS) $$(TS_ARGS) $2 \
+	       $$(SNAP_QTIP_ARGS) $$(TS_ARGS) $2 \
 	       --output-directory $$(shell dirname $$(@)) \
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \

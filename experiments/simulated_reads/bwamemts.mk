@@ -1,7 +1,7 @@
 # Must already have a BWA index of the FASTA reference somewhere
 
 QTIP=python $(QTIP_HOME)/src/qtip
-BWA_TS_ARGS=--write-orig-mapq
+BWA_QTIP_ARGS=--write-orig-mapq --write-precise-mapq
 
 define bwamemts
 
@@ -10,7 +10,7 @@ r0_$1_%.$6/DONE: r0_%.fq.gz
 	$$(QTIP) --ref $4 \
 	       --bwa-exe $$(BWA) --aligner=bwa-mem \
 	       --index $5 \
-	       $$(BWA_TS_ARGS) $$(TS_ARGS) $2 \
+	       $$(BWA_QTIP_ARGS) $$(TS_ARGS) $2 \
 	       --output-directory $$(shell dirname $$(@))\
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --U $$< \
@@ -24,7 +24,7 @@ r12_$1_%.$6/DONE: r1_%.fq.gz
 	$$(QTIP) --ref $4 \
 	       --bwa-exe $$(BWA) --aligner=bwa-mem \
 	       --index $5 \
-	       $$(BWA_TS_ARGS) $$(TS_ARGS) $2 \
+	       $$(BWA_QTIP_ARGS) $$(TS_ARGS) $2 \
 	       --output-directory $$(shell dirname $$(@)) \
 	       --temp-directory $$(shell dirname $$(@)).temp \
 	       --m1 $$< --m2 $$(<:r1_%=r2_%) \
