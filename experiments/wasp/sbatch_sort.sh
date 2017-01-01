@@ -38,7 +38,7 @@ for rdlen in 100 250 ; do
     for genome in hg mm ; do
         for aln in bt2s snap bwamem ; do
             # Unpaired
-            FN="r0_${aln}_${genome}_mason_ill_${genome}_${rdlen}"
+            FN="r0_${aln}_${genome}_mason_ill_${genome}_${rdlen}.trial0"
             cat >.${FN}.sort.sh <<EOF
 #!/bin/sh
 #SBATCH --job-name=SortPreWasp
@@ -56,7 +56,7 @@ EOF
             echo "sbatch .${FN}.sort.sh"
 
             # Paired
-            FN="r12_${aln}${rdlen}_${genome}_mason_ill_${genome}_${rdlen}"
+            FN="r12_${aln}${rdlen}_${genome}_mason_ill_${genome}_${rdlen}.trial0"
             cat >.${FN}.sort.sh <<EOF
 #!/bin/sh
 #SBATCH --job-name=SortPreWasp
