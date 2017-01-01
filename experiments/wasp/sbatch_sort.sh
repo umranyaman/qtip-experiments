@@ -28,9 +28,10 @@ if [ ! -f "${FN}.bam" ] ; then
     sambamba view -t ${NTHREADS} -S -f bam ${FN}.sam > ${FN}.bam
 fi
 if [ ! -f "${FN}.sorted.bam" ] ; then
-    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN}.sorted.bam ${FN}.bam ; then
+    if sambamba sort --tmpdir=${FN}.temp -m 3G -t ${NTHREADS} -o ${FN}.sorted.bam ${FN}.bam ; then
         rm -f ${FN}.bam
     fi
+    rm -rf ${FN}.temp
 fi
 EOF
             echo "sbatch .${FN}.sort.sh"
@@ -58,9 +59,10 @@ if [ ! -f "${FN}.bam" ] ; then
     sambamba view -t ${NTHREADS} -S -f bam ${FN}.sam > ${FN}.bam
 fi
 if [ ! -f "${FN}.sorted.bam" ] ; then
-    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN}.sorted.bam ${FN}.bam ; then
+    if sambamba sort --tmpdir=${FN}.temp -m 3G -t ${NTHREADS} -o ${FN}.sorted.bam ${FN}.bam ; then
         rm -f ${FN}.bam
     fi
+    rm -rf ${FN}.temp
 fi
 EOF
             echo "sbatch .${FN}.sort.sh"
@@ -81,9 +83,11 @@ if [ ! -f "${FN}.bam" ] ; then
     sambamba view -t ${NTHREADS} -S -f bam ${FN}.sam > ${FN}.bam
 fi
 if [ ! -f "${FN}.sorted.bam" ] ; then
-    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN}.sorted.bam ${FN}.bam ; then
+    mkdir ${FN}.temp
+    if sambamba sort --tmpdir=${FN}.temp -m 3G -t ${NTHREADS} -o ${FN}.sorted.bam ${FN}.bam ; then
         rm -f ${FN}.bam
     fi
+    rm -rf ${FN}.temp
 fi
 EOF
             echo "sbatch .${FN}.sort.sh"
