@@ -15,7 +15,7 @@ for genome in hg mm ; do
 for aln in bt2s snap bwamem ; do
 
     MEMGB=6
-    [ "${aln}" = "bwa" ] && MEMGB=12
+    [ "${aln}" = "bwa" ] && MEMGB=16
     [ "${aln}" = "snap" ] && MEMGB=50
 
     # Unpaired
@@ -37,11 +37,13 @@ ${PART2}
 FASTQ1="--fastq ${P}.wasp_out/${P}.sorted.remap.fq.gz"
 FASTQ2=""
 
+if [ ! -f "${P}.csv" ] ; then
 python postprocess.py \
     --bam ${P}.sorted.bam \
     \${FASTQ1} \${FASTQ2} \
     --threads ${NTHREADS} \
     --output ${P}.csv
+fi
 EOF
     echo "sbatch .${P}.postproc.sh"
 
@@ -63,11 +65,13 @@ ${PART2}
 FASTQ1="--fastq  ${P}.wasp_out/${P}.sorted.remap.fq1.gz"
 FASTQ2="--fastq2 ${P}.wasp_out/${P}.sorted.remap.fq2.gz"
 
+if [ ! -f "${P}.csv" ] ; then
 python postprocess.py \
     --bam ${P}.sorted.bam \
     \${FASTQ1} \${FASTQ2} \
     --threads ${NTHREADS} \
     --output ${P}.csv
+fi
 EOF
     echo "sbatch .${P}.postproc.sh"
 
