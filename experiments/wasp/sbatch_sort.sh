@@ -17,8 +17,8 @@ for pa in unp pair ; do
             cat >.${FN}.sort.sh <<EOF
 #!/bin/sh
 #SBATCH --job-name=SortPreWasp
-#SBATCH --output ${FN}.out
-#SBATCH --error ${FN}.err
+#SBATCH --output SortPreWasp.${FN}.out
+#SBATCH --error SortPreWasp.${FN}.err
 #SBATCH --cpus-per-task=${NTHREADS}
 ${PART1}
 ${PART2}
@@ -47,8 +47,8 @@ for rdlen in 100 250 ; do
             cat >.${FN}.sort.sh <<EOF
 #!/bin/sh
 #SBATCH --job-name=SortPreWasp
-#SBATCH --output ${FN}.out
-#SBATCH --error ${FN}.err
+#SBATCH --output SortPreWasp.${FN}.out
+#SBATCH --error SortPreWasp.${FN}.err
 #SBATCH --cpus-per-task=${NTHREADS}
 ${PART1}
 ${PART2}
@@ -70,8 +70,8 @@ EOF
             cat >.${FN}.sort.sh <<EOF
 #!/bin/sh
 #SBATCH --job-name=SortPreWasp
-#SBATCH --output ${FN}.out
-#SBATCH --error ${FN}.err
+#SBATCH --output SortPreWasp.${FN}.out
+#SBATCH --error SortPreWasp.${FN}.err
 #SBATCH --cpus-per-task=${NTHREADS}
 ${PART1}
 ${PART2}
