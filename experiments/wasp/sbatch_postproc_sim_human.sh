@@ -45,7 +45,7 @@ python postprocess.py \
 EOF
     echo "sbatch .${P}.postproc.sh"
 
-    FN="r12_${aln}${rdlen}_${genome}_mason_ill_${genome}_${rdlen}.trial0"
+    P="r12_${aln}${rdlen}_${genome}_mason_ill_${genome}_${rdlen}.trial0"
     cat >.${P}.postproc.sh <<EOF
 #!/bin/sh
 
