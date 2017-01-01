@@ -24,8 +24,13 @@ ${PART1}
 ${PART2}
 #SBATCH --time=8:00:00
 #SBATCH --mem=4G
-if sambamba sort -m 3G -t ${NTHREADS} -o ${FN} ${FN}.sam ; then
-    rm -f ${FN}.sam
+if [ ! -f "${FN}.bam" ] ; then
+    sambamba view -t ${NTHREADS} -S -f bam ${FN}.sam > ${FN}.bam
+fi
+if [ ! -f "${FN}.sorted.bam" ] ; then
+    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN} ${FN}.bam ; then
+        rm -f ${FN}.bam
+    fi
 fi
 EOF
             echo "sbatch .${FN}.sort.sh"
@@ -49,8 +54,13 @@ ${PART1}
 ${PART2}
 #SBATCH --time=8:00:00
 #SBATCH --mem=4G
-if sambamba sort -m 3G -t ${NTHREADS} -o ${FN} ${FN}.sam ; then
-    rm -f ${FN}.sam
+if [ ! -f "${FN}.bam" ] ; then
+    sambamba view -t ${NTHREADS} -S -f bam ${FN}.sam > ${FN}.bam
+fi
+if [ ! -f "${FN}.sorted.bam" ] ; then
+    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN} ${FN}.bam ; then
+        rm -f ${FN}.bam
+    fi
 fi
 EOF
             echo "sbatch .${FN}.sort.sh"
@@ -67,8 +77,13 @@ ${PART1}
 ${PART2}
 #SBATCH --time=8:00:00
 #SBATCH --mem=4G
-if sambamba sort -m 3G -t ${NTHREADS} -o ${FN} ${FN}.sam ; then
-    rm -f ${FN}.sam
+if [ ! -f "${FN}.bam" ] ; then
+    sambamba view -t ${NTHREADS} -S -f bam ${FN}.sam > ${FN}.bam
+fi
+if [ ! -f "${FN}.sorted.bam" ] ; then
+    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN} ${FN}.bam ; then
+        rm -f ${FN}.bam
+    fi
 fi
 EOF
             echo "sbatch .${FN}.sort.sh"
