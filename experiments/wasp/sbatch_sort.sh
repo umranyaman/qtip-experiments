@@ -28,7 +28,7 @@ if [ ! -f "${FN}.bam" ] ; then
     sambamba view -t ${NTHREADS} -S -f bam ${FN}.sam > ${FN}.bam
 fi
 if [ ! -f "${FN}.sorted.bam" ] ; then
-    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN} ${FN}.bam ; then
+    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN}.sorted.bam ${FN}.bam ; then
         rm -f ${FN}.bam
     fi
 fi
@@ -58,7 +58,7 @@ if [ ! -f "${FN}.bam" ] ; then
     sambamba view -t ${NTHREADS} -S -f bam ${FN}.sam > ${FN}.bam
 fi
 if [ ! -f "${FN}.sorted.bam" ] ; then
-    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN} ${FN}.bam ; then
+    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN}.sorted.bam ${FN}.bam ; then
         rm -f ${FN}.bam
     fi
 fi
@@ -81,7 +81,7 @@ if [ ! -f "${FN}.bam" ] ; then
     sambamba view -t ${NTHREADS} -S -f bam ${FN}.sam > ${FN}.bam
 fi
 if [ ! -f "${FN}.sorted.bam" ] ; then
-    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN} ${FN}.bam ; then
+    if sambamba sort -m 3G -t ${NTHREADS} -o ${FN}.sorted.bam ${FN}.bam ; then
         rm -f ${FN}.bam
     fi
 fi
