@@ -11,10 +11,10 @@ PART1="#SBATCH --partition=shared"
 PART2=""
 fi
 
-SNPS=human_ensembl85_snps
+SNPS=mouse_ensembl85_snps
 
 for rdlen in 100 250 ; do
-for genome in hg ; do
+for genome in mm ; do
 for aln in bt2s snap bwamem ; do
 
     # Unpaired
