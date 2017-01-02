@@ -104,7 +104,7 @@ def align_fastq_bowtie2(fastq1_fn, fastq2_fn, bt2_args, threads, ofn):
 
 def align_fastq_snap(fastq1_fn, fastq2_fn, snap_args, threads, ofn):
     assert '-o' in snap_args
-    cmd = [snap_exe] + remove_args(remove_args(snap_args, ['-sam', '-t']), ['-fastq'], 1 if fastq2_fn is None else 2)
+    cmd = [snap_exe] + remove_args(remove_args(snap_args, ['-sam', '-t']), ['-fastq', '-compressedFastq'], 1 if fastq2_fn is None else 2)
     assert '-o' in snap_args
     format_arg = '-compressedFastq' if fastq1_fn.endswith('.gz') else '-fastq'
     if fastq2_fn is None:
