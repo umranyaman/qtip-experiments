@@ -72,7 +72,8 @@ def remove_args(bt2_args, exclude, num_to_remove=1):
 
 
 def align_fastq_bwa(fastq1_fn, fastq2_fn, bwa_args, threads, ofn):
-    while bwa_args[-1].endswith('fastq') or bwa_args[-1].endswith('fq'):
+    while bwa_args[-1].endswith('.fastq') or bwa_args[-1].endswith('.fq') or \
+            bwa_args[-1].endswith('.fastq.gz') or bwa_args[-1].endswith('.fq.gz'):
         bwa_args = bwa_args[:-1]
     cmd = [bwa_exe] + remove_args(bwa_args, ['-t']) + ['-t', str(threads), fastq1_fn]
     if fastq2_fn is not None:
