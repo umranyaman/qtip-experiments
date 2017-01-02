@@ -3,14 +3,15 @@
 NM=vcflib
 USER=ekg
 VER=1.0.0-rc1
+EXE=vcfroc
 
 .PHONY: all
 all: $(NM)
 
-$(NM): $(NM)-git/bin/freebayes
+$(EXE): $(NM)-git/bin/$(EXE)
 	ln -s -f $< $@
 
-$(NM)-git/bin/freebayes: $(NM)-git
+$(NM)-git/bin/$(EXE): $(NM)-git
 	$(MAKE) -C $<
 
 $(NM)-git:
