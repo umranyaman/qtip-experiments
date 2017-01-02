@@ -15,7 +15,7 @@ for genome in hg mm ; do
 for aln in bt2s snap bwamem ; do
 
     MEMGB=6
-    [ "${aln}" = "bwa" ] && MEMGB=16
+    [ "${aln}" = "bwamem" ] && MEMGB=16
     [ "${aln}" = "snap" ] && MEMGB=50
 
     # Unpaired
