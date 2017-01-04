@@ -8,7 +8,7 @@ PART1="#SBATCH --partition=shared"
 PART2=""
 fi
 
-NTHREADS=8
+NTHREADS=12
 
 for rdlen in 100 250 ; do
 for genome in hg mm ; do
