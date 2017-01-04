@@ -19,6 +19,9 @@ import re
 import subprocess
 from collections import defaultdict
 
+# qtip imports
+import correct
+
 join = os.path.join
 
 if 'QTIP_EXPERIMENTS_HOME' not in os.environ:
@@ -215,7 +218,7 @@ def scan_remapped_bam(remapped_sam_fn, keep=False):
 # - Predicted MAPQ
 # - # derived reads that aligned correctly
 # - # derived reads that aligned incorrectly
-def tabulate(bam_fn, out_fn, hist):
+def tabulate(bam_fn, out_fn, hist, has_correctness, wiggle=30):
     mapq_re = re.compile('Zm:[iZ]:([0-9]+)')
     tab = defaultdict(int)
     proc = subprocess.Popen(['samtools', 'view', '-h', bam_fn], stdout=subprocess.PIPE)
@@ -228,20 +231,24 @@ def tabulate(bam_fn, out_fn, hist):
         if flags >= 2048:
             continue
         if qname in hist:
+            cor = 'NA'
+            if has_correctness:
+                cor = correct.is_correct(toks, wiggle=wiggle)
+                cor = '1' if cor else '0'
             mapq = int(toks[4])
-            cor, incor = hist[qname]
+            remap_correct, remap_incorrect = hist[qname]
             orig_mapq = mapq_re.search(ln)
             if orig_mapq is None:
                 raise RuntimeError('Could not parse original mapq from this line: ' + ln)
             orig_mapq = int(orig_mapq.group(1))
-            tab[(mapq, orig_mapq, cor, incor)] += 1
+            tab[(mapq, orig_mapq, remap_correct, remap_incorrect, cor)] += 1
     ret = proc.wait()
     if ret != 0:
         raise RuntimeError('samtools returned %d' % ret)
     with open(out_fn, 'wb') as ofh:
         for k, v in tab.items():
-            mapq, orig_mapq, cor, incor = k
-            print(','.join(map(str, [mapq, orig_mapq, cor, incor, v])), file=ofh)
+            mapq, orig_mapq, remap_correct, remap_incorrect, cor = k
+            print(','.join(map(str, [mapq, orig_mapq, remap_correct, remap_incorrect, cor, v])), file=ofh)
 
 
 def add_args(parser):
@@ -253,6 +260,10 @@ def add_args(parser):
                         help='WASP "remap" FASTQ file (end 2 for paired-end)')
     parser.add_argument('--threads', metavar='N', type=int, default=16,
                         help='Use N simultaneous threads when aligning remap FASTQs')
+    parser.add_argument('--wiggle', metavar='N', type=int, default=30,
+                        help='Allow start pos to be off by <=N positions before calling incorrect')
+    parser.add_argument('--correctness', action='store_const', const=True, default=False,
+                        help='Parse and tabulate correctness information given by simulator')
     parser.add_argument('--output', metavar='path', type=str, required=True,
                         help='Place output table here')
     parser.add_argument('--skip', action='store_const', const=True, default=False,
@@ -293,9 +304,12 @@ def go(args):
         print('Scanning alignments', file=sys.stderr)
     else:
         remap_sam_fn = args.bam
-    hist, nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright = scan_remapped_bam(remap_sam_fn, keep=args.keep or args.skip)
+    print('Remapping and populating remapping histogram', file=sys.stderr)
+    hist, nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright = \
+        scan_remapped_bam(remap_sam_fn, keep=args.keep or args.skip)
     print_update(nsecondary, nnot_proper_pair, ncor, nincor, nleft, nright)
-    tabulate(args.bam, args.output, hist)
+    print('Re-scanning BAM and creating output table', file=sys.stderr)
+    tabulate(args.bam, args.output, hist, args.correctness, args.wiggle)
 
 
 def go_profile(args):
