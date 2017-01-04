@@ -40,6 +40,7 @@ FASTQ2=""
 if [ ! -f "${P}.csv" ] ; then
 python postprocess.py \
     --bam ${P}.sorted.bam \
+    --correctness \
     \${FASTQ1} \${FASTQ2} \
     --threads ${NTHREADS} \
     --output ${P}.csv
@@ -68,6 +69,7 @@ FASTQ2="--fastq2 ${P}.wasp_out/${P}.sorted.remap.fq2.gz"
 if [ ! -f "${P}.csv" ] ; then
 python postprocess.py \
     --bam ${P}.sorted.bam \
+    --correctness \
     \${FASTQ1} \${FASTQ2} \
     --threads ${NTHREADS} \
     --output ${P}.csv
