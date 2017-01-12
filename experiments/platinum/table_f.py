@@ -20,8 +20,8 @@ def f_beta(precision, recall, beta):
 
 def go():
     nm = 'ERR194147'
-    betas = list(map(lambda x: 2 ** (x/10.0), range(-10, 11)))
-    betas = list(sorted(betas + [0.75, 1.5]))
+    betas = list(map(lambda x: 2 ** (x/5.0), range(-10, 11)))
+    betas = list(sorted(betas + [1.0/3.0, 1.0/2.0, 0.75, 1.5, 2.0/1.0, 3.0/1.0]))
     beta_labs = list(map(lambda x: ('%0.3f' % x).replace('.', '_'), betas))
 
     # Print headers
