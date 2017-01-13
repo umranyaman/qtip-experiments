@@ -18,7 +18,8 @@ for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
         elif [ "${MINMAPQ}" = "u" ] ; then
             MINMAPQ_ARG="--use-mapping-quality"
         fi
-        cat >.CallFB.${NM}_${CHR}_${MINMAPQ}.sh <<EOF
+        if [ ! -f "${NM}.sam/${NM}_input_${CHR}_${MINMAPQ}.cr_filt.vcf" -o ! -f "${NM}.sam/${NM}_final_${CHR}_${MINMAPQ}.cr_filt.vcf" ] ; then
+            cat >.CallFB.${NM}_${CHR}_${MINMAPQ}.sh <<EOF
 #!/bin/bash -l
 #SBATCH
 #SBATCH --job-name=CallFB
@@ -46,7 +47,8 @@ if [ ! -f ERR194147.sam/\${FN}.cr_filt.vcf ] ; then
         gawk '/^#/ {print} match(\$0, /DP=([0-9]+);/, a) {if(a[1] <= ${MAXDEPTH}) {print}}' > ERR194147.sam/\${FN}.cr_filt.vcf
 fi
 EOF
-        echo "sbatch .CallFB.${NM}_${CHR}_${MINMAPQ}.sh"
-        [ "$1" = "wet" ] && sbatch .CallFB.${NM}_${CHR}_${MINMAPQ}.sh && sleep 1
+            echo "sbatch .CallFB.${NM}_${CHR}_${MINMAPQ}.sh"
+            [ "$1" = "wet" ] && sbatch .CallFB.${NM}_${CHR}_${MINMAPQ}.sh && sleep 1
+        fi
 	done
 done
