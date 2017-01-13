@@ -22,8 +22,8 @@ for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
 #!/bin/bash -l
 #SBATCH
 #SBATCH --job-name=CallFB
-#SBATCH --output=.CallFB.${FN}.out
-#SBATCH --error=.CallFB.${FN}.err
+#SBATCH --output=.CallFB.${NM}_${CHR}_${MINMAPQ}.out
+#SBATCH --error=.CallFB.${NM}_${CHR}_${MINMAPQ}.err
 #SBATCH --nodes=1
 #SBATCH --mem=4G
 #SBATCH --partition=shared
