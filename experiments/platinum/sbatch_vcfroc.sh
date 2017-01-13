@@ -15,7 +15,7 @@ REFDIR="$QTIP_EXPERIMENTS_HOME/experiments/refs"
 NM=ERR194147
 SAMP=NA12878
 
-for MINMAPQ in 00 01 02 03 05 08 10 15 20 30 40 d s u ; do
+for MINMAPQ in 00 01 02 03 04 05 06 07 08 09 10 11 12 15 20 30 d s u ; do
 cat >.VcfRoc.${MINMAPQ}.sh <<EOF
 #!/bin/bash -l
 #SBATCH
@@ -27,11 +27,12 @@ cat >.VcfRoc.${MINMAPQ}.sh <<EOF
 #SBATCH --partition=shared
 #SBATCH --time=1:00:00
 
-for CHR in 1 6 19 22 ; do
+for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
     for BAM in input final ; do
         FN="${NM}_\${BAM}_\${CHR}_${MINMAPQ}"
         PREF="${NM}.sam/\${FN}."
-        for FILT in rmsk cr ; do
+        #for FILT in rmsk cr ; do
+        for FILT in cr ; do
             VR_COMMON="${VR} --truth-vcf ${SAMP}.\${CHR}.\${FILT}_filt.vcf --reference ${REFDIR}/hg38.fa"
             ROC_FN="\${PREF}\${FILT}_filt.roc"
             VCF_FN="\${PREF}\${FILT}_filt.vcf"
