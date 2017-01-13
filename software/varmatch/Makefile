@@ -10,7 +10,7 @@ all: $(NM)
 $(EXE): $(NM)-git/$(EXE)
 	ln -s -f $< $@
 
-$(NM)-git/bin/$(EXE): $(NM)-git
+$(NM)-git/$(EXE): $(NM)-git
 	$(MAKE) -C $<
 
 $(NM)-git:
