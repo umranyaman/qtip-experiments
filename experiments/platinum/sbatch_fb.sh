@@ -37,7 +37,7 @@ for COV in 50 40 30 ; do
 #SBATCH --partition=shared
 #SBATCH --time=8:00:00
 if [ ! -f ${INP_FN}.raw.vcf ] ; then
-    samtools view -s ${SUBSAMP_FRAC} -bu ERR194147.sam/input.sorted.bam | ${FB_BASE} --stdin -r ${CHR} ${MINMAPQ_ARG} -v ${INP_FN}.raw.vcf
+    samtools view -s ${SUBSAMP_FRAC} -bu ERR194147.sam/input.sorted.bam ${CHR} | ${FB_BASE} --stdin ${MINMAPQ_ARG} -v ${INP_FN}.raw.vcf
 fi
 if [ ! -f ${INP_FN}.cr_filt.vcf ] ; then
     ${VCFISECT} -b cr_${CHR}.bed ${INP_FN}.raw.vcf | \
@@ -45,7 +45,7 @@ if [ ! -f ${INP_FN}.cr_filt.vcf ] ; then
 fi
 
 if [ ! -f ${FIN_FN}.raw.vcf ] ; then
-    samtools view -s ${SUBSAMP_FRAC} -bu ERR194147.sam/final.sorted.bam | ${FB_BASE} --stdin -r ${CHR} ${MINMAPQ_ARG} -v ${FIN_FN}.raw.vcf
+    samtools view -s ${SUBSAMP_FRAC} -bu ERR194147.sam/final.sorted.bam ${CHR} | ${FB_BASE} --stdin ${MINMAPQ_ARG} -v ${FIN_FN}.raw.vcf
 fi
 if [ ! -f ${FIN_FN}.cr_filt.vcf ] ; then
     ${VCFISECT} -b cr_${CHR}.bed ${FIN_FN}.raw.vcf | \
