@@ -14,6 +14,7 @@ for COV in F 50 40 30 ; do
     if [ "${COV}" != "F" ] ; then
         SUBSAMP_FRAC=`python -c "print(${COV}/52.78920049911709)"`
         SUBSAMP_FRAC="-s ${SUBSAMP_FRAC}"
+    else
         COVNUM=52.78920049911709
     fi
     MAXDEPTH=`python -c "from math import *; print(int(round(${COVNUM} + ${MAXDEPTH_FACTOR} * sqrt(${COVNUM}))))"`
