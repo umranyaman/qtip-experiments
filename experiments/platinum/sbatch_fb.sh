@@ -6,11 +6,15 @@ FB_BASE="${FB} -X -u --haplotype-length 0 -f $QTIP_EXPERIMENTS_HOME/experiments/
 VCFLIB_HOME=$QTIP_EXPERIMENTS_HOME/software/vcflib
 VCFISECT=$VCFLIB_HOME/vcflib-git/bin/vcfintersect
 
-for COV in 50 40 30 ; do
+for COV in F 50 40 30 ; do
 
     MAXDEPTH_FACTOR=4
     MAXDEPTH=`python -c "from math import *; print(int(round(${COV} + ${MAXDEPTH_FACTOR} * sqrt(${COV}))))"`
-    SUBSAMP_FRAC=`python -c "print(${COV}/52.78920049911709)"`
+    SUBSAMP_FRAC=""
+    if [ "${COV}" != "F" ] ; then
+        SUBSAMP_FRAC=`python -c "print(${COV}/52.78920049911709)"`
+        SUBSAMP_FRAC="-s ${SUBSAMP_FRAC}"
+    fi
 
     for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
         for MINMAPQ in 00 01 02 03 04 05 06 07 08 09 10 11 12 15 20 30 d s u ; do
@@ -37,7 +41,7 @@ for COV in 50 40 30 ; do
 #SBATCH --partition=shared
 #SBATCH --time=8:00:00
 if [ ! -f ${INP_FN}.raw.vcf ] ; then
-    samtools view -s ${SUBSAMP_FRAC} -bu ERR194147.sam/input.sorted.bam ${CHR} | ${FB_BASE} --stdin ${MINMAPQ_ARG} -v ${INP_FN}.raw.vcf
+    samtools view ${SUBSAMP_FRAC} -bu ERR194147.sam/input.sorted.bam ${CHR} | ${FB_BASE} --stdin ${MINMAPQ_ARG} -v ${INP_FN}.raw.vcf
 fi
 if [ ! -f ${INP_FN}.cr_filt.vcf ] ; then
     ${VCFISECT} -b cr_${CHR}.bed ${INP_FN}.raw.vcf | \
@@ -45,7 +49,7 @@ if [ ! -f ${INP_FN}.cr_filt.vcf ] ; then
 fi
 
 if [ ! -f ${FIN_FN}.raw.vcf ] ; then
-    samtools view -s ${SUBSAMP_FRAC} -bu ERR194147.sam/final.sorted.bam ${CHR} | ${FB_BASE} --stdin ${MINMAPQ_ARG} -v ${FIN_FN}.raw.vcf
+    samtools view ${SUBSAMP_FRAC} -bu ERR194147.sam/final.sorted.bam ${CHR} | ${FB_BASE} --stdin ${MINMAPQ_ARG} -v ${FIN_FN}.raw.vcf
 fi
 if [ ! -f ${FIN_FN}.cr_filt.vcf ] ; then
     ${VCFISECT} -b cr_${CHR}.bed ${FIN_FN}.raw.vcf | \

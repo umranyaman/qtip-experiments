@@ -15,7 +15,7 @@ REFDIR="$QTIP_EXPERIMENTS_HOME/experiments/refs"
 NM=ERR194147
 SAMP=NA12878
 
-for COV in 50 40 30 ; do
+for COV in F 50 40 30 ; do
     for MINMAPQ in 00 01 02 03 04 05 06 07 08 09 10 11 12 15 20 30 d s u ; do
         cat >.VcfRoc.${MINMAPQ}.${COV}.sh <<EOF
 #!/bin/bash -l
