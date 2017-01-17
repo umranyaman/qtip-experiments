@@ -9,12 +9,14 @@ VCFISECT=$VCFLIB_HOME/vcflib-git/bin/vcfintersect
 for COV in F 50 40 30 ; do
 
     MAXDEPTH_FACTOR=4
-    MAXDEPTH=`python -c "from math import *; print(int(round(${COV} + ${MAXDEPTH_FACTOR} * sqrt(${COV}))))"`
     SUBSAMP_FRAC=""
+    COVNUM=${COV}
     if [ "${COV}" != "F" ] ; then
         SUBSAMP_FRAC=`python -c "print(${COV}/52.78920049911709)"`
         SUBSAMP_FRAC="-s ${SUBSAMP_FRAC}"
+        COVNUM=52.78920049911709
     fi
+    MAXDEPTH=`python -c "from math import *; print(int(round(${COVNUM} + ${MAXDEPTH_FACTOR} * sqrt(${COVNUM}))))"`
 
     for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
         for MINMAPQ in 00 01 02 03 04 05 06 07 08 09 10 11 12 15 20 30 d s u ; do
