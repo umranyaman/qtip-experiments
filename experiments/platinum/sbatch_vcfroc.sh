@@ -41,9 +41,13 @@ for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
             if [ -f "\${VCF_FN}" ] ; then
                 if [ ! -f "\${ROC_FN}" ] ; then
                     \${VR_COMMON} \${VCF_FN} > \${ROC_FN}
-                    gawk -f f.awk \${ROC_FN} > \${F_FN}
                 else
                     echo "Skipping \${ROC_FN}, already present"
+                fi
+                if [ ! -f "\${F_FN}" ] ; then
+                    gawk -f f.awk \${ROC_FN} > \${F_FN}
+                else
+                    echo "Skipping \${F_FN}, already present"
                 fi
             else
                 echo "Skipping \${VCF_FN}, not present"
