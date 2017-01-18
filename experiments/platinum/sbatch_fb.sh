@@ -6,7 +6,8 @@ FB_BASE="${FB} -X -u --haplotype-length 0 -f $QTIP_EXPERIMENTS_HOME/experiments/
 VCFLIB_HOME=$QTIP_EXPERIMENTS_HOME/software/vcflib
 VCFISECT=$VCFLIB_HOME/vcflib-git/bin/vcfintersect
 
-for COV in F 50 40 30 ; do
+#for COV in F 50 40 30 ; do
+for COV in F ; do
 
     MAXDEPTH_FACTOR=4
     SUBSAMP_FRAC=""
@@ -19,7 +20,7 @@ for COV in F 50 40 30 ; do
     fi
     MAXDEPTH=`python -c "from math import *; print(int(round(${COVNUM} + ${MAXDEPTH_FACTOR} * sqrt(${COVNUM}))))"`
 
-    for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
+    for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X ; do
         for MINMAPQ in 00 01 02 03 04 05 06 07 08 09 10 11 12 15 20 30 d s u ; do
             MINMAPQ_ARG="--min-mapping-quality ${MINMAPQ}"
             if [ "${MINMAPQ}" = "d" ] ; then
@@ -40,7 +41,7 @@ for COV in F 50 40 30 ; do
 #SBATCH --output=.CallFB.${LAB}.out
 #SBATCH --error=.CallFB.${LAB}.err
 #SBATCH --nodes=1
-#SBATCH --mem=8G
+#SBATCH --mem=12G
 #SBATCH --partition=shared
 #SBATCH --time=8:00:00
 if [ ! -f ${INP_FN}.raw.vcf ] ; then
