@@ -44,7 +44,7 @@ for COV in F ; do
 #SBATCH --partition=shared
 #SBATCH --time=80:00:00
 if [ ! -f ${INP_FN}.raw.vcf ] ; then
-    samtools view ${SUBSAMP_FRAC} -bu ERR194147.sam/input.sorted.bam | ${FB_BASE} --stdin ${MINMAPQ_ARG} -v ${INP_FN}.raw.vcf
+    ${FB_BASE} ${MINMAPQ_ARG} -v ${INP_FN}.raw.vcf ERR194147.sam/input.sorted.bam
 fi
 if [ ! -f ${INP_FN}.cr_filt.vcf ] ; then
     ${VCFISECT} -b cr_W.bed ${INP_FN}.raw.vcf | \
@@ -52,16 +52,15 @@ if [ ! -f ${INP_FN}.cr_filt.vcf ] ; then
 fi
 
 if [ ! -f ${FIN_FN}.raw.vcf ] ; then
-    samtools view ${SUBSAMP_FRAC} -bu ERR194147.sam/final.sorted.bam | ${FB_BASE} --stdin ${MINMAPQ_ARG} -v ${FIN_FN}.raw.vcf
+    ${FB_BASE} ${MINMAPQ_ARG} -v ${FIN_FN}.raw.vcf ERR194147.sam/final.sorted.bam
 fi
 if [ ! -f ${FIN_FN}.cr_filt.vcf ] ; then
     ${VCFISECT} -b cr_W.bed ${FIN_FN}.raw.vcf | \
         gawk '/^#/ {print} match(\$0, /DP=([0-9]+);/, a) {if(a[1] <= ${MAXDEPTH}) {print}}' > ${FIN_FN}.cr_filt.vcf
 fi
 EOF
-                echo "sbatch .CallFBWhole.${LAB}.sh"
-                [ "$1" = "wet" ] && sbatch .CallFBWhole.${LAB}.sh && sleep 1
-            fi
-        done
+            echo "sbatch .CallFBWhole.${LAB}.sh"
+            [ "$1" = "wet" ] && sbatch .CallFBWhole.${LAB}.sh && sleep 1
+        fi
     done
 done
