@@ -38,9 +38,9 @@ def go():
                               'fn_' + lab]), end='')
     print()
 
-    for ch in [1, 6, 19, 22]:
-        for filt in ['cr_filt', 'rmsk_filt']:
-
+    for filt in ['cr_filt']:
+        for ch in map(str, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 'X']):
+            
             best_mapq = [0] * len(betas)
             argbest_mapq = [None] * len(betas)
 
@@ -49,12 +49,13 @@ def go():
                 best_mapq_r = [0] * len(betas)
                 argbest_mapq_r = [None] * len(betas)
 
-                for mapq_cutoff in ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '15', '20', '30', 'd', 's', 'u']:
+                for mapq_cutoff in ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09',
+                                    '10', '11', '12', '15', '20', '30', 'd', 's', 'u']:
 
                     best_mapq_rc = [0] * len(betas)
                     argbest_mapq_rc = [None] * len(betas)
 
-                    fn = '%s.sam/%s_%s_%d_%s.%s.roc' % (nm, nm, regime, ch, mapq_cutoff, filt)
+                    fn = '%s.sam/%s_%s_%s_%s_F.%s.roc' % (nm, nm, regime, ch, mapq_cutoff, filt)
                     with open(fn) as fh:
                         for ln in fh:
                             toks = ln.rstrip().split('\t')
