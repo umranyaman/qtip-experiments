@@ -19,10 +19,10 @@ for FN in ConfidentRegions.bed.gz ConfidentRegions.bed.gz.tbi ; do
     fi
 done
 
-for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
+for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X ; do
     #[ ! -f "rmsk_${CHR}.bed" ] && echo "Need rmsk file for ${CHR}; see get_low_complexity.sh" && exit 1
     if [ ! -f "cr_${CHR}.bed" ] ; then
-        gzip -dc ConfidentRegions.bed.gz | awk "\$1 == \"chr${CHR}\" {print ${CHR},\$2,\$3}" > cr_${CHR}.bed
+        gzip -dc ConfidentRegions.bed.gz | awk "\$1 == \"chr${CHR}\" {print \"${CHR}\",\$2,\$3}" > cr_${CHR}.bed
     fi
     if [ ! -f "${NM}.${CHR}.raw.vcf" ] ; then
         # make chromosome-specific VCF file with normalized chromosome name
@@ -37,3 +37,7 @@ for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
         ${VCFISECT} -b cr_${CHR}.bed ${NM}.${CHR}.raw.vcf > ${NM}.${CHR}.cr_filt.vcf
     fi
 done
+
+if [ ! -f "cr_W.bed" ] ; then
+    gzip -dc ConfidentRegions.bed.gz | awk '$1 ~ /^chr/ && $1 !~ /^chrY/' | sed 's/^chr//' | > cr_Y.bed
+fi
