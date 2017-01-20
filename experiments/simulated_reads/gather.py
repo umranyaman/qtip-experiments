@@ -152,7 +152,7 @@ def compile_line(ofh, combined_target_name, variant, mapq_incl, tt, trial,
     species = parse_species(target)
     headers = ['name', 'combined_name', 'variant', 'mapq_included', 'training', 'trial_no', 'aligner', 'local',
                'paired', 'sim', 'readlen', 'sensitivity', 'species']
-    values = [name, combined_target_name, variant, 'T' if mapq_incl else 'F', 'T' if tt == 'training' else 'F',
+    values = [name, combined_target_name, variant, 'T' if mapq_incl else 'F', 'T' if tt == 'train' else 'F',
               trial, aligner, 'T' if local else 'F', 'T' if paired else 'F', sim,
               str(readlen), sensitivity, species]
     for fn in [params_fn, summ_fn]:
@@ -254,7 +254,7 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
                 params_fn = join(odir_rmt, 'params.csv')
                 os.system('cp -f %s %s' % (join(target_full_smt, 'params.csv'), params_fn))
 
-                for tt in ['test', 'training']:
+                for tt in ['test', 'train']:
 
                     target_full_smtt = join(target_full_smt, tt)
                     if not os.path.isdir(target_full_smtt):
