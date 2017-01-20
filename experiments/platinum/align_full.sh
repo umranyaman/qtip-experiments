@@ -20,20 +20,23 @@ make_job() {
 #SBATCH --cpus-per-task=${ALIGNER_CPUS}
 #SBATCH --time=48:00:00
 
-TEMP="${NM}.temp"
-rm -rf ${TEMP}
-mkdir -p ${TEMP}
-${QTIP_HOME}/src/qtip \
-    --ref ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
-    --m1 ${2} --m2 ${3} \
-    --index ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
-    --bt2-exe ${QTIP_HOME}/software/bowtie2/bowtie2 \
-    --keep-intermediates \
-    --output-directory ${1}.sam \
-    --write-orig-mapq \
-    --write-precise-mapq \
-    --temp-directory ${TEMP} \
-    -- -I 0 -X 550 -t -p${ALIGNER_CPUS} --reorder
+ODIR="${1}.sam"
+if [ ! -f "${ODIR}/final.sam" ] ; then
+    TEMP="${NM}.temp"
+    rm -rf ${TEMP}
+    mkdir -p ${TEMP}
+    ${QTIP_HOME}/src/qtip \
+        --ref ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
+        --m1 ${2} --m2 ${3} \
+        --index ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
+        --bt2-exe ${QTIP_HOME}/software/bowtie2/bowtie2 \
+        --keep-intermediates \
+        --output-directory ${ODIR} \
+        --write-orig-mapq \
+        --write-precise-mapq \
+        --temp-directory ${TEMP} \
+        -- -I 0 -X 550 -t -p${ALIGNER_CPUS} --reorder
+fi
 EOF
     echo "sbatch ${SCR_FN}"
     if [ "${4}" = "wet" ] ; then
