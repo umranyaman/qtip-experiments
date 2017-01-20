@@ -21,17 +21,18 @@ make_job() {
 #SBATCH --time=1:00:00
 
 OUTFN="${1}.fraglen.sam"
-if [ ! -f "${OUTFN}" ] ; then
+if [ ! -f "\${OUTFN}" ] ; then
     ${QTIP_HOME}/software/bowtie2/bowtie2 \
-        -x "${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa" \
+        -x ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
         -1 ${2} -2 ${3} \
         -I 0 -X 2000 \
         -t \
         -s 10000000 -u 10000000 \
         -p ${ALIGNER_CPUS} \
-        -S ${OUTFN}
+        -S \${OUTFN}
 
-    awk -v FS='\t' '\$9 > 0 && \$1 !~ /^@/ && \$9 < 10000 {h[int(\$9/10)] += 1} END {for(d in h) {print d*10,h[d]}}' ${OUTFN} | sort -r -n -k1,1 > ${1}.fraglen
+    awk -v FS='\t' '\$9 > 0 && \$1 !~ /^@/ && \$9 < 10000 {h[int(\$9/10)] += 1} END {for(d in h) {print d*10,h[d]}}' \
+        \${OUTFN} | sort -r -n -k1,1 > ${1}.fraglen
 fi
 EOF
     echo "sbatch ${SCR_FN}"
