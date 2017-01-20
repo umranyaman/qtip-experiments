@@ -21,20 +21,20 @@ make_job() {
 #SBATCH --time=48:00:00
 
 ODIR="${1}.sam"
-if [ ! -f "${ODIR}/final.sam" ] ; then
+if [ ! -f "\${ODIR}/final.sam" ] ; then
     TEMP="${NM}.temp"
-    rm -rf ${TEMP}
-    mkdir -p ${TEMP}
+    rm -rf \${TEMP}
+    mkdir -p \${TEMP}
     ${QTIP_HOME}/src/qtip \
         --ref ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
         --m1 ${2} --m2 ${3} \
         --index ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
         --bt2-exe ${QTIP_HOME}/software/bowtie2/bowtie2 \
         --keep-intermediates \
-        --output-directory ${ODIR} \
+        --output-directory \${ODIR} \
         --write-orig-mapq \
         --write-precise-mapq \
-        --temp-directory ${TEMP} \
+        --temp-directory \${TEMP} \
         -- -I ${4} -X ${5} -t -p${ALIGNER_CPUS} --reorder
 fi
 EOF
