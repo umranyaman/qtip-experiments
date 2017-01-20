@@ -1,21 +1,52 @@
-#!/bin/sh
+#!/bin/bash
 
 ALIGNER_CPUS=$1
-[ -z "${ALIGNER_CPUS}" ] && ALIGNER_CPUS=56
+[ -z "${ALIGNER_CPUS}" ] && ALIGNER_CPUS=24
 
-mkdir -p temp
+# 1: NAME
+# 2: FASTQ1
+# 3: FASTQ2
+make_job() {
+    SCR_FN=".AlignFull.${NM}.sh"
+    cat >${SCR_FN} << EOF
+#!/bin/bash -l
+#SBATCH
+#SBATCH --job-name=AlignFull.${NM}
+#SBATCH --output=.AlignFull.${NM}.out
+#SBATCH --error=.AlignFull.${NM}.err
+#SBATCH --nodes=1
+#SBATCH --mem=12G
+#SBATCH --partition=shared
+#SBATCH --cpus-per-task=${ALIGNER_CPUS}
+#SBATCH --time=48:00:00
+
+TEMP="${NM}.temp"
+rm -rf ${TEMP}
+mkdir -p ${TEMP}
 ${QTIP_HOME}/src/qtip \
     --ref ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
-    --m1 ERR194147_1.fastq \
-    --m2 ERR194147_2.fastq \
+    --m1 ${2} --m2 ${3} \
     --index ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
     --bt2-exe ${QTIP_HOME}/software/bowtie2/bowtie2 \
     --keep-intermediates \
-    --output-directory ERR194147.sam \
+    --output-directory ${1}.sam \
     --write-orig-mapq \
     --write-precise-mapq \
-    --temp-directory temp \
+    --temp-directory ${TEMP} \
     -- -I 0 -X 550 -t -p${ALIGNER_CPUS} --reorder
+EOF
+    echo "sbatch ${SCR_FN}"
+    if [ "${4}" = "wet" ] ; then
+        sbatch ${SCR_FN}
+    fi
+}
 
-# awk -v FS='\t' '$9 > 0 && $1 !~ /^@/ && $9 < 10000 {h[int($9/10)] += 1} END {for(d in h) {print d*10,h[d]}}' ERR194147_1.fraglen_pairs.sam | sort -r -n -k1,1
+for samp in 6 7 ; do
+    NM="ERR19414${samp}"
+    make_job ${NM} "${NM}_1.fastq.gz" "${NM}_2.fastq.gz" ${1}
+done
 
+for samp in 36 37 38 39 40 41 ; do
+    NM="SRR6426${samp}"
+    make_job ${NM} "${NM}_1.fastq.gz" "${NM}_2.fastq.gz" ${1}
+done
