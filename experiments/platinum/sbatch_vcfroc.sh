@@ -1,12 +1,4 @@
-#!/bin/bash -l
-#SBATCH
-#SBATCH --job-name=VCFROC
-#SBATCH --output=.VCFROC.out
-#SBATCH --error=.VCFROC.err
-#SBATCH --nodes=1
-#SBATCH --mem=16G
-#SBATCH --partition=shared
-#SBATCH --time=4:00:00
+#!/bin/sh
 
 # Generate .roc files
 
@@ -15,7 +7,8 @@ REFDIR="$QTIP_EXPERIMENTS_HOME/experiments/refs"
 NM=ERR194147
 SAMP=NA12878
 
-for COV in F 50 40 30 ; do
+#for COV in F 50 40 30 ; do
+for COV in F ; do
     for MINMAPQ in 00 01 02 03 04 05 06 07 08 09 10 11 12 15 20 30 d s u ; do
         cat >.VcfRoc.${MINMAPQ}.${COV}.sh <<EOF
 #!/bin/bash -l
@@ -26,9 +19,9 @@ for COV in F 50 40 30 ; do
 #SBATCH --nodes=1
 #SBATCH --mem=12G
 #SBATCH --partition=shared
-#SBATCH --time=1:00:00
+#SBATCH --time=4:00:00
 
-for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ; do
+for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X ; do
     for BAM in input final ; do
         FN="${NM}_\${BAM}_\${CHR}_${MINMAPQ}_${COV}"
         PREF="${NM}.sam/\${FN}."
