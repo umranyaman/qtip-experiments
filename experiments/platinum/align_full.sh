@@ -35,21 +35,21 @@ if [ ! -f "${ODIR}/final.sam" ] ; then
         --write-orig-mapq \
         --write-precise-mapq \
         --temp-directory ${TEMP} \
-        -- -I 0 -X 550 -t -p${ALIGNER_CPUS} --reorder
+        -- -I ${4} -X ${5} -t -p${ALIGNER_CPUS} --reorder
 fi
 EOF
     echo "sbatch ${SCR_FN}"
-    if [ "${4}" = "wet" ] ; then
+    if [ "${6}" = "wet" ] ; then
         sbatch ${SCR_FN}
     fi
 }
 
 for samp in 6 7 ; do
     NM="ERR19414${samp}"
-    make_job ${NM} "${NM}_1.fastq.gz" "${NM}_2.fastq.gz" ${1}
+    make_job ${NM} "${NM}_1.fastq.gz" "${NM}_2.fastq.gz" 0 550 ${1}
 done
 
 for samp in 36 37 38 39 40 41 ; do
     NM="SRR6426${samp}"
-    make_job ${NM} "${NM}_1.fastq.gz" "${NM}_2.fastq.gz" ${1}
+    make_job ${NM} "${NM}_1.fastq.gz" "${NM}_2.fastq.gz" 0 250 ${1}
 done
