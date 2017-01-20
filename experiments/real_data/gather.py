@@ -67,7 +67,7 @@ def go():
         for al in ['bt2', 'bwa', 'snap']:
             for trial in '0123456789':
                 for samp in ['ERR050082', 'ERR050083']:
-                    trial_dr = os.path.join('new_%s_1.%s.unp.sam' % (samp, al), 'trial%d' % trial)
+                    trial_dr = os.path.join('new_%s_1.%s.unp.sam' % (samp, al), 'trial%s' % trial)
                     params_fn = os.path.join(trial_dr, 'params.csv')
                     trial_tr_dr = os.path.join(trial_dr, 'train')
                     trial_te_dr = os.path.join(trial_dr, 'test')
