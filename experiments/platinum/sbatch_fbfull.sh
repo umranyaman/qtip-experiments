@@ -32,17 +32,17 @@ for COV in F ; do
         LAB="${NM}_${MINMAPQ}_${COV}"
         INP_FN="${NM}.sam/${NM}_input_W_${MINMAPQ}_${COV}"
         FIN_FN="${NM}.sam/${NM}_final_W_${MINMAPQ}_${COV}"
-        if [ ! -f "${INP_FN}.cr_filt.vcf" -o ! -f "${FIN_FN}.cr_filt.vcf" ] ; then
-            cat >.CallFBWhole.${LAB}.sh <<EOF
+        if [ ! -f "${INP_FN}.cr_filt.vcf" ] ; then
+            cat >.CallFBWhole.${LAB}.inp.sh <<EOF
 #!/bin/bash -l
 #SBATCH
 #SBATCH --job-name=CallFBWhole
-#SBATCH --output=.CallFBWhole.${LAB}.out
-#SBATCH --error=.CallFBWhole.${LAB}.err
+#SBATCH --output=.CallFBWhole.${LAB}_inp.out
+#SBATCH --error=.CallFBWhole.${LAB}_inp.err
 #SBATCH --nodes=1
-#SBATCH --mem=32G
+#SBATCH --mem=12G
 #SBATCH --partition=shared
-#SBATCH --time=80:00:00
+#SBATCH --time=48:00:00
 if [ ! -f ${INP_FN}.raw.vcf ] ; then
     ${FB_BASE} ${MINMAPQ_ARG} -v ${INP_FN}.raw.vcf ERR194147.sam/input.sorted.bam
 fi
@@ -50,7 +50,22 @@ if [ ! -f ${INP_FN}.cr_filt.vcf ] ; then
     ${VCFISECT} -b cr_W.bed ${INP_FN}.raw.vcf | \
         gawk '/^#/ {print} match(\$0, /DP=([0-9]+);/, a) {if(a[1] <= ${MAXDEPTH}) {print}}' > ${INP_FN}.cr_filt.vcf
 fi
+EOF
+            echo "sbatch .CallFBWhole.${LAB}.inp.sh"
+            [ "$1" = "wet" ] && sbatch .CallFBWhole.${LAB}.inp.sh && sleep 1
+        fi
 
+        if [ ! -f "${FIN_FN}.cr_filt.vcf" ] ; then
+            cat >.CallFBWhole.${LAB}.fin.sh <<EOF
+#!/bin/bash -l
+#SBATCH
+#SBATCH --job-name=CallFBWhole
+#SBATCH --output=.CallFBWhole.${LAB}_fin.out
+#SBATCH --error=.CallFBWhole.${LAB}_fin.err
+#SBATCH --nodes=1
+#SBATCH --mem=12G
+#SBATCH --partition=shared
+#SBATCH --time=48:00:00
 if [ ! -f ${FIN_FN}.raw.vcf ] ; then
     ${FB_BASE} ${MINMAPQ_ARG} -v ${FIN_FN}.raw.vcf ERR194147.sam/final.sorted.bam
 fi
@@ -59,8 +74,8 @@ if [ ! -f ${FIN_FN}.cr_filt.vcf ] ; then
         gawk '/^#/ {print} match(\$0, /DP=([0-9]+);/, a) {if(a[1] <= ${MAXDEPTH}) {print}}' > ${FIN_FN}.cr_filt.vcf
 fi
 EOF
-            echo "sbatch .CallFBWhole.${LAB}.sh"
-            [ "$1" = "wet" ] && sbatch .CallFBWhole.${LAB}.sh && sleep 1
+            echo "sbatch .CallFBWhole.${LAB}.fin.sh"
+            [ "$1" = "wet" ] && sbatch .CallFBWhole.${LAB}.fin.sh && sleep 1
         fi
     done
 done
