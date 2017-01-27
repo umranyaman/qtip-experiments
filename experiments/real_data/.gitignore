@@ -1,5 +1,7 @@
+.*.sh
 *.sam
 *.out
 *.plain
 *.fastq
+*.err
 temp
