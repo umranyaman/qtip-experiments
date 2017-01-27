@@ -1,6 +1,7 @@
 .*.sh
 .*.e
 .*.o
+*.version
 .tss_qsubs
 .read_qsubs
 summary
