@@ -3,5 +3,10 @@
 *.out
 *.plain
 *.fastq
+*.fq
+*.fastq.gz
+*.fq.gz
 *.err
+*.csv
 temp
+pull.sh
