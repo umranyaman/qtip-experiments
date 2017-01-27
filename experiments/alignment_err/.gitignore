@@ -2,3 +2,7 @@
 *.fna.gz
 *.fa
 *.fq
+*.sam
+*.alstats
+*.stats
+*.corstats
