@@ -28,10 +28,6 @@ for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X ; do
         # make chromosome-specific VCF file with normalized chromosome name
         gzip -dc ${NM}.vcf.gz | awk "\$1 ~ /^#/ || \$1 == \"chr${CHR}\"" | sed 's/^chr//' > ${NM}.${CHR}.raw.vcf
     fi
-    #if [ ! -f "${NM}.${CHR}.rmsk_filt.vcf" ] ; then
-    ## make filtered VCF file with low complexity regions removed
-    #${VCFISECT} -v -b rmsk_${CHR}.bed ${NM}.${CHR}.raw.vcf > ${NM}.${CHR}.rmsk_filt.vcf
-    #fi
     if [ ! -f "${NM}.${CHR}.cr_filt.vcf" ] ; then
         # make filtered VCF file with Platinum low-confidence regions removed
         ${VCFISECT} -b cr_${CHR}.bed ${NM}.${CHR}.raw.vcf > ${NM}.${CHR}.cr_filt.vcf
@@ -39,5 +35,12 @@ for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X ; do
 done
 
 if [ ! -f "cr_W.bed" ] ; then
-    gzip -dc ConfidentRegions.bed.gz | awk '$1 ~ /^chr/ && $1 !~ /^chrY/' | sed 's/^chr//' | > cr_Y.bed
+    gzip -dc ConfidentRegions.bed.gz | awk '$1 ~ /^chr/ && $1 !~ /^chrY/' | sed 's/^chr//' > cr_W.bed
+fi
+if [ ! -f "${NM}.chr_removed.vcf" ] ; then
+    sed 's/^chr//' < ${NM}.vcf > ${NM}.chr_removed.vcf
+fi
+if [ ! -f "${NM}.W.cr_filt.vcf" ] ; then
+    # make filtered VCF file with Platinum low-confidence regions removed
+    ${VCFISECT} -b cr_W.bed ${NM}.chr_removed.vcf > ${NM}.W.cr_filt.vcf
 fi
