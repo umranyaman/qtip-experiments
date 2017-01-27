@@ -21,7 +21,7 @@ for COV in F ; do
 #SBATCH --partition=shared
 #SBATCH --time=4:00:00
 
-for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X ; do
+CHR=W
     for BAM in input final ; do
         FN="${NM}_\${BAM}_\${CHR}_${MINMAPQ}_${COV}"
         PREF="${NM}.sam/\${FN}."
@@ -47,7 +47,6 @@ for CHR in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X ; do
             fi
         done
     done
-done
 EOF
         echo "sbatch .VcfRoc.${MINMAPQ}.${COV}.sh"
         [ "$1" = "wet" ] && sbatch .VcfRoc.${MINMAPQ}.${COV}.sh && sleep 1
