@@ -4,7 +4,7 @@ Scripts for driving all experiments described in the `qtip` manuscript.
 
 ### Clone repos
 
-Clone the [`qtip`](https://github.com/BenLangmead/qtip) and [`qtip-experiments`](https://github.com/BenLangmead/qtip-experiments) repos.  The `qtip` repo contains the `qtip` software and scripts for building `qtip`-compatible versions of the relevant read aligners.  `qtip-experiments` contains everything else needed to run the experiments described in the manuscript.
+Clone the [`qtip`](https://github.com/BenLangmead/qtip) and [`qtip-experiments`](https://github.com/BenLangmead/qtip-experiments) repos.  `qtip` contains the Qtip software and scripts for building `qtip`-compatible versions of the relevant aligners.  `qtip-experiments` contains everything else needed to run the experiments described in the manuscript.
 
 ```
 cd $US/git
@@ -36,23 +36,33 @@ Although most of `qtip` is in Python, some helper programs are C++.  You'll need
 
 ### Build software in `qtip-experiments`
 
-Make the required software for read alignment and read simulation.  The read aligners are patched to be `qtip`-compatible.
+Make the software required for read alignment.  The read aligners are patched to be `qtip`-compatible:
+
+```
+make -C qtip/software/bowtie2
+make -C qtip/software/bwa
+make -C qtip/software/snap
+```
+
+Make the software required for read simulation:
 
 ```
 make -f Makefile.src_linux -C qtip-experiments/software/art
 make -C qtip-experiments/software/mason
 make -C qtip-experiments/software/wgsim
-make -C qtip-experiments/software/bowtie2
-# For now: make -C qtip-experiments/software/bowtie2 -f Makefile.from_github
-make -C qtip-experiments/software/bwa
-make -C qtip-experiments/software/snap
+```
+
+Make the software required for evaluating variant calls:
+
+```
+make -C qtip-experiments/software/vcflib
 ```
 
 MARCC note: making mason doesn’t work with `vtune` module loaded.
 
 ### Obtain reference genomes and build indexes
 
-Reference genomes (`hg19`, `mm10` and `zm_AGPv3`) and indexes (`bowtie2`, `bwa mem` and `snap`) are used in these experiments.
+Reference genomes (`hg38`, `mm10` and `zm_AGPv4`) and indexes (`bowtie2`, `bwa mem` and `snap`) are used in these experiments.
 
 ```
 pushd qtip-experiments/experiments/refs
@@ -70,7 +80,9 @@ sh index_marcc.sh
 popd
 ```
 
-### Simulate reads in `qtip-experiments`
+### `simulated_reads` experiments
+
+#### Simulate reads
 
 ```
 pushd qtip-experiments/experiments/simulated_reads
@@ -83,9 +95,9 @@ Many jobs are submitted here.  The longest job takes about 2 hours.
 
 The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
 
-### Run `qtip` on simulated datasets in `qtip-experiments`
+#### Run `qtip`
 
-These scripts are described in more detail in the `qtip-experiments/experiments/simulated_reads/README.md` file.
+Scripts are described in more detail in the `qtip-experiments/experiments/simulated_reads/README.md` file.
 
 ```
 pushd qtip-experiments/experiments/simulated_reads
@@ -100,23 +112,52 @@ Many jobs are submitted here.  All told, this takes about 4 hours for me on MARC
 
 The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
 
-TODO: those steps do everything but the gathering of CID and CSED curves into a file that gets loaded into R.  Need at add that.
+### `platinum` experiments
 
-### Run `qtip` on real datasets in `qtip-experiments`
-
-See `qtip-experiments/experiments/real_data/README.md` file for more details.
-
-The user has to issue the commands to the distributed resource manager.  The `sbatch_align.sh` and `sbatch_multialign.sh` scripts generate the jobs and print appropriate submission commands without running them.
-
-The `sbatch_*` scripts are intended for the SLURM DRM, which we use on the MARCC cluster.  You may have to modify the scripts for your cluster.
+#### Download reads
 
 ```
-pushd qtip-experiments/experiments/real_data
-sh get_real_reads.sh  # might want to submit to your DRM
-sh sbatch_align.sh
-# copy and paste all the alignment jobs to submit them
-# ...when those are done, proceed
-sh sbatch_multialign.sh
-# copy and paste all the alignment jobs to submit them
+pushd qtip-experiments/experiments/platinum
+sh get.sh
+```
+
+#### Download platinum variants and high confidence regions
+
+```
+sh get_gold_vcf.sh
+```
+
+### Analyze reads
+
+```
+sh fraglen.sh wet
+# previous is optional; useful for learning frag length dist
+# pass "dry" instead to just print batch commands
+sh align_full.sh wet
+# pass "dry" instead to just print batch commands
+# very time- and resource-intensive
+```
+
+### Call variants
+
+Calls variants:
+* for all MAPQ thresholds
+* for both original and qtip-predicted MAPQs
+* for chromosomes 1-22 and X
+
+```
+sh sambamba_sort.sh
+sh sbatch_fb.sh wet
+# pass "dry" instead to just print batch commands
+# very time- and resource-intensive
+```
+
+### Summarize
+
+Makes ROCs, and calculates F-scores based on best MAPQ and QUAL thresholds for both original and Qtip-predicted MAPQs.
+
+```
+sh sbatch_vcfroc.sh wet
+python table_f.py > ERR194147.csv
 popd
 ```
