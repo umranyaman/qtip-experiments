@@ -1,0 +1,12 @@
+.*.sh
+.*.out
+.*.err
+*.tbi
+*.bed
+*.bed.gz
+*.fastq.gz
+*.sam
+*.fraglen
+*.vcf
+*.vcf.gz
+*.csv
