@@ -1,0 +1,12 @@
+.*.sh
+*.bam
+*.bai
+*.sam
+*.wasp_out
+*.err
+*.out
+*.csv
+*.pyc
+snps
+human_ensembl85_snps
+mouse_ensembl85_snps
