@@ -108,7 +108,7 @@ reads: \
     r1_mason_ill_100.fq.gz \
     r1_mason_ill_250.fq.gz
 
-MK_QSIM_ARGS=--trials=5 --predict-for-training --keep-intermediates --assess-accuracy
+MK_QSIM_ARGS=--trials=5 --predict-for-training --keep-intermediates --assess-accuracy --write-orig-mapq --write-precise-mapq
 
 , := ,
 

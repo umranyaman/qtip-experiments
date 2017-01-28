@@ -33,9 +33,11 @@ Steps:
 
 * Download FASTQ reads (`get_real_reads.sh`)
 * Align FASTQ reads with various tools, producing SAM files (`sbatch_align.sh` / `Makefile`)
-* Sort and compare groups of SAM files, compiling CSV correct/incorrect information & ROC tables (`sbatch_multialign.sh` / `Makefile`)
 * Generate table of `qtip` overhead measurements (`perf_tabulate.py > perf.csv`)
-* Generate table of `qtip` accuracy measurements (`overall_tabulate.py`)
+* Create new reads annotated with "correctish" information using `sbatch_correctish.sh`
+* Align the new, correctish-annotated reads using `sbatch_align_correctish.sh`
+    * Once completed, the results are in the `new_*.sam` subdirectories
+    * Eventually need to gather these up, like we do with `gather.py`
 
 From directory containing the `qtip` and `qtip-experiments` repo clones:
 

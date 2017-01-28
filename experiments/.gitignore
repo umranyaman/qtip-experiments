@@ -1,4 +1,5 @@
 *.pdf
 *.html
 *.tex_snippet
+.DS_Store
 .R*
