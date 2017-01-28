@@ -11,7 +11,9 @@ output:
 This R markdown notebook depends on the existence of certain summary files from the experiments in the [`qsim-experiments` repo](https://github.com/BenLangmead/qsim-experiments).  It is meant to be executed from the `experiments` subdirectory of the `qsim-experiments` working set.  In particular, the notebook expects that these files are already present:
 
 * `simulated_reads/summary/overall.csv`
+* `real_data/perf.csv`
 * `real_data/overall.csv`
+* `platinum/ERR194147.csv`
 
 See the `README.md` in the root of the `qsim-experiments` repo for instructions on how to generate those files.
 
@@ -20,6 +22,7 @@ See the `README.md` in the root of the `qsim-experiments` repo for instructions 
 ```{r libraries}
 # Might require installation using install.packages()
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(scales)
 library(data.table)
@@ -28,6 +31,7 @@ library(gridExtra)
 library(xtable)
 library(knitr)
 library(tables)
+# setwd('~/git/qtip-experiments/experiments/')
 ```
 
 ### Load/create R object for table
@@ -89,12 +93,14 @@ grid_arrange_shared_legend <- function(...) {
 
 ```{r roc_handling}
 roc_string_to_table <- function(roc_string) {
-  roct <- read.table(textConnection(gsub(';', '\n', roc_string)), sep=':')
+  conn <- textConnection(gsub(';', '\n', roc_string), local=T)
+  roct <- read.table(conn, sep=':')
   colnames(roct) <- c('mapq', 'cor', 'incor')
   stopifnot(!is.unsorted(rev(roct$mapq)))
   roct$n = roct$cor + roct$incor
   roct$pcor = 1 - (10 ** (roct$mapq/-10))
   roct$emp_pcor = roct$cor / roct$n
+  close(conn)
   roct
 }
 
@@ -123,6 +129,7 @@ tables_to_cse <- function(rl, rr) {
   cumsum(rep((incor_se_l + cor_se_l)/rl$n, rl$n) -
          rep((incor_se_r + cor_se_r)/rr$n, rr$n))
 }
+
 
 # relative change in squared error
 rce <- function(r_predict, r_orig) {
@@ -280,7 +287,7 @@ various_simulators_table <- function(m, want_training, ...) {
   colnames(mtmp) <- c('simulator', 'paired', 'readlen', 'RCA', 'RCE')
   tabular((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) *
           (Heading("100 nt") * (readlen == 100) + Heading("250 nt") * (readlen == 250)) *
-          Heading() * simulator ~ ((RCA + RCE) * (mean + sd)), data=mtmp)
+          Heading() * simulator ~ (Format(sprintf("%.2f")) * (RCA + RCE) * (mean + sd)), data=mtmp)
 }
 
 fn <- 'various_simulators.tex_snippet'
@@ -445,9 +452,9 @@ various_genomes_plot <- function(
                          trial_no == want_trial)
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
-    levels(mtmp$species)[levels(mtmp$species)=="hg"] <- "Human (GRCh37)  "
+    levels(mtmp$species)[levels(mtmp$species)=="hg"] <- "Human (GRCh38)  "
     levels(mtmp$species)[levels(mtmp$species)=="mm"] <- "Mouse (GRCm38)  "
-    levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea Mays (AGPv3)  "
+    levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea Mays (AGPv4)  "
     levels(mtmp$aligner)[levels(mtmp$aligner)=="bt2"] <- "Bowtie 2  "
     levels(mtmp$aligner)[levels(mtmp$aligner)=="bwamem"] <- "BWA-MEM  "
     levels(mtmp$aligner)[levels(mtmp$aligner)=="snap"] <- "SNAP  "
@@ -996,16 +1003,14 @@ real <- rbindlist(ls)
 ##### Accuracy
 
 ```{r real_data_accuracy_tables}
-real_data_accuracy_table <- function() {
-  realtmp <- real
+real_data_accuracy_table <- function(test=T) {
+  realtmp <- real %>% filter(training == !test)
   levels(realtmp$aligner)[levels(realtmp$aligner)=="bt2"] <- "Bowtie 2"
-  levels(realtmp$aligner)[levels(realtmp$aligner)=="bwamem"] <- "BWA-MEM"
+  levels(realtmp$aligner)[levels(realtmp$aligner)=="bwa"] <- "BWA-MEM"
   levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP"
   realtmp$RCA <- realtmp$RCA * 100.0  # convert to percent
-  realtmp$loose <- factor(realtmp$loose, labels=c('Strong', 'Weak'))
-  tabular(((Heading() * aligner) *
-            Heading() * loose) ~
-           (Format(digits=2) * (Heading("Unpaired") * (!paired) + Heading("Paired") * paired) * Heading() * data * (RCA) * Heading() * identity),
+  tabular((Heading() * aligner) ~
+           (Format(digits=2) * Heading() * name * (RCA) * Heading() * (mean + sd)),
           data=realtmp)
 }
 fn <- 'real_accuracy.tex_snippet'
@@ -1020,21 +1025,13 @@ write("\\end{table}", file=fn, append=T)
 ```
 
 ```{r real_data_plot}
-real_data_plot <- function(
-  want_data,
-  want_paired,
-  want_loose,
-  want_cid)
-{
-    xlab <- paste0(if(want_paired) "Paired " else "Unpaired ",
-                   want_data)
-    realtmp <- real %>% filter(data == want_data &
-                               paired == want_paired &
-                               loose == want_loose)
+real_data_plot <- function(want_data, want_cid, want_trial=1) {
+    xlab <- paste0(want_data)
+    realtmp <- real %>% filter(!training & name == want_data & trial_no == want_trial)
     realtmp <- explode_curves(realtmp, want_cid)
     mx <- max(abs(realtmp$y))
     levels(realtmp$aligner)[levels(realtmp$aligner)=="bt2"] <- "Bowtie 2  "
-    levels(realtmp$aligner)[levels(realtmp$aligner)=="bwamem"] <- "BWA-MEM  "
+    levels(realtmp$aligner)[levels(realtmp$aligner)=="bwa"] <- "BWA-MEM  "
     levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP  "
     realtmp$aligner <- relevel(realtmp$aligner, "BWA-MEM  ")
     realtmp$aligner <- relevel(realtmp$aligner, "Bowtie 2  ")
@@ -1054,23 +1051,17 @@ real_data_plot <- function(
 
 ```{r real_data_plot_1}
 # data, paired, loose, cid
-p_rl_err050082_us <- real_data_plot('ERR050082', F, F, T)
-p_rl_err050083_us <- real_data_plot('ERR050083', F, F, T)
-p_rl_err050082_ps <- real_data_plot('ERR050082', T, F, T)
-p_rl_err050083_ps <- real_data_plot('ERR050083', T, F, T)
+p_rl_err050082_us <- real_data_plot('ERR050082', T)
+p_rl_err050083_us <- real_data_plot('ERR050083', T)
 
 # Write to notebook
 grid_arrange_shared_legend(p_rl_err050082_us,
-                           p_rl_err050083_us,
-                           p_rl_err050082_ps,
-                           p_rl_err050083_ps)
+                           p_rl_err050083_us)
 
 # Write to PDF
 pdf(file="real_human_cid.pdf", onefile=F)
 grid_arrange_shared_legend(p_rl_err050082_us,
-                           p_rl_err050083_us,
-                           p_rl_err050082_ps,
-                           p_rl_err050083_ps)
+                           p_rl_err050083_us)
 dev.off()
 ```
 
@@ -1142,3 +1133,74 @@ write("\\label{aln_error_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
 
+### Variant calling experiments
+
+```{r}
+m <- read.table('platinum/ERR194147.csv', header=T, sep=',')
+
+chr_table_sm <- function(want_chr) {
+  df <- chr_table(want_chr)
+  df[df$betas %in% c('4.000', '3.000', '2.000', '1.500', '1.000', '0.750', '0.500', '0.333', '0.250'),]
+}
+
+chr_table <- function(want_chr) {
+  regime_cols <- colnames(m)[grepl('^regime_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  betas <- as.vector(sub('_', '.', sub('regime_', '', regime_cols)))
+  pool_rows_nr <- m$mapq_cutoff == '*' & m$filt == 'cr_filt'
+  m1 <- m[pool_rows_nr & m$regime != '*' & m$chrom == want_chr,]
+  f_cols <- colnames(m)[grepl('^f_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  tp_cols <- colnames(m)[grepl('^tp_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  fp_cols <- colnames(m)[grepl('^fp_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  f_input <- as.vector(t(m1[m1$regime == 'input', f_cols]))
+  f_final <- as.vector(t(m1[m1$regime == 'final', f_cols]))
+  tp_input <- as.vector(t(m1[m1$regime == 'input', tp_cols]))
+  tp_final <- as.vector(t(m1[m1$regime == 'final', tp_cols]))
+  fp_input <- as.vector(t(m1[m1$regime == 'input', fp_cols]))
+  fp_final <- as.vector(t(m1[m1$regime == 'final', fp_cols]))
+  qual_thresh_cols <- colnames(m)[grepl('^qual_cutoff_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  qual_thresh_input <- sprintf('%0.3g', as.vector(t(m1[m1$regime == 'input', qual_thresh_cols])))
+  qual_thresh_final <- sprintf('%0.3g', as.vector(t(m1[m1$regime == 'final', qual_thresh_cols])))
+  mapq_thresh_cols <- colnames(m)[grepl('^mapq_cutoff_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  mapq_thresh_input <- sprintf('%d', as.integer(as.vector(t(m1[m1$regime == 'input', mapq_thresh_cols]))))
+  mapq_thresh_final <- sprintf('%d', as.integer(t(m1[m1$regime == 'final', mapq_thresh_cols])))
+  change <- sprintf('%+0.1e', f_final - f_input)
+  tp_change <- formatC(tp_final - tp_input, format='d', flag='+', big.mark=',')
+  fp_change <- formatC(fp_final - fp_input, format='d', flag='+', big.mark=',')
+  data.frame(betas=betas,
+             f_input=sprintf('%0.4f', f_input),
+             qt_input=qual_thresh_input,
+             mt_input=mapq_thresh_input,
+             buf=rep('', length(f_input)),
+             f_final=sprintf('%0.4f', f_final),
+             qt_final=qual_thresh_final,
+             mt_final=mapq_thresh_final,
+             buf=rep('', length(f_input)),
+             f_change=change,
+             tp_change=tp_change,
+             fp_change=fp_change)
+}
+```
+
+```{r}
+print(xtable(chr_table_sm('W')), include.rownames=F)
+```
+
+<!---
+\begin{table}[ht]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{rrrrlrrrrrrrr}
+  \hline
+ & \multicolumn{3}{c}{Original} & & \multicolumn{3}{c}{Qtip} & & \multicolumn{3}{c}{$\Delta$ (Qtip $-$ Orig)} \\\cline{2-4}\cline{6-8}\cline{10-12}
+\multicolumn{1}{c}{$\beta$} & \multicolumn{1}{c}{$F_\beta$} & QUAL & Q & & \multicolumn{1}{c}{$F_\beta$} & QUAL & Q & & \multicolumn{1}{c}{$F_\beta$} & \multicolumn{1}{c}{TP} & \multicolumn{1}{c}{FP} \\
+  \hline
+-->
+
+<!---
+   \hline
+\end{tabular}
+}
+\caption{Single-nucleotide variant (SNV) $F_\beta$ scores for various $\beta$s with original mapping qualities and with Qtip-generated qualities. Paired-end reads from ERR194147, a female, were aligned with Bowtie 2 together with Qtip.  SNV variants were called with Freebayes for chromosomes 1-22 and X. Variant-quality (QUAL) and mapping-quality (Q) cutoffs yielding greatest $F_\beta$ score are reported. Platinum variants were used as the true callset.  Before calculating $F_\beta$, calls outside Platinum Genomes high-confidence regions were excluded.  Rightmost columns show differences in $F_\beta$, number of true positive SNVs, and number of false positive SNVs.}
+\label{varcall_tab}
+\end{table}
+-->
