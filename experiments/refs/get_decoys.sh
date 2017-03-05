@@ -4,10 +4,10 @@
 # Get GRCh38 decoys
 #
 
-URL="https://sourceforge.net/projects/bio-bwa/files/bwakit"
+URL="https://downloads.sourceforge.net/project/bio-bwa/bwakit"
 VER="0.7.12"
 NM="bwakit-${VER}"
-AR="${NM}-linux.tar.bz2"
+AR="${NM}_x86-linux.tar.bz2"
 DL="${URL}/${AR}/download"
 
 if [ ! -f "hg38_decoy.fa" ] ; then
