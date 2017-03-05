@@ -7,8 +7,8 @@
 URL="https://downloads.sourceforge.net/project/bio-bwa/bwakit"
 VER="0.7.12"
 NM="bwakit-${VER}"
-AR="${NM}_x86-linux.tar.bz2"
-DL="${URL}/${AR}/download"
+AR="${NM}_x64-linux.tar.bz2"
+DL="${URL}/${AR}"
 
 if [ ! -f "hg38_decoy.fa" ] ; then
     wget -O "${AR}" "${DL}"
