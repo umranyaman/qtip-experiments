@@ -1,9 +1,9 @@
 #!/bin/sh
 
 AMT=50M
-MEM="128G"
+MEM="256G"
 PARTITION=lrgmem
-NHOURS=8
+NHOURS=16
 
 for PAIRED in 0 1 ; do
 for LEN in 100 250 ; do
