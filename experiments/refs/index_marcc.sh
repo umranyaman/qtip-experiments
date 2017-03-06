@@ -20,7 +20,7 @@ EOF
     cat > .${1}.bt2.sh <<EOF
 #!/bin/bash -l
 #SBATCH --nodes=1
-#SBATCH --mem=8G
+#SBATCH --mem=16G
 #SBATCH --partition=shared
 #SBATCH --time=10:00:00
 #SBATCH --output=.${1}.bt2.sh.o
