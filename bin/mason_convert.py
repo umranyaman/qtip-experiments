@@ -2,7 +2,9 @@
 mason_convert.py
 
 Take FASTQ files output by Mason.  Emit a new FASTQ file that uses our
-modified wgsim-like read name encoding.
+modified wgsim-like read name encoding.  Pairs may be omitted from the
+output if they seem to clearly violate paired-end constraints, e.g.
+references don't match, strands don't match.
 
 Usage:
 python mason_convert.py --in1 *.fastq [--in2 *.fastq] \
