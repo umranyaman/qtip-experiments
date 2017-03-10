@@ -37,6 +37,8 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qtip_args,
                 # 2 things to do: change the args passed to qtip and change the .out target names
                 if ln.startswith('SUBSAMPLING_ARGS'):
                     mk_out.write('SUBSAMPLING_ARGS=%s %s\n' % (' '.join(base_args), ' '.join(ar)))
+                elif ln.startswith('MK_QTIP_ARGS'):
+                    mk_out.write('MK_QTIP_ARGS=%s %s\n' % (' '.join(base_args), ' '.join(ar)))
                 elif ln.startswith('NUM_CORES='):
                     mk_out.write('NUM_CORES=1\n')
                 else:

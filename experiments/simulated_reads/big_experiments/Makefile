@@ -69,14 +69,15 @@ clean:
 	rm -f *.fq.gz
 	rm -rf *.out
 
-#.PHONY: outs
+.PHONY: outs
+outs: outs_bt2
 #outs: outs_bt2 outs_snap outs_bwamem
 
-#outs_bt2: \
-#    r0_bt2s_mason_ill_100_50M.out/DONE \
-#    r0_bt2s_mason_ill_250_50M.out/DONE \
-#    r12_bt2s100_mason_ill_100_50M.out/DONE \
-#    r12_bt2s250_mason_ill_250_50M.out/DONE
+outs_bt2: \
+    r0_bt2s_mason_ill_100_50M.out/DONE \
+    r0_bt2s_mason_ill_250_50M.out/DONE \
+    r12_bt2s100_mason_ill_100_50M.out/DONE \
+    r12_bt2s250_mason_ill_250_50M.out/DONE
 
 #outs_snap: \
 #    r0_snap_mason_ill_100_50M.out/DONE \
@@ -115,17 +116,9 @@ r1_mason_ill_250_50M.fq.gz: r1_mason_ill_250_1_50M.fq.gz \
 
 MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy --skip-rewrite
 
-#$(eval $(call bt2ts,bt2s,1,1,,,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call bt2ts,bt2s100,1,1,,-I 200 -X 400,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call bt2ts,bt2s250,1,1,,-I 500 -X 1000,$(HG_FASTA),$(HG_INDEX)))
-
-#$(eval $(call bwamemts,bwamem,1,1,,,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call bwamemts,bwamem100,1,1,,-I 300$(,)25,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call bwamemts,bwamem250,1,1,,-I 750$(,)62,$(HG_FASTA),$(HG_INDEX)))
-
-#$(eval $(call snapts,snap,1,1,,,,,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call snapts,snap100,1,1,,,,-s 100 300,$(HG_FASTA),$(HG_INDEX)))
-#$(eval $(call snapts,snap250,1,1,,,,-s 250 750,$(HG_FASTA),$(HG_INDEX)))
+$(eval $(call bt2ts,bt2s,$(MK_QTIP_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
 # Trim down a bit
 $(eval $(call mason_ill_unp_reads,ill_100_50M,$(HG_FASTA),100,50500000,7724))
