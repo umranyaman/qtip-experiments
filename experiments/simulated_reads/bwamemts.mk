@@ -1,6 +1,6 @@
 # Must already have a BWA index of the FASTA reference somewhere
 
-QTIP=python $(QTIP_HOME)/src/qtip
+QTIP=python $(QTIP_HOME)/qtip
 BWA_QTIP_ARGS=--write-orig-mapq --write-precise-mapq
 
 define bwamemts

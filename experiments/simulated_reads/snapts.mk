@@ -11,7 +11,7 @@
 # 8. Reference to use
 # 9. Index to use
 
-QTIP=python $(QTIP_HOME)/src/qtip
+QTIP=python $(QTIP_HOME)/qtip
 SNAP_ARGS+=-=
 SNAP_QTIP_ARGS=--write-orig-mapq --write-precise-mapq
 

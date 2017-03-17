@@ -1,6 +1,6 @@
 # Must already have a Bowtie 2 index of the FASTA reference somewhere
 
-QTIP=python $(QTIP_HOME)/src/qtip
+QTIP=python $(QTIP_HOME)/qtip
 BT2_QTIP_ARGS=--write-orig-mapq --write-precise-mapq
 
 define bt2ts
