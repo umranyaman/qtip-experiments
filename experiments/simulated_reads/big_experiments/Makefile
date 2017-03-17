@@ -116,6 +116,7 @@ r1_mason_ill_250_50M.fq.gz: r1_mason_ill_250_1_50M.fq.gz \
 
 MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy --skip-rewrite
 MK_ALIGNER_ARGS=
+NCORES=1
 
 $(eval $(call bt2ts,bt2s,$(MK_QTIP_ARGS),--sensitive $(MK_ALIGNER_ARGS),$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive $(MK_ALIGNER_ARGS),$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
