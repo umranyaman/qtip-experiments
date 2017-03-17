@@ -39,8 +39,8 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qtip_args,
                     mk_out.write('MK_QTIP_ARGS=%s %s\n' % (' '.join(base_args), ' '.join(ar)))
                 elif ln.startswith('MK_ALIGNER_ARGS'):
                     mk_out.write('MK_ALIGNER_ARGS=%s\n' % (' '.join(al_ar)))
-                elif ln.startswith('NUM_CORES='):
-                    mk_out.write('NUM_CORES=1\n')
+                elif ln.startswith('NCORES='):
+                    mk_out.write('NCORES=1\n')
                 else:
                     mk_out.write(ln.replace('.out', '.%s.out' % nm).replace(',out', ',%s.out' % nm))
         for fulltarget in targets:
