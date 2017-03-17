@@ -115,10 +115,11 @@ r1_mason_ill_250_50M.fq.gz: r1_mason_ill_250_1_50M.fq.gz \
 	gzip -dc $^ | head -n 200000000 | gzip -c > $@
 
 MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-accuracy --skip-rewrite
+MK_ALIGNER_ARGS=
 
-$(eval $(call bt2ts,bt2s,$(MK_QTIP_ARGS),--sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s,$(MK_QTIP_ARGS),--sensitive $(MK_ALIGNER_ARGS),$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive $(MK_ALIGNER_ARGS),$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive $(MK_ALIGNER_ARGS),$(HG_FASTA),$(HG_INDEX),out,$(NCORES)))
 
 # Trim down a bit
 $(eval $(call mason_ill_unp_reads,ill_100_50M,$(HG_FASTA),100,50500000,7724))
