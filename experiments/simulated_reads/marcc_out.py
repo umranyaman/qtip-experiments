@@ -36,6 +36,10 @@ def write_slurm(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False,
         my_mem_gb = max(my_mem_gb, 12)
     if '_snap' in rule:
         my_mem_gb = max(my_mem_gb, 32)
+    if 'ts_10m_' in rule:
+        my_hours *= 2
+    if 'ts_50m_' in rule:
+        my_hours *= 4
     pbs_lns = list()
     pbs_lns.append('#!/bin/bash -l')
     pbs_lns.append('#SBATCH')
