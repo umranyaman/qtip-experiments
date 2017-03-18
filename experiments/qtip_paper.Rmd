@@ -257,7 +257,8 @@ various_genomes_table <- function(m, want_training, ...) {
   levels(mtmp$aligner)[levels(mtmp$aligner)=="bt2"] <- "Bowtie 2"
   levels(mtmp$aligner)[levels(mtmp$aligner)=="bwamem"] <- "BWA-MEM"
   levels(mtmp$aligner)[levels(mtmp$aligner)=="snap"] <- "SNAP"
-  levels(mtmp$species)[levels(mtmp$species)=="hg"] <- "Human"  # GRCh37
+  levels(mtmp$species)[levels(mtmp$species)=="hg19"] <- "GRCh37"
+  levels(mtmp$species)[levels(mtmp$species)=="hg38"] <- "GRCh38"
   levels(mtmp$species)[levels(mtmp$species)=="mm"] <- "Mouse"  # GRCm38
   levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea mays"  # AGPv3
   colnames(mtmp) <- c('aligner', 'species', 'paired', 'readlen', 'RCA', 'RCE')
@@ -452,7 +453,8 @@ various_genomes_plot <- function(
                          trial_no == want_trial)
     mtmp <- explode_curves(mtmp, want_cid)
     mx <- max(abs(mtmp$y))
-    levels(mtmp$species)[levels(mtmp$species)=="hg"] <- "Human (GRCh38)  "
+    levels(mtmp$species)[levels(mtmp$species)=="hg38"] <- "Human (GRCh38)  "
+    levels(mtmp$species)[levels(mtmp$species)=="hg19"] <- "Human (GRCh37)  "
     levels(mtmp$species)[levels(mtmp$species)=="mm"] <- "Mouse (GRCm38)  "
     levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea Mays (AGPv4)  "
     levels(mtmp$aligner)[levels(mtmp$aligner)=="bt2"] <- "Bowtie 2  "
