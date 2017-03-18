@@ -23,7 +23,6 @@ from __future__ import print_function
 import sys
 import os
 import re
-import glob
 import logging
 from os.path import join
 
@@ -50,13 +49,11 @@ def parse_aligner_local(target):
 
 def parse_species(target):
     """ Based on Makefile target name, parse which species is involved """
-    genome = 'hg'
+    genome = 'hg38'  # hg gets normalized to hg38
     toks = target.split('_')
     # Parsing reference species info
-    if toks[2] == 'mm':
-        genome = 'mm'
-    if toks[2] == 'zm':
-        genome = 'zm'
+    if toks[2] in ['mm', 'zm', 'hg19']:
+        genome = toks[2]
     return genome
 
 
@@ -117,14 +114,6 @@ def has_done(dr):
     """ Return true if directory contains DONE file, indicating qtip finished
         running. """
     return os.path.exists(join(dr, 'DONE'))
-
-
-def copyfiles(fglob, dest, prefix=''):
-    """ Copy files (indicated by the file glob fglob) to the destination
-        directory (indicated by dest). """
-    assert os.path.isdir(dest) and os.path.exists(dest)
-    for fn in glob.glob(fglob):
-        os.system('cp -f %s %s' % (fn, join(dest, prefix + os.path.basename(fn))))
 
 
 def roc_file_to_string(roc_fn, inner_sep=':', outer_sep=';'):
@@ -202,20 +191,17 @@ def targets_from_makefile(dirname, fn):
 
 def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first):
 
-    odir = join(dest_dirname, combined_target_name, variant)
     for dir_samp in get_immediate_subdirectories(dirname):
 
         print('dir_samp=' + dir_samp, file=sys.stderr)
         if dir_samp.startswith('sample'):
             rate = dir_samp[6:]
-            odir_r = join(odir, 'sample' + rate)
             logging.info('    Found sampling rate: %s' % rate)
             target_full_s = join(dirname, 'sample' + rate)
             if not os.path.isdir(target_full_s):
                 logging.warn('*** Directory "%s" does not exist!' % target_full_s)
             next_subdirs1 = get_immediate_subdirectories(target_full_s)
         else:
-            odir_r = dest_dirname
             target_full_s = dirname
             next_subdirs1 = [dir_samp]
 
@@ -223,7 +209,6 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
 
             if dir_mapq in ['mapq_excluded', 'mapq_included']:
                 mapq_included = dir_mapq == 'mapq_included'
-                odir_rm = join(odir_r, dir_mapq)
                 logging.info('      Found %s' % dir_mapq)
                 target_full_sm = join(target_full_s, dir_mapq)
                 if not os.path.isdir(target_full_sm):
@@ -233,7 +218,6 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
             else:
                 assert dir_mapq.startswith('trial'), dir_mapq
                 target_full_sm = target_full_s
-                odir_rm = odir_r
                 mapq_included = False
                 next_subdirs2 = [dir_mapq]
 
@@ -241,18 +225,13 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
 
                 assert dir_trial.startswith('trial')
                 trial = dir_trial[5:]
-                odir_rmt = join(odir_rm, 'trial' + trial)
                 logging.info('        Found trial: %s' % trial)
                 target_full_smt = join(target_full_sm, 'trial' + trial)
                 if not os.path.isdir(target_full_smt):
                     logging.warn('*** Directory "%s" does not exist!' % target_full_smt)
                     continue
 
-                mkdir_quiet(odir_rmt)
-
-                os.system('cp -f %s %s' % (join(target_full_smt, 'featimport_*.csv'), odir_rmt))
-                params_fn = join(odir_rmt, 'params.csv')
-                os.system('cp -f %s %s' % (join(target_full_smt, 'params.csv'), params_fn))
+                params_fn = join(target_full_smt, 'params.csv')
 
                 for tt in ['test', 'train']:
 
@@ -261,15 +240,10 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
                         logging.warn('*** Directory "%s" does not exist!' % target_full_smtt)
                         continue
 
-                    mapqst = 'incl' if mapq_included else 'excl'
-                    summ_fn = join(odir_rmt, tt + '_' + mapqst + '_summary.csv')
-                    roc_fn = join(odir_rmt, tt + '_' + mapqst + '_roc.csv')
-                    roc_orig_fn = join(odir_rmt, tt + '_' + mapqst + '_roc_orig.csv')
-                    roc_round_fn = join(odir_rmt, tt + '_' + mapqst + '_roc_round.csv')
-                    os.system('cp -f %s %s' % (join(target_full_smtt, 'summary.csv'), summ_fn))
-                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc.csv'), roc_fn))
-                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_orig.csv'), roc_orig_fn))
-                    os.system('cp -f %s %s' % (join(target_full_smtt, 'roc_round.csv'), roc_round_fn))
+                    summ_fn = join(target_full_smtt, 'summary.csv')
+                    roc_round_fn = join(target_full_smtt, 'roc_round.csv')
+                    roc_orig_fn = join(target_full_smtt, 'roc_orig.csv')
+
                     compile_line(ofh, combined_target_name, variant,
                                  mapq_included, tt, trial, params_fn,
                                  summ_fn, roc_round_fn, roc_orig_fn, first)
