@@ -10,8 +10,11 @@
 # 2. $QTIP_EXPERIMENTS_HOME/experiments/refs must have relevant references and indexes
 # 3. $QTIP_EXPERIMENTS_HOME/software/mason/mason must have been built
 
-HG38_FASTA_NAME=hg38.fa
-HG19_FASTA_NAME=hg19.fa
+# To experiment using the CHM1 sequences, change to:
+# HG38_FASTA_NAME=hg38_with_chm1.fa
+# HG19_FASTA_NAME=hg19_with_chm1.fa
+HG38_FASTA_NAME=hg38_with_decoy.fa
+HG19_FASTA_NAME=hg19_with_decoy.fa
 MM_FASTA_NAME=mm10.fa
 ZM_FASTA_NAME=zm_AGPv4.fa
 HG38_INDEX_BASE=$(HG38_FASTA_NAME)
