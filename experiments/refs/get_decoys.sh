@@ -17,6 +17,8 @@ if [ ! -f "hg38_decoy.fa" ] ; then
     rm -rf bwa.kit
 fi
 
+cat hg38.fa hg38_decoy.fa > hg38_with_decoy.fa
+
 #
 # Get GRCh37.p13 decoys from 1K genomes
 #
@@ -29,3 +31,5 @@ if [ ! -f "hg19_decoy.fa" ] ; then
     gzip -dc "${AR_1KG}" > hg19_decoy.fa
     rm -f "${AR_1KG}"
 fi
+
+cat hg19.fa hg19_decoy.fa > hg19_with_decoy.fa
