@@ -11,16 +11,16 @@
 # 3. $QTIP_EXPERIMENTS_HOME/software/mason/mason must have been built
 
 # To experiment using the CHM1 sequences, change to:
-# HG38_FASTA_NAME=hg38_with_chm1.fa
-# HG19_FASTA_NAME=hg19_with_chm1.fa
-HG38_FASTA_NAME=hg38_with_decoy.fa
-HG19_FASTA_NAME=hg19_with_decoy.fa
-MM_FASTA_NAME=mm10.fa
-ZM_FASTA_NAME=zm_AGPv4.fa
-HG38_INDEX_BASE=hg38.fa
-HG19_INDEX_BASE=hg19.fa
-MM_INDEX_BASE=$(MM_FASTA_NAME)
-ZM_INDEX_BASE=$(ZM_FASTA_NAME)
+# HG38_FA=hg38_with_chm1.fa
+# HG19_FA=hg19_with_chm1.fa
+HG38_FA=hg38_with_decoy.fa
+HG19_FA=hg19_with_decoy.fa
+MM_FA=mm10.fa
+ZM_FA=zm_AGPv4.fa
+HG38_IDXFA=hg38.fa
+HG19_IDXFA=hg19.fa
+MM_INDEX_BASE=$(MM_FA)
+ZM_INDEX_BASE=$(ZM_FA)
 
 ifeq (,$(QTIP_EXPERIMENTS_HOME))
 $(error "Set QTIP_EXPERIMENTS_HOME, where qtip-experiments working copy is located")
@@ -28,21 +28,23 @@ endif
 TS_REFS=$(QTIP_EXPERIMENTS_HOME)/experiments/refs
 TS_INDEXES=$(QTIP_EXPERIMENTS_HOME)/experiments/refs
 
-FA_HG38=$(TS_REFS)/$(HG38_FASTA_NAME)
-FA_HG19=$(TS_REFS)/$(HG19_FASTA_NAME)
-FA_MM=$(TS_REFS)/$(MM_FASTA_NAME)
-FA_ZM=$(TS_REFS)/$(ZM_FASTA_NAME)
+FA_SIM_HG38=$(TS_REFS)/$(HG38_FA)
+FA_SIM_HG19=$(TS_REFS)/$(HG19_FA)
+FA_IDX_HG38=$(TS_REFS)/$(HG38_IDXFA)
+FA_IDX_HG19=$(TS_REFS)/$(HG19_IDXFA)
+FA_MM=$(TS_REFS)/$(MM_FA)
+FA_ZM=$(TS_REFS)/$(ZM_FA)
 
-HG38_INDEX=$(TS_INDEXES)/$(HG38_INDEX_BASE)
-HG19_INDEX=$(TS_INDEXES)/$(HG19_INDEX_BASE)
+HG38_INDEX=$(TS_INDEXES)/$(HG38_IDXFA)
+HG19_INDEX=$(TS_INDEXES)/$(HG19_IDXFA)
 MM_INDEX=$(TS_INDEXES)/$(MM_INDEX_BASE)
 ZM_INDEX=$(TS_INDEXES)/$(ZM_INDEX_BASE)
 
-ifeq ($(wildcard $(FA_HG38)),)
-$(error "$(FA_HG38) doesn't exist")
+ifeq ($(wildcard $(FA_SIM_HG38)),)
+$(error "$(FA_SIM_HG38) doesn't exist")
 endif
-ifeq ($(wildcard $(FA_HG19)),)
-$(error "$(FA_HG19) doesn't exist")
+ifeq ($(wildcard $(FA_SIM_HG19)),)
+$(error "$(FA_SIM_HG19) doesn't exist")
 endif
 #ifeq ($(wildcard $(FA_MM)),)
 #$(error "$(FA_MM) doesn't exist")
@@ -185,55 +187,55 @@ MK_QTIP_ARGS=--trials=10 --predict-for-training --keep-intermediates --assess-ac
 
 , := ,
 
-$(eval $(call bt2ts,bt2s_hg38,$(MK_QTIP_ARGS),--sensitive,$(FA_HG38),$(HG38_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s_hg19,$(MK_QTIP_ARGS),--sensitive,$(FA_HG19),$(HG19_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s_hg38,$(MK_QTIP_ARGS),--sensitive,$(FA_IDX_HG38),$(HG38_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s_hg19,$(MK_QTIP_ARGS),--sensitive,$(FA_IDX_HG19),$(HG19_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s_mm,$(MK_QTIP_ARGS),--sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s_zm,$(MK_QTIP_ARGS),--sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bwamemts,bwamem_hg38,$(MK_QTIP_ARGS),,$(FA_HG38),$(HG38_INDEX),out,$(NCORES)))
-$(eval $(call bwamemts,bwamem_hg19,$(MK_QTIP_ARGS),,$(FA_HG19),$(HG19_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem_hg38,$(MK_QTIP_ARGS),,$(FA_IDX_HG38),$(HG38_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem_hg19,$(MK_QTIP_ARGS),,$(FA_IDX_HG19),$(HG19_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem_mm,$(MK_QTIP_ARGS),,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem_zm,$(MK_QTIP_ARGS),,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call snapts,snap_hg38,$(MK_QTIP_ARGS),,,,$(FA_HG38),$(HG38_INDEX),out,$(NCORES)))
-$(eval $(call snapts,snap_hg19,$(MK_QTIP_ARGS),,,,$(FA_HG19),$(HG19_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap_hg38,$(MK_QTIP_ARGS),,,,$(FA_IDX_HG38),$(HG38_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap_hg19,$(MK_QTIP_ARGS),,,,$(FA_IDX_HG19),$(HG19_INDEX),out,$(NCORES)))
 $(eval $(call snapts,snap_mm,$(MK_QTIP_ARGS),,,,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call snapts,snap_zm,$(MK_QTIP_ARGS),,,,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bt2ts,bt2s100_hg38,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(FA_HG38),$(HG38_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s100_hg19,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(FA_HG19),$(HG19_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100_hg38,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(FA_IDX_HG38),$(HG38_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s100_hg19,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(FA_IDX_HG19),$(HG19_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s100_mm,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s100_zm,$(MK_QTIP_ARGS),-I 200 -X 400 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bwamemts,bwamem100_hg38,$(MK_QTIP_ARGS),-I 300$(,)25,$(FA_HG38),$(HG38_INDEX),out,$(NCORES)))
-$(eval $(call bwamemts,bwamem100_hg19,$(MK_QTIP_ARGS),-I 300$(,)25,$(FA_HG19),$(HG19_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem100_hg38,$(MK_QTIP_ARGS),-I 300$(,)25,$(FA_IDX_HG38),$(HG38_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem100_hg19,$(MK_QTIP_ARGS),-I 300$(,)25,$(FA_IDX_HG19),$(HG19_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem100_mm,$(MK_QTIP_ARGS),-I 300$(,)25,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem100_zm,$(MK_QTIP_ARGS),-I 300$(,)25,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call snapts,snap100_hg38,$(MK_QTIP_ARGS),,,-s 100 300,$(FA_HG38),$(HG38_INDEX),out,$(NCORES)))
-$(eval $(call snapts,snap100_hg19,$(MK_QTIP_ARGS),,,-s 100 300,$(FA_HG19),$(HG19_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap100_hg38,$(MK_QTIP_ARGS),,,-s 100 300,$(FA_IDX_HG38),$(HG38_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap100_hg19,$(MK_QTIP_ARGS),,,-s 100 300,$(FA_IDX_HG19),$(HG19_INDEX),out,$(NCORES)))
 $(eval $(call snapts,snap100_mm,$(MK_QTIP_ARGS),,,-s 100 300,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call snapts,snap100_zm,$(MK_QTIP_ARGS),,,-s 100 300,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bt2ts,bt2s250_hg38,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(FA_HG38),$(HG38_INDEX),out,$(NCORES)))
-$(eval $(call bt2ts,bt2s250_hg19,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(FA_HG19),$(HG19_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250_hg38,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(FA_IDX_HG38),$(HG38_INDEX),out,$(NCORES)))
+$(eval $(call bt2ts,bt2s250_hg19,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(FA_IDX_HG19),$(HG19_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s250_mm,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bt2ts,bt2s250_zm,$(MK_QTIP_ARGS),-I 500 -X 1000 --sensitive,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call bwamemts,bwamem250_hg38,$(MK_QTIP_ARGS),-I 750$(,)62,$(FA_HG38),$(HG38_INDEX),out,$(NCORES)))
-$(eval $(call bwamemts,bwamem250_hg19,$(MK_QTIP_ARGS),-I 750$(,)62,$(FA_HG19),$(HG19_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem250_hg38,$(MK_QTIP_ARGS),-I 750$(,)62,$(FA_IDX_HG38),$(HG38_INDEX),out,$(NCORES)))
+$(eval $(call bwamemts,bwamem250_hg19,$(MK_QTIP_ARGS),-I 750$(,)62,$(FA_IDX_HG19),$(HG19_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem250_mm,$(MK_QTIP_ARGS),-I 750$(,)62,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call bwamemts,bwamem250_zm,$(MK_QTIP_ARGS),-I 750$(,)62,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call snapts,snap250_hg38,$(MK_QTIP_ARGS),,,-s 250 750,$(FA_HG38),$(HG38_INDEX),out,$(NCORES)))
-$(eval $(call snapts,snap250_hg19,$(MK_QTIP_ARGS),,,-s 250 750,$(FA_HG19),$(HG19_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap250_hg38,$(MK_QTIP_ARGS),,,-s 250 750,$(FA_IDX_HG38),$(HG38_INDEX),out,$(NCORES)))
+$(eval $(call snapts,snap250_hg19,$(MK_QTIP_ARGS),,,-s 250 750,$(FA_IDX_HG19),$(HG19_INDEX),out,$(NCORES)))
 $(eval $(call snapts,snap250_mm,$(MK_QTIP_ARGS),,,-s 250 750,$(FA_MM),$(MM_INDEX),out,$(NCORES)))
 $(eval $(call snapts,snap250_zm,$(MK_QTIP_ARGS),,,-s 250 750,$(FA_ZM),$(ZM_INDEX),out,$(NCORES)))
 
-$(eval $(call mason_ill_unp_reads,ill_hg38_100,$(FA_HG38),100,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_hg38_250,$(FA_HG38),250,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_hg19_100,$(FA_HG19),100,$(NREADS),7724))
-$(eval $(call mason_ill_unp_reads,ill_hg19_250,$(FA_HG19),250,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_hg38_100,$(FA_SIM_HG38),100,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_hg38_250,$(FA_SIM_HG38),250,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_hg19_100,$(FA_SIM_HG19),100,$(NREADS),7724))
+$(eval $(call mason_ill_unp_reads,ill_hg19_250,$(FA_SIM_HG19),250,$(NREADS),7724))
 
 $(eval $(call mason_ill_unp_reads,ill_mm_100,$(FA_MM),100,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_mm_250,$(FA_MM),250,$(NREADS),7724))
@@ -241,10 +243,10 @@ $(eval $(call mason_ill_unp_reads,ill_mm_250,$(FA_MM),250,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_zm_100,$(FA_ZM),100,$(NREADS),7724))
 $(eval $(call mason_ill_unp_reads,ill_zm_250,$(FA_ZM),250,$(NREADS),7724))
 
-$(eval $(call mason_ill_pair_reads,ill_hg38_100,$(FA_HG38),100,$(NREADS),300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_hg38_250,$(FA_HG38),250,$(NREADS),750,250,7724))
-$(eval $(call mason_ill_pair_reads,ill_hg19_100,$(FA_HG19),100,$(NREADS),300,100,7724))
-$(eval $(call mason_ill_pair_reads,ill_hg19_250,$(FA_HG19),250,$(NREADS),750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg38_100,$(FA_SIM_HG38),100,$(NREADS),300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg38_250,$(FA_SIM_HG38),250,$(NREADS),750,250,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg19_100,$(FA_SIM_HG19),100,$(NREADS),300,100,7724))
+$(eval $(call mason_ill_pair_reads,ill_hg19_250,$(FA_SIM_HG19),250,$(NREADS),750,250,7724))
 
 $(eval $(call mason_ill_pair_reads,ill_mm_100,$(FA_MM),100,$(NREADS),300,100,7724))
 $(eval $(call mason_ill_pair_reads,ill_mm_250,$(FA_MM),250,$(NREADS),750,250,7724))
