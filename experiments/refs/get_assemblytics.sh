@@ -1,25 +1,20 @@
 #!/bin/sh
 
 #
-# Make file with CHM1 "decoy" sequences w/r/t GRCh37/hg19
+# Make FASTA files that include unaligned/poorly-aligned sequence from CHM1 assembies
+# Both are MHAP assemblies
 #
 
-# Get assembly
-ASM=GCA_000772585.3_ASM77258v3
-ASM_AR=${ASM}_genomic.fna
-ARGZ=${ASM_AR}.gz
-ASM_URL=http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/genomes/genbank/vertebrate_mammalian/Homo_sapiens/latest_assembly_versions/${ASM}/${ARGZ}
+get_assembly() {
+    if [ ! -f ${1} ] ; then
+	curl ${2} | gzip -dc > ${1}
+	samtools faidx ${1}
+	awk -v OFS='\t' '{print $1,$2}' "${1}.fai" > "${1}.genome"
+    fi
+}
 
-if [ ! -f ${ASM_AR} ] ; then
-    wget ${ASM_URL}
-    gunzip ${ARGZ}
-fi
-
-# Make genome file
-if [ ! -f "${ASM_AR}.genome" ] ; then
-    samtools faidx ${ASM_AR}
-    awk -v OFS='\t' '{print $1,$2}' "${ASM_AR}.fai" > "${ASM_AR}.genome"
-fi
+get_assembly chm1_quiver.fa http://gembox.cbcb.umd.edu/mhap/asm/human.quiver.ctg.fasta.gz
+get_assembly chm1_mhap.fa http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/genomes/genbank/vertebrate_mammalian/Homo_sapiens/latest_assembly_versions/GCA_000772585.3_ASM77258v3/GCA_000772585.3_ASM77258v3_genomic.fna.gz
 
 # Get assemblytics files
 AR_37=Homo_sapiens_MHAP_assembly.Assemblytics_results.zip
@@ -36,7 +31,7 @@ unpack() {
     if [ ! -d $1 ] ; then
         wget $2
         unzip $3
-        mv user_data assemblytics_37
+        mv user_data $1
     fi
 }
 
@@ -54,17 +49,22 @@ getbed() {
         # 2. Removes non-insertion lines
         # 3. Extracts column 10, with the CHM1 coordinates
         # 4. Parses column 10 and converts it to 3-column bed
-        # 5. Filters out intervals shorter than 50
-        awk '{n += 1; if(n > 1) {if($7 == "Insertion") {print $10}}}' ${BED} | sed 's/[:-]/,/g' | awk -v FS=',' -v OFS='\t' '$3-$2 >= 50 {print $1,$2,$3}' > .tmp.bed
-        # Now add slop on both sides
-        bedtools slop -i .tmp.bed -g "${ASM_AR}.genome" -b ${SLOP} > "${4}"
+        # 5. Filters out intervals shorter than 260 bp (for simulation)
+        awk '{n += 1; if(n > 1) {if($7 == "Insertion") {print $10}}}' ${BED} | \
+	    sed 's/[:-]/,/g' | \
+	    awk -v FS=',' -v OFS='\t' '$3-$2 >= 260 {print $1,$2,$3}' > .tmp.bed
+        # Add slop on both sides
+        bedtools slop -i .tmp.bed -g "${6}.genome" -b ${SLOP} > "${4}"
     fi
 
     # Now extract sequences from CHM1
     if [ ! -f "${5}" ] ; then
-        bedtools getfasta -fi ${ASM_AR} -bed "${4}" > "${5}"
+        bedtools getfasta -fi "${6}" -bed "${4}" -fo "${5}"
     fi
 }
 
-getbed ${BED_37} 25 50 chm1_grch19.bed hg19_chm1.fa
-getbed ${BED_38} 25 50 chm1_grch38.bed hg38_chm1.fa
+getbed ${BED_37} 25 50 chm1_grch19.bed hg19_chm1.fa chm1_mhap.fa
+getbed ${BED_38} 25 50 chm1_grch38.bed hg38_chm1.fa chm1_quiver.fa
+
+cat hg19.fa hg19_chm1.fa > hg19_with_chm1.fa
+cat hg38.fa hg38_chm1.fa > hg38_with_chm1.fa
