@@ -128,8 +128,22 @@ def roc_file_to_string(roc_fn, inner_sep=':', outer_sep=';'):
     return outer_sep.join(fields)
 
 
+def feat_files_to_string(fns):
+    ret = []
+    for fn, typ in zip(fns, 'bcdu'):
+        if os.path.exists(fn):
+            with open(fn) as fh:
+                for ln in fh:
+                    if not ln.startswith('feature,importance,rank'):
+                        toks = ln.rstrip().split(',')
+                        assert len(toks) == 3
+                        ret.extend([typ, toks[0], toks[1]])
+    return ','.join(ret)
+
+
 def compile_line(ofh, combined_target_name, variant, mapq_incl, tt, trial,
-                 params_fn, summ_fn, roc_round_fn, roc_orig_fn, first):
+                 params_fn, summ_fn, roc_round_fn, roc_orig_fn, feat_fns,
+                 first):
     """ Put together one line of output and write to ofh (overall.csv)
         """
     name, target = parse_name_and_target(combined_target_name)
@@ -150,10 +164,16 @@ def compile_line(ofh, combined_target_name, variant, mapq_incl, tt, trial,
             headers += header.split(',')
             body = fh.readline().rstrip()
             values += body.split(',')
+
     # Add ROCs; these are big long strings
     headers.extend(['roc_round', 'roc_orig'])
     values.extend([roc_file_to_string(roc_round_fn),
                    roc_file_to_string(roc_orig_fn)])
+
+    # Add feature importances; also big long strings
+    headers.append('feat')
+    values.append(feat_files_to_string(feat_fns))
+
     if first:
         ofh.write(','.join(map(str, headers)) + '\n')
     ofh.write(','.join(map(str, values)) + '\n')
@@ -232,6 +252,7 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
                     continue
 
                 params_fn = join(target_full_smt, 'params.csv')
+                feat_fns = list(map(lambda x: join(target_full_smt, 'featimport_%s.csv' % x), 'bcdu'))
 
                 for tt in ['test', 'train']:
 
@@ -246,7 +267,8 @@ def handle_dir(dirname, combined_target_name, variant, dest_dirname, ofh, first)
 
                     compile_line(ofh, combined_target_name, variant,
                                  mapq_included, tt, trial, params_fn,
-                                 summ_fn, roc_round_fn, roc_orig_fn, first)
+                                 summ_fn, roc_round_fn, roc_orig_fn,
+                                 feat_fns, first)
                     first = False
 
 
