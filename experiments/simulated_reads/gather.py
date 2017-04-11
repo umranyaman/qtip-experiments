@@ -137,8 +137,8 @@ def feat_files_to_string(fns):
                     if not ln.startswith('feature,importance,rank'):
                         toks = ln.rstrip().split(',')
                         assert len(toks) == 3
-                        ret.extend([typ, toks[0], toks[1]])
-    return ','.join(ret)
+                        ret.append(':'.join([typ, toks[0], toks[1]]))
+    return ';'.join(ret)
 
 
 def compile_line(ofh, combined_target_name, variant, mapq_incl, tt, trial,
