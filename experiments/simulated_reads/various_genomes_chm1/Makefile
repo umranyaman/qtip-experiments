@@ -10,8 +10,8 @@
 # 2. $QTIP_EXPERIMENTS_HOME/experiments/refs must have relevant references and indexes
 # 3. $QTIP_EXPERIMENTS_HOME/software/mason/mason must have been built
 
-HG19_FA=hg19.fa
-HG38_FA=hg38.fa
+HG19_FA=hg19_with_chm1.fa
+HG38_FA=hg38_with_chm1.fa
 MM_FA=mm10.fa
 ZM_FA=zm_AGPv4.fa
 HG38_IDXFA=hg38.fa
