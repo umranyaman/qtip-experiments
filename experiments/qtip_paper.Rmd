@@ -246,8 +246,8 @@ write("\\end{table}", file=fn, append=T)
 ```
 
 ```{r various_genomes_table}
-various_genomes_table <- function(m, want_training, ...) {
-  mtmp <- m %>% filter(training == want_training & name == 'various_genomes')
+various_genomes_table <- function(m, want_training, want_series, ...) {
+  mtmp <- m %>% filter(training == want_training & name == want_series)
   mtmp <- subset(mtmp, select=c(aligner,
                                 species,
                                 paired,
@@ -268,8 +268,18 @@ various_genomes_table <- function(m, want_training, ...) {
 fn <- 'various_genomes.tex_snippet'
 write("\\begin{table}", file=fn)
 write("\\centering", file=fn, append=T)
-capture.output(latex(various_genomes_table(m, F)), file=fn, append=T)
+capture.output(latex(various_genomes_table(m, F, 'various_genomes')), file=fn, append=T)
 write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and reference genomes, expressed as percent change.  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated.  Results are means and standard deviations over \\numtrials random trials, repeated starting from the input modeling step.}", file=fn, append=T)
+write("\\label{genomes_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
+```
+
+```{r various_genomes_chm1_table}
+fn <- 'various_genomes_chm1.tex_snippet'
+write("\\begin{table}", file=fn)
+write("\\centering", file=fn, append=T)
+capture.output(latex(various_genomes_table(m, F, 'various_genomes_chm1')), file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and reference genomes, expressed as percent change.  The experiments simulated the input reads from a combination of the appropriate human reference genome (GRCh37 or GRCh38) and additional contigs containing sequence from CHM1 that does not align well to the reference. The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated.  Results are means and standard deviations over \\numtrials random trials, repeated starting from the input modeling step.}", file=fn, append=T)
 write("\\label{genomes_tab}", file=fn, append=T)
 write("\\end{table}", file=fn, append=T)
 ```
@@ -438,6 +448,7 @@ dev.off()
 
 ```{r various_genomes_plot}
 various_genomes_plot <- function(
+  want_series,
   want_paired,
   want_readlen,
   want_training,
@@ -446,7 +457,7 @@ various_genomes_plot <- function(
 {
     xlab <- paste0(want_readlen, " bp ",
                    if(want_paired) "paired " else "unpaired ")
-    mtmp <- m %>% filter(name == 'various_genomes' &
+    mtmp <- m %>% filter(name == want_series &
                          paired == want_paired &
                          readlen == want_readlen &
                          training == want_training &
@@ -479,10 +490,10 @@ various_genomes_plot <- function(
 ## Test ##
 
 # params: paired, readlen, training, cid
-p_vg_u100ei <- various_genomes_plot(F, 100, F, T)
-p_vg_u250ei <- various_genomes_plot(F, 250, F, T)
-p_vg_p100ei <- various_genomes_plot(T, 100, F, T)
-p_vg_p250ei <- various_genomes_plot(T, 250, F, T)
+p_vg_u100ei <- various_genomes_plot('various_genomes', F, 100, F, T)
+p_vg_u250ei <- various_genomes_plot('various_genomes', F, 250, F, T)
+p_vg_p100ei <- various_genomes_plot('various_genomes', T, 100, F, T)
+p_vg_p250ei <- various_genomes_plot('various_genomes', T, 250, F, T)
 
 # Write to notebook
 grid_arrange_shared_legend(p_vg_u100ei,
@@ -499,15 +510,40 @@ grid_arrange_shared_legend(p_vg_u100ei,
 dev.off()
 ```
 
+```{r various_genomes_chm1_plot_cid_test}
+
+## Test ##
+
+# params: paired, readlen, training, cid
+p_vg_u100ei <- various_genomes_plot('various_genomes_chm1', F, 100, F, T)
+p_vg_u250ei <- various_genomes_plot('various_genomes_chm1', F, 250, F, T)
+p_vg_p100ei <- various_genomes_plot('various_genomes_chm1', T, 100, F, T)
+p_vg_p250ei <- various_genomes_plot('various_genomes_chm1', T, 250, F, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vg_u100ei,
+                           p_vg_u250ei,
+                           p_vg_p100ei,
+                           p_vg_p250ei)
+
+# Write to PDF
+pdf(file="various_genomes_chm1_cid_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_vg_u100ei,
+                           p_vg_u250ei,
+                           p_vg_p100ei,
+                           p_vg_p250ei)
+dev.off()
+```
+
 ```{r various_genomes_plot_cid_train}
 
 ## Training ##
 
 # params: paired, readlen, training, cid
-p_vg_u100ri <- various_genomes_plot(F, 100, T, T)
-p_vg_u250ri <- various_genomes_plot(F, 250, T, T)
-p_vg_p100ri <- various_genomes_plot(T, 100, T, T)
-p_vg_p250ri <- various_genomes_plot(T, 250, T, T)
+p_vg_u100ri <- various_genomes_plot('various_genomes', F, 100, T, T)
+p_vg_u250ri <- various_genomes_plot('various_genomes', F, 250, T, T)
+p_vg_p100ri <- various_genomes_plot('various_genomes', T, 100, T, T)
+p_vg_p250ri <- various_genomes_plot('various_genomes', T, 250, T, T)
 
 # Write to notebook
 grid_arrange_shared_legend(p_vg_u100ri,
@@ -524,15 +560,40 @@ grid_arrange_shared_legend(p_vg_u100ri,
 dev.off()
 ```
 
+```{r various_genomes_chm1_plot_cid_train}
+
+## Training ##
+
+# params: paired, readlen, training, cid
+p_vg_u100ri <- various_genomes_plot('various_genomes_chm1', F, 100, T, T)
+p_vg_u250ri <- various_genomes_plot('various_genomes_chm1', F, 250, T, T)
+p_vg_p100ri <- various_genomes_plot('various_genomes_chm1', T, 100, T, T)
+p_vg_p250ri <- various_genomes_plot('various_genomes_chm1', T, 250, T, T)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vg_u100ri,
+                           p_vg_u250ri,
+                           p_vg_p100ri,
+                           p_vg_p250ri)
+
+# Write to PDF
+pdf(file="various_genomes_chm1_cid_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_vg_u100ri,
+                           p_vg_u250ri,
+                           p_vg_p100ri,
+                           p_vg_p250ri)
+dev.off()
+```
+
 ```{r various_genomes_plot_cse_test}
 
 ## Test ##
 
 # params: paired, readlen, training, cid
-p_vg_u100ee <- various_genomes_plot(F, 100, F, F)
-p_vg_u250ee <- various_genomes_plot(F, 250, F, F)
-p_vg_p100ee <- various_genomes_plot(T, 100, F, F)
-p_vg_p250ee <- various_genomes_plot(T, 250, F, F)
+p_vg_u100ee <- various_genomes_plot('various_genomes', F, 100, F, F)
+p_vg_u250ee <- various_genomes_plot('various_genomes', F, 250, F, F)
+p_vg_p100ee <- various_genomes_plot('various_genomes', T, 100, F, F)
+p_vg_p250ee <- various_genomes_plot('various_genomes', T, 250, F, F)
 
 # Write to notebook
 grid_arrange_shared_legend(p_vg_u100ee,
@@ -549,15 +610,40 @@ grid_arrange_shared_legend(p_vg_u100ee,
 dev.off()
 ```
 
+```{r various_genomes_chm1_plot_cse_test}
+
+## Test ##
+
+# params: paired, readlen, training, cid
+p_vg_u100ee <- various_genomes_plot('various_genomes_chm1', F, 100, F, F)
+p_vg_u250ee <- various_genomes_plot('various_genomes_chm1', F, 250, F, F)
+p_vg_p100ee <- various_genomes_plot('various_genomes_chm1', T, 100, F, F)
+p_vg_p250ee <- various_genomes_plot('various_genomes_chm1', T, 250, F, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vg_u100ee,
+                           p_vg_u250ee,
+                           p_vg_p100ee,
+                           p_vg_p250ee)
+
+# Write to PDF
+pdf(file="various_genomes_chm1_cse_test.pdf", onefile=F)
+grid_arrange_shared_legend(p_vg_u100ee,
+                           p_vg_u250ee,
+                           p_vg_p100ee,
+                           p_vg_p250ee)
+dev.off()
+```
+
 ```{r various_genomes_plot_cse_train}
 
 ## Training ##
 
 # params: paired, readlen, training, cid
-p_vg_u100re <- various_genomes_plot(F, 100, T, F)
-p_vg_u250re <- various_genomes_plot(F, 250, T, F)
-p_vg_p100re <- various_genomes_plot(T, 100, T, F)
-p_vg_p250re <- various_genomes_plot(T, 250, T, F)
+p_vg_u100re <- various_genomes_plot('various_genomes', F, 100, T, F)
+p_vg_u250re <- various_genomes_plot('various_genomes', F, 250, T, F)
+p_vg_p100re <- various_genomes_plot('various_genomes', T, 100, T, F)
+p_vg_p250re <- various_genomes_plot('various_genomes', T, 250, T, F)
 
 # Write to notebook
 grid_arrange_shared_legend(p_vg_u100re,
@@ -574,18 +660,43 @@ grid_arrange_shared_legend(p_vg_u100re,
 dev.off()
 ```
 
+```{r various_genomes_chm1_plot_cse_train}
+
+## Training ##
+
+# params: paired, readlen, training, cid
+p_vg_u100re <- various_genomes_plot('various_genomes_chm1', F, 100, T, F)
+p_vg_u250re <- various_genomes_plot('various_genomes_chm1', F, 250, T, F)
+p_vg_p100re <- various_genomes_plot('various_genomes_chm1', T, 100, T, F)
+p_vg_p250re <- various_genomes_plot('various_genomes_chm1', T, 250, T, F)
+
+# Write to notebook
+grid_arrange_shared_legend(p_vg_u100re,
+                           p_vg_u250re,
+                           p_vg_p100re,
+                           p_vg_p250re)
+
+# Write to PDF
+pdf(file="various_genomes_chm1_cse_training.pdf", onefile=F)
+grid_arrange_shared_legend(p_vg_u100re,
+                           p_vg_u250re,
+                           p_vg_p100re,
+                           p_vg_p250re)
+dev.off()
+```
+
 ##### Diagnostics
 
 Zooming in on BWA-MEM 100 bp human CID:
 
 ```{r various_genomes_plot_bwa_100_unp_hg}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & !paired & readlen == 100 & aligner == 'bwamem'), T)
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg38' & !paired & readlen == 100 & aligner == 'bwamem'), T)
 ```
 
 Now 250 bp:
 
 ```{r various_genomes_plot_bwa_250_unp_mm}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & !paired & readlen == 250 & aligner == 'bwamem'), T)
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg38' & !paired & readlen == 250 & aligner == 'bwamem'), T)
 ```
 
 Now corn 100 bp unpaired:
@@ -601,11 +712,11 @@ subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'zm' &
 ```
 
 ```{r r12_snap100_hg_mason_ill_hg_100_diag}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & paired & readlen == 100 & aligner == 'snap'), T)
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg38' & paired & readlen == 100 & aligner == 'snap'), T)
 ```
 
 ```{r r12_snap250_hg_mason_ill_hg_250_diag}
-subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg' & paired & readlen == 250 & aligner == 'snap'), T)
+subsample_trials_plot(m %>% filter(name == 'various_genomes' & species == 'hg38' & paired & readlen == 250 & aligner == 'snap'), T)
 ```
 
 ```{r r12_snap250_zm_mason_ill_zm_250_diag}
@@ -906,167 +1017,6 @@ grid_arrange_shared_legend(p_vi_u100re,
 dev.off()
 ```
 
-#### Mixed length
-
-#```{r mixed_length_plot}
-#mixed_length_plot <- function(
-#  want_training,
-#  want_cid,
-#  want_trial=1)
-#{
-#    mtmp <- m %>% filter(name == '454_mixed_length' &
-#                         training == want_training &
-#                         trial_no == want_trial)
-#    stopifnot(nrow(mtmp) == 2)  # local and end-to-end
-#    mtmp <- explode_curves(mtmp, want_cid)
-#    mx <- max(abs(mtmp$y))
-#    ggplot(mtmp, aes(x=x, y=y, color=local)) +
-#      geom_abline(intercept = 0, slope = 0) +
-#      coord_trans(y = logmod_trans()) +
-#      scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-#      scale_x_continuous(labels=mfmt) +
-#      labs(y="") +
-#      geom_line() +
-#      theme_bw() +
-#      theme(legend.title=element_blank(),
-#            axis.title.x = element_text(vjust=-0.4))
-#}
-#```
-
-#```{r mixed_length_cid_test}
-#
-### Test ##
-#
-## Write to notebook
-#mixed_length_plot(F, T)
-#
-## Write to PDF
-#pdf(file="mixed_length_cid_test.pdf", onefile=F)
-#mixed_length_plot(F, T)
-#dev.off()
-#```
-
-#```{r mixed_length_cse_test}
-#
-### Test ##
-#
-## Write to notebook
-#mixed_length_plot(F, F)
-#
-## Write to PDF
-#pdf(file="mixed_length_cse_test.pdf", onefile=F)
-#mixed_length_plot(F, F)
-#dev.off()
-#```
-
-#```{r mixed_length_cid_training}
-#
-### Training ##
-#
-## Write to notebook
-#mixed_length_plot(T, T)
-#
-## Write to PDF
-#pdf(file="mixed_length_cid_training.pdf", onefile=F)
-#mixed_length_plot(T, T)
-#dev.off()
-#```
-
-#```{r mixed_length_cse_training}
-#
-### Training ##
-#
-## Write to notebook
-#mixed_length_plot(T, F)
-#
-## Write to PDF
-#pdf(file="mixed_length_cse_training.pdf", onefile=F)
-#mixed_length_plot(T, F)
-#dev.off()
-#```
-
-### Real reads
-
-```{r}
-real <- read.table('real_data/overall.csv', sep=',', quote='', comment.char='', header=T)
-ls <- list()
-for(i in 1:nrow(real)) {
-  ls[[i]] <- real[i,]
-  roct <- roc_string_to_table(real$roc_round[i])
-  rocto <- roc_string_to_table(real$roc_orig[i])
-  ls[[i]]$RCA <- rca(roct, rocto)
-  ls[[i]]$RCE <- rce(roct, rocto)
-}
-real <- rbindlist(ls)
-```
-
-#### ERR050083 & ERR050082
-
-##### Accuracy
-
-```{r real_data_accuracy_tables}
-real_data_accuracy_table <- function(test=T) {
-  realtmp <- real %>% filter(training == !test)
-  levels(realtmp$aligner)[levels(realtmp$aligner)=="bt2"] <- "Bowtie 2"
-  levels(realtmp$aligner)[levels(realtmp$aligner)=="bwa"] <- "BWA-MEM"
-  levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP"
-  realtmp$RCA <- realtmp$RCA * 100.0  # convert to percent
-  tabular((Heading() * aligner) ~
-           (Format(digits=2) * Heading() * name * (RCA) * Heading() * (mean + sd)),
-          data=realtmp)
-}
-fn <- 'real_accuracy.tex_snippet'
-write("\\begin{table}", file=fn)
-write("\\centering", file=fn, append=T)
-#write("\\resizebox{\\columnwidth}{!}{%", file=fn, append=T)
-capture.output(latex(real_data_accuracy_table()), file=fn, append=T)
-#write("}", file=fn, append=T)
-write("\\caption{Relative change in area under CID (RCA) for various aligners on the public ERR050082 and ERR050083 DNA sequencing samples.  Both samples are paired-end; in ``Unpaired'' experiments we mimic unpaired data by providing only the first end to the aligner.}", file=fn, append=T)
-write("\\label{real_accuracy_tab}", file=fn, append=T)
-write("\\end{table}", file=fn, append=T)
-```
-
-```{r real_data_plot}
-real_data_plot <- function(want_data, want_cid, want_trial=1) {
-    xlab <- paste0(want_data)
-    realtmp <- real %>% filter(!training & name == want_data & trial_no == want_trial)
-    realtmp <- explode_curves(realtmp, want_cid)
-    mx <- max(abs(realtmp$y))
-    levels(realtmp$aligner)[levels(realtmp$aligner)=="bt2"] <- "Bowtie 2  "
-    levels(realtmp$aligner)[levels(realtmp$aligner)=="bwa"] <- "BWA-MEM  "
-    levels(realtmp$aligner)[levels(realtmp$aligner)=="snap"] <- "SNAP  "
-    realtmp$aligner <- relevel(realtmp$aligner, "BWA-MEM  ")
-    realtmp$aligner <- relevel(realtmp$aligner, "Bowtie 2  ")
-    ggplot(realtmp, aes(x=x, y=y, color=aligner)) +
-      geom_abline(intercept = 0, slope = 0) +
-      coord_trans(y = logmod_trans()) +
-      scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
-      scale_x_continuous(labels=mfmt) +
-      labs(x=xlab, y='') +
-      geom_line() +
-      theme_bw() +
-      guides(colour = guide_legend(override.aes = list(size=1))) +
-      theme(legend.title=element_blank(), legend.key = element_blank(),
-            legend.text=element_text(size=12))
-}
-```
-
-```{r real_data_plot_1}
-# data, paired, loose, cid
-p_rl_err050082_us <- real_data_plot('ERR050082', T)
-p_rl_err050083_us <- real_data_plot('ERR050083', T)
-
-# Write to notebook
-grid_arrange_shared_legend(p_rl_err050082_us,
-                           p_rl_err050083_us)
-
-# Write to PDF
-pdf(file="real_human_cid.pdf", onefile=F)
-grid_arrange_shared_legend(p_rl_err050082_us,
-                           p_rl_err050083_us)
-dev.off()
-```
-
 ##### Performance
 
 ```{r real_data_perf_tables}
@@ -1206,3 +1156,256 @@ print(xtable(chr_table_sm('W')), include.rownames=F)
 \label{varcall_tab}
 \end{table}
 -->
+
+### Target number of tandem reads
+
+```{r tandem_target}
+mtsu <- read.table('simulated_reads/big_experiments/r0_train_series.csv', sep=',', header=F)
+mtsp <- read.table('simulated_reads/big_experiments/r12_train_series.csv', sep=',', header=F)
+mtsu$paired <- F
+mtsp$paired <- T
+
+mts <- rbind(mtsu, mtsp)
+colnames(m) <- c('input', 'func', 'trial', 'rca', 'rcar', 'rce', 'rcer', 'paired')
+
+# Adapted from: https://rpubs.com/sjackman/grid_arrange_shared_legend
+# Thanks to Shaun Jackman
+grid_arrange_shared_legend2 <- function(...) {
+    plots <- list(...)
+    g <- ggplotGrob(plots[[1]] + theme(legend.position="right"))$grobs
+    legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+    lheight <- sum(legend$height)
+    grid.arrange(
+        do.call(arrangeGrob, lapply(plots, function(x)
+            x + theme(legend.position="none"))),
+        legend,
+        ncol = 3,
+        heights = unit.c(unit(1, "npc") - lheight, lheight))
+}
+
+tandem_target_plot <- function(m, want_paired) {
+  tt <- paste(if(want_paired) 'Paired' else 'Unpaired', '100bp')
+  mg <- m %>%
+    filter(paired == want_paired) %>%
+    group_by(input, func, paired) %>% 
+    summarise(rce_med=median(rcer), rce_max=max(rcer), rce_min=min(rcer),
+              rca_med=median(rcar), rca_max=max(rcar), rca_min=min(rcar))
+  mg$reord <- 0
+  mg$reord[mg$func ==  '15s'] <- 1
+  mg$reord[mg$func ==  '30s'] <- 2
+  mg$reord[mg$func ==  '45s'] <- 3
+  mg$reord[mg$func ==   '1l'] <- 4
+  mg$reord[mg$func ==   '3l'] <- 5
+  mg$reord[mg$func ==   '5l'] <- 6
+  mg$reord[mg$func == '050c'] <- 7
+  mg$reord[mg$func == '100c'] <- 8
+  mg$func <- reorder(mg$func, mg$reord)
+  mg$func <- plyr::revalue(mg$func, c(
+    '15s'='15 * sqrt(x)',
+    '30s'='30 * sqrt(x)',
+    '45s'='45 * sqrt(x)',
+    '1l'='0.01 * x',
+    '3l'='0.03 * x',
+    '5l'='0.05 * x',
+    '050c'='50,000',
+    '100c'='100,000'))
+  ggplot(mg, aes(x=input, color=func)) +
+    geom_line(aes(y=rce_med)) +
+    geom_point(aes(y=rce_med)) +
+    theme_bw() +
+    ggtitle(tt) +
+    labs(x="# input reads", y="Median RCE, 10 trials") +
+    theme(legend.title=element_blank(), legend.key = element_blank())
+}
+
+# Write to PDF
+tn_u <- tandem_target_plot(mts, F)
+tn_p <- tandem_target_plot(mts, T)
+pdf(file="tandem_num.pdf", onefile=F)
+grid_arrange_shared_legend2(tn_u, tn_p)
+dev.off()
+```
+
+### Feature importances
+
+```{r feat_import_intro}
+# Do various_genomes data, but caller specifies aligner and species
+# We do 4 panels with 
+feature_importances_plot_various_genomes <- function(
+    want_aligner,
+    want_model,
+    want_readlen,
+    top=6)
+{
+    aligner <- if(want_aligner == 'bt2') {
+      'Bowtie 2'
+    } else {
+      if(want_aligner == 'bwamem') {
+        'BWA-MEM'
+      } else {
+        'SNAP'
+      }
+    }
+    type <- if     (want_model == 'c') { 'Conc' }
+            else if(want_model == 'd') { 'Disc' }
+            else if(want_model == 'b') { 'Bad-end' }
+            else                       { 'Unp' }
+    tt <- paste0(
+      #aligner, " ",
+      type, ' ',
+      #if(want_paired) "paired " else "unpaired ",
+      want_readlen, 'nt'
+      )
+    mtmp <- m %>%
+      dplyr::filter(name == 'various_genomes' &
+             !training &
+             aligner == want_aligner &
+             readlen == want_readlen) %>%
+      dplyr::select(trial_no, aligner, species, readlen, sim, feat) %>%
+      dplyr::mutate(feat = as.character(feat)) %>%
+      dplyr::group_by(trial_no, aligner, species, readlen, sim) %>%
+      dplyr::mutate(feat = strsplit(feat, ';')) %>%
+      tidyr::unnest() %>%
+      tidyr::separate(feat, into=c('type', 'feature', 'importance'), sep=':') %>%
+      dplyr::filter(type == want_model) %>%
+      dplyr::mutate(feature = sub('_', '', feature), importance = as.numeric(importance))
+    mtmp_top <- mtmp %>%
+      group_by(aligner, readlen, sim, type, feature) %>%
+      summarise(mn=mean(importance)) %>%
+      top_n(n=top, wt=mn)
+    mtmp_join = plyr::join(mtmp_top, mtmp, by=c('aligner', 'sim', 'readlen', 'type', 'feature'), type='inner')
+    mtmp_join$feature <- reorder(mtmp_join$feature, -mtmp_join$mn)
+  levels(mtmp_join$species)[levels(mtmp_join$species)=="hg19"] <- "GRCh37"
+  levels(mtmp_join$species)[levels(mtmp_join$species)=="hg38"] <- "GRCh38"
+  levels(mtmp_join$species)[levels(mtmp_join$species)=="mm"] <- "Mouse"  # GRCm38
+  levels(mtmp_join$species)[levels(mtmp_join$species)=="zm"] <- "Zea mays"  # AGPv3
+    if(want_aligner == 'bt2') {
+        # Bowtie 2 paired
+        mtmp_join$feature <- plyr::revalue(mtmp_join$feature, c(
+          'fraglen'='Frag length',
+          'ztz0'='Best score',
+          'ztz1'='Score diff',
+          'ztz2'='Edit diff',
+          'ztz4'='Score diff other',
+          'ztz6'='Conc score diff',
+          'ztz7'='Conc edit diff',
+          'ztz9'='% unique',
+          'ztz10'='% repetitive',
+          'ztz11'='Avg seed hits',
+          'ztz13'='% unique stranded',
+          'ztz15'='Avg seed hits stranded',
+          'oztz2'='Edit diff other',
+          'oztz13'='% unique stranded other'))
+    } else if(want_aligner == 'bwamem') {
+        mtmp_join$feature <- plyr::revalue(mtmp_join$feature, c(
+          'fraglen'='Frag length',
+          'ztz0'='Best score',
+          'ztz1'='Best edit dist',
+          'ztz2'='Score diff',
+          'ztz3'='Score diff o',
+          'oztz0'='Best score other',
+          'oztz1'='Best edit dist other',
+          'oztz2'='Score diff other',
+          'oztz3'='Score diff o other',
+          'ztz4'='Conc best score',
+          'ztz5'='Conc score diff',
+          'ztz6'='Seed length',
+          'ztz7'='# tied for 2nd',
+          'ztz8'='# tied for 2nd o',
+          'ztz9'='# conc tied for 2nd',
+          'oztz7'='# tied for 2nd other',
+          'oztz8'='# tied for 2nd o other',
+          'ztz10'='% repetitive',
+          'ztz11'='% repetitive pair',
+          'ztz12'='Seed coverage',
+          'ztz13'='Seed coverage pair'))
+    } else if(want_aligner == 'snap') {
+        mtmp_join$feature <- plyr::revalue(mtmp_join$feature, c(
+          'fraglen'='Frag length',
+          'alqual'='Avg al base qual',
+          'ztz0'='Best score',
+          'ztz1'='Score diff',
+          'ztz2'='Conc score diff',
+          'ztz3'='Prob best',
+          'oztz0'='Best score other',
+          'oztz1'='Score diff other',
+          'oztz2'='Conc score diff other',
+          'oztz3'='Prob best other',
+          'ztz4'='Pop seeds skip',
+          'ztz5'='Pop seeds skip pair',
+          'ztz6'='Min hits',
+          'ztz7'='Min hits strand',
+          'oztz6'='Min hits other',
+          'oztz7'='Min hits strand other',
+          'ztz8'='Hash misses',
+          'oztz8'='Hash misses other',
+          'ztz9'='Hash misses strand',
+          'ztz10'='Hits per lookup',
+          'ztz11'='Hits per lookup pair'))
+    }
+    ggplot(mtmp_join,
+           aes(fill=species, x=feature, y=importance)) +
+      geom_boxplot(outlier.size=NA) +
+      labs(
+           #x=paste('Top', top, 'features'),
+           x='',
+           y="Importance", title=tt) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.title=element_blank(),
+            legend.key = element_blank())
+}
+fi_u_100 <- feature_importances_plot_various_genomes('bt2', 'u', 100)
+fi_c_100 <- feature_importances_plot_various_genomes('bt2', 'c', 100)
+fi_d_100 <- feature_importances_plot_various_genomes('bt2', 'd', 100)
+fi_b_100 <- feature_importances_plot_various_genomes('bt2', 'b', 100)
+
+pdf(file="feat_import_bt2_100.pdf", onefile=F)
+grid_arrange_shared_legend(fi_u, fi_c, fi_d, fi_b)
+dev.off()
+
+fi_u_250 <- feature_importances_plot_various_genomes('bt2', 'u', 250)
+fi_c_250 <- feature_importances_plot_various_genomes('bt2', 'c', 250)
+fi_d_250 <- feature_importances_plot_various_genomes('bt2', 'd', 250)
+fi_b_250 <- feature_importances_plot_various_genomes('bt2', 'b', 250)
+
+pdf(file="feat_import_bt2_250.pdf", onefile=F)
+grid_arrange_shared_legend(fi_u_250, fi_c_250, fi_d_250, fi_b_250)
+dev.off()
+
+fi_u_bwa_100 <- feature_importances_plot_various_genomes('bwamem', 'u', 100)
+fi_c_bwa_100 <- feature_importances_plot_various_genomes('bwamem', 'c', 100)
+fi_d_bwa_100 <- feature_importances_plot_various_genomes('bwamem', 'd', 100)
+#fi_b_bwa_100 <- feature_importances_plot_various_genomes('bwamem', 'b', 100)
+
+pdf(file="feat_import_bwa_100.pdf", onefile=F)
+grid_arrange_shared_legend(fi_u_bwa_100, fi_c_bwa_100, fi_d_bwa_100)
+dev.off()
+
+fi_u_bwa_250 <- feature_importances_plot_various_genomes('bwamem', 'u', 250)
+fi_c_bwa_250 <- feature_importances_plot_various_genomes('bwamem', 'c', 250)
+fi_d_bwa_250 <- feature_importances_plot_various_genomes('bwamem', 'd', 250)
+#fi_b_bwa_250 <- feature_importances_plot_various_genomes('bwamem', 'b', 250)
+
+pdf(file="feat_import_bwa_250.pdf", onefile=F)
+grid_arrange_shared_legend(fi_u_bwa_250, fi_c_bwa_250, fi_d_bwa_250)
+dev.off()
+
+fi_u_snap_100 <- feature_importances_plot_various_genomes('snap', 'u', 100)
+fi_c_snap_100 <- feature_importances_plot_various_genomes('snap', 'c', 100)
+fi_d_snap_100 <- feature_importances_plot_various_genomes('snap', 'd', 100)
+fi_b_snap_100 <- feature_importances_plot_various_genomes('snap', 'b', 100)
+
+pdf(file="feat_import_snap_100.pdf", onefile=F)
+grid_arrange_shared_legend(fi_u_snap_100, fi_c_snap_100, fi_d_snap_100, fi_b_snap_100)
+dev.off()
+
+fi_u_snap_250 <- feature_importances_plot_various_genomes('snap', 'u', 250)
+fi_c_snap_250 <- feature_importances_plot_various_genomes('snap', 'c', 250)
+fi_d_snap_250 <- feature_importances_plot_various_genomes('snap', 'd', 250)
+fi_b_snap_250 <- feature_importances_plot_various_genomes('snap', 'b', 250)
+
+pdf(file="feat_import_snap_250.pdf", onefile=F)
+grid_arrange_shared_legend(fi_u_snap_250, fi_c_snap_250, fi_d_snap_250, fi_b_snap_250)
+dev.off()
+```

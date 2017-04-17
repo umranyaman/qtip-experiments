@@ -17,12 +17,23 @@
 # -nm  Read length mean
 # -ne  Read length error (stddev for normal, interval for uniform)
 
+ifndef QTIP_HOME
+$(error QTIP_HOME is not set)
+endif
+ifndef QTIP_EXPERIMENTS_HOME
+$(error QTIP_EXPERIMENTS_HOME is not set)
+endif
+
 MASON=$(QTIP_EXPERIMENTS_HOME)/software/mason/mason
-BT2=$(QTIP_EXPERIMENTS_HOME)/software/bowtie2/bowtie2
+BT2=$(QTIP_HOME)/software/bowtie2/bowtie2
 NTHREADS=24
 SHELL=/bin/bash
 ASM_HUMAN=hg38
+ASM_HG19=hg19
 ASM_MOUSE=mm10
+ASM_HG38_DECOY=$(QTIP_EXPERIMENTS_HOME)/experiments/refs/hg38_decoy.fa
+ASM_HG19_DECOY=$(QTIP_EXPERIMENTS_HOME)/experiments/refs/hg19_decoy.fa
+ASM_HG38_CHM1=$(QTIP_EXPERIMENTS_HOME)/experiments/refs/human_CHM1htert_25bp_flanked_insertions.geq260.fasta
 
 .PHONY: all
 all: corstats
@@ -36,6 +47,9 @@ corstats: r0_mason_human_mixture_100.corstats \
           r0_mason_mouse_mixture_250.corstats \
           r1_mason_mouse_mixture_100.corstats \
           r1_mason_mouse_mixture_250.corstats
+
+r0_mason_hg38_%.corstats: r0_mason_hg38_%.sam
+	pypy evaluate.py human < $< > $@
 
 r0_mason_human_%.corstats: r0_mason_human_%.sam
 	pypy evaluate.py human < $< > $@
@@ -333,6 +347,161 @@ reads: r0_mason_a_laidlawii_100_10k.fq \
        r0_mason_p_acnes_250_10k.fq \
        r1_mason_p_acnes_100_10k.fq \
        r1_mason_p_acnes_250_10k.fq
+
+.PHONY: decoy_reads
+decoy_reads: \
+  r0_mason_hg38_decoy_100.fq \
+  r0_mason_hg38_decoy_250.fq \
+  r0_mason_hg19_decoy_100.fq \
+  r0_mason_hg19_decoy_250.fq \
+  r1_mason_hg38_decoy_100.fq \
+  r1_mason_hg38_decoy_250.fq \
+  r1_mason_hg19_decoy_100.fq \
+  r1_mason_hg19_decoy_250.fq
+
+r0_mason_hg38_%_100.sam: r0_mason_hg38_%_100.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    --sam-no-qname-trunc \
+	    -U $< \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r0_mason_hg38_chm1_100.fq: $(ASM_HG38_CHM1) $(MASON)
+	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+r0_mason_hg38_decoy_100.fq: $(ASM_HG38_DECOY) $(MASON)
+	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+r0_mason_hg38_%_250.sam: r0_mason_hg38_%_250.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    --sam-no-qname-trunc \
+	    -U $< \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r0_mason_hg38_chm1_250.fq: $(ASM_HG38_CHM1) $(MASON)
+	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+r0_mason_hg38_decoy_250.fq: $(ASM_HG38_DECOY) $(MASON)
+	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+r0_mason_hg38_%_250.sam: r0_mason_hg38_%_250.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    --sam-no-qname-trunc \
+	    -U $< \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r0_mason_hg19_chm1_100.fq: $(ASM_HG19_CHM1) $(MASON)
+	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+r0_mason_hg19_decoy_100.fq: $(ASM_HG19_DECOY) $(MASON)
+	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+r0_mason_hg19_%_100.sam: r0_mason_hg19_%_100.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG19).fa \
+	    --sam-no-qname-trunc \
+	    -U $< \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r0_mason_hg19_chm1_250.fq: $(ASM_HG19_CHM1) $(MASON)
+	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+r0_mason_hg19_decoy_250.fq: $(ASM_HG19_DECOY) $(MASON)
+	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+r0_mason_hg19_%_250.sam: r0_mason_hg19_%_250.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG19).fa \
+	    --sam-no-qname-trunc \
+	    -U $< \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r1_mason_hg38_chm1_100.fq: $(ASM_HG38_CHM1) $(MASON)
+	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
+
+r1_mason_hg38_decoy_100.fq: $(ASM_HG38_DECOY) $(MASON)
+	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
+
+r1_mason_hg38_%_100.sam: r1_mason_hg38_%_100.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    --sam-no-qname-trunc \
+	    -1 $< \
+	    -2 $(<:r1%=r2%) \
+	    -I 200 -X 400 \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r1_mason_hg38_chm1_250.fq: $(ASM_HG38_CHM1) $(MASON)
+	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
+
+r1_mason_hg38_decoy_250.fq: $(ASM_HG38_DECOY) $(MASON)
+	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
+
+r1_mason_hg38_%_250.sam: r1_mason_hg38_%_250.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    --sam-no-qname-trunc \
+	    -1 $< \
+	    -2 $(<:r1%=r2%) \
+	    -I 500 -X 1000 \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r1_mason_hg19_decoy_100.fq: $(ASM_HG19_DECOY) $(MASON)
+	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
+
+r1_mason_hg19_chm1_100.fq: $(ASM_HG19_CHM1) $(MASON)
+	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
+
+r1_mason_hg19_%_100.sam: r1_mason_hg19_%_100.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG19).fa \
+	    --sam-no-qname-trunc \
+	    -1 $< \
+	    -2 $(<:r1%=r2%) \
+	    -I 200 -X 400 \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r1_mason_hg19_chm1_250.fq: $(ASM_HG19_CHM1) $(MASON)
+	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
+
+r1_mason_hg19_decoy_250.fq: $(ASM_HG19_DECOY) $(MASON)
+	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
+
+r1_mason_hg19_%_250.sam: r1_mason_hg19_%_250.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG19).fa \
+	    --sam-no-qname-trunc \
+	    -1 $< \
+	    -2 $(<:r1%=r2%) \
+	    -I 500 -X 1000 \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
 
 define reads
 
