@@ -28,21 +28,26 @@ MASON=$(QTIP_EXPERIMENTS_HOME)/software/mason/mason
 BT2=$(QTIP_HOME)/software/bowtie2/bowtie2
 NTHREADS=24
 SHELL=/bin/bash
-ASM_HUMAN=hg38
+ASM_HG38=hg38
 ASM_HG19=hg19
 ASM_MOUSE=mm10
 ASM_HG38_DECOY=$(QTIP_EXPERIMENTS_HOME)/experiments/refs/hg38_decoy.fa
 ASM_HG19_DECOY=$(QTIP_EXPERIMENTS_HOME)/experiments/refs/hg19_decoy.fa
-ASM_HG38_CHM1=$(QTIP_EXPERIMENTS_HOME)/experiments/refs/human_CHM1htert_25bp_flanked_insertions.geq260.fasta
+ASM_HG38_CHM1=$(QTIP_EXPERIMENTS_HOME)/experiments/refs/hg38_with_chm1
+ASM_HG19_CHM1=$(QTIP_EXPERIMENTS_HOME)/experiments/refs/hg19_with_chm1
 
 .PHONY: all
 all: corstats
 
 .PHONY: corstats
-corstats: r0_mason_human_mixture_100.corstats \
-          r0_mason_human_mixture_250.corstats \
-          r1_mason_human_mixture_100.corstats \
-          r1_mason_human_mixture_250.corstats \
+corstats: r0_mason_hg38_mixture_100.corstats \
+          r0_mason_hg38_mixture_250.corstats \
+          r1_mason_hg38_mixture_100.corstats \
+          r1_mason_hg38_mixture_250.corstats \
+          r0_mason_hg38chm1_mixture_100.corstats \
+          r0_mason_hg38chm1_mixture_250.corstats \
+          r1_mason_hg38chm1_mixture_100.corstats \
+          r1_mason_hg38chm1_mixture_250.corstats \
           r0_mason_mouse_mixture_100.corstats \
           r0_mason_mouse_mixture_250.corstats \
           r1_mason_mouse_mixture_100.corstats \
@@ -51,16 +56,22 @@ corstats: r0_mason_human_mixture_100.corstats \
 r0_mason_hg38_%.corstats: r0_mason_hg38_%.sam
 	pypy evaluate.py human < $< > $@
 
-r0_mason_human_%.corstats: r0_mason_human_%.sam
+r0_mason_hg38chm1_%.corstats: r0_mason_hg38_%.sam
 	pypy evaluate.py human < $< > $@
 
 r0_mason_mouse_%.corstats: r0_mason_mouse_%.sam
 	pypy evaluate.py mouse < $< > $@
 
-r1_mason_human_mixture_100.corstats: r1_mason_human_mixture_100.sam
+r1_mason_hg38_mixture_100.corstats: r1_mason_hg38_mixture_100.sam
 	pypy evaluate.py human < $< > $@
 
-r1_mason_human_mixture_250.corstats: r1_mason_human_mixture_250.sam
+r1_mason_hg38_mixture_250.corstats: r1_mason_hg38_mixture_250.sam
+	pypy evaluate.py human < $< > $@
+
+r1_mason_hg38chm1_mixture_100.corstats: r1_mason_hg38chm1_mixture_100.sam
+	pypy evaluate.py human < $< > $@
+
+r1_mason_hg38chm1_mixture_250.corstats: r1_mason_hg38chm1_mixture_250.sam
 	pypy evaluate.py human < $< > $@
 
 r1_mason_mouse_mixture_100.corstats: r1_mason_mouse_mixture_100.sam
@@ -70,10 +81,14 @@ r1_mason_mouse_mixture_250.corstats: r1_mason_mouse_mixture_250.sam
 	pypy evaluate.py mouse < $< > $@
 
 .PHONY: alignments
-alignments: r0_mason_human_mixture_100.sam \
-            r0_mason_human_mixture_250.sam \
-            r1_mason_human_mixture_100.sam \
-            r1_mason_human_mixture_250.sam \
+alignments: r0_mason_hg38_mixture_100.sam \
+            r0_mason_hg38_mixture_250.sam \
+            r1_mason_hg38_mixture_100.sam \
+            r1_mason_hg38_mixture_250.sam \
+            r0_mason_hg38chm1_mixture_100.sam \
+            r0_mason_hg38chm1_mixture_250.sam \
+            r1_mason_hg38chm1_mixture_100.sam \
+            r1_mason_hg38chm1_mixture_250.sam \
             r0_mason_mouse_mixture_100.sam \
             r0_mason_mouse_mixture_250.sam \
             r1_mason_mouse_mixture_100.sam \
@@ -96,9 +111,18 @@ alignments: r0_mason_human_mixture_100.sam \
 
 RENAME=awk '{ln += 1; if(ln % 4 == 1) { n += 1; print "@r"n } else {print}}'
 
-r0_mason_human_%.sam: r0_mason_human_%.fq
+r0_mason_hg38_%.sam: r0_mason_hg38_%.fq
 	$(BT2) \
-	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
+	    --sam-no-qname-trunc \
+	    -p $(NTHREADS) \
+	    -U $< \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r0_mason_hg38chm1_%.sam: r0_mason_hg38chm1_%.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
 	    --sam-no-qname-trunc \
 	    -p $(NTHREADS) \
 	    -U $< \
@@ -114,9 +138,9 @@ r0_mason_mouse_%.sam: r0_mason_mouse_%.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r1_mason_human_mixture_100.sam: r1_mason_human_mixture_100.fq
+r1_mason_hg38_mixture_100.sam: r1_mason_hg38_mixture_100.fq
 	$(BT2) \
-	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
 	    --sam-no-qname-trunc \
 	    -p $(NTHREADS) \
 	    -1 $< \
@@ -125,9 +149,31 @@ r1_mason_human_mixture_100.sam: r1_mason_human_mixture_100.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r1_mason_human_mixture_250.sam: r1_mason_human_mixture_250.fq
+r1_mason_hg38_mixture_250.sam: r1_mason_hg38_mixture_250.fq
 	$(BT2) \
-	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
+	    --sam-no-qname-trunc \
+	    -p $(NTHREADS) \
+	    -1 $< \
+	    -2 $(<:r1%=r2%) \
+	    -I 500 -X 1000 \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r1_mason_hg38chm1_mixture_100.sam: r1_mason_hg38chm1_mixture_100.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
+	    --sam-no-qname-trunc \
+	    -p $(NTHREADS) \
+	    -1 $< \
+	    -2 $(<:r1%=r2%) \
+	    -I 200 -X 400 \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+r1_mason_hg38chm1_mixture_250.sam: r1_mason_hg38chm1_mixture_250.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
 	    --sam-no-qname-trunc \
 	    -p $(NTHREADS) \
 	    -1 $< \
@@ -158,7 +204,11 @@ r1_mason_mouse_mixture_250.sam: r1_mason_mouse_mixture_250.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-READS_UNP_100=../simulated_reads/various_genomes/r0_mason_ill_hg_100.fq.gz \
+# What if I want these experiments to include CHM1 reads?  I could do this
+# but point to the various_genomes_chm1 directory instead of various_genomes.
+# Should I do both?
+
+READS_UNP_100=../simulated_reads/various_genomes/r0_mason_ill_hg38_100.fq.gz \
               ../simulated_reads/various_genomes/r0_mason_ill_mm_100.fq.gz \
               r0_mason_a_laidlawii_100_10k.fq \
               r0_mason_m_fermentans_100_10k.fq \
@@ -167,7 +217,16 @@ READS_UNP_100=../simulated_reads/various_genomes/r0_mason_ill_hg_100.fq.gz \
               r0_mason_m_globosa_100_10k.fq \
               r0_mason_p_acnes_100_10k.fq
 
-READS_UNP_250=../simulated_reads/various_genomes/r0_mason_ill_hg_250.fq.gz \
+READS_UNP_CHM1_100=../simulated_reads/various_genomes_chm1/r0_mason_ill_hg38_100.fq.gz \
+              ../simulated_reads/various_genomes/r0_mason_ill_mm_100.fq.gz \
+              r0_mason_a_laidlawii_100_10k.fq \
+              r0_mason_m_fermentans_100_10k.fq \
+              r0_mason_m_hyorhinis_100_10k.fq \
+              r0_mason_m_hominis_100_10k.fq \
+              r0_mason_m_globosa_100_10k.fq \
+              r0_mason_p_acnes_100_10k.fq
+
+READS_UNP_250=../simulated_reads/various_genomes/r0_mason_ill_hg38_250.fq.gz \
               ../simulated_reads/various_genomes/r0_mason_ill_mm_250.fq.gz \
               r0_mason_a_laidlawii_250_10k.fq \
               r0_mason_m_fermentans_250_10k.fq \
@@ -176,7 +235,16 @@ READS_UNP_250=../simulated_reads/various_genomes/r0_mason_ill_hg_250.fq.gz \
               r0_mason_m_globosa_250_10k.fq \
               r0_mason_p_acnes_250_10k.fq
 
-READS_PAIR_100=../simulated_reads/various_genomes/r1_mason_ill_hg_100.fq.gz \
+READS_UNP_CHM1_250=../simulated_reads/various_genomes_chm1/r0_mason_ill_hg38_250.fq.gz \
+              ../simulated_reads/various_genomes/r0_mason_ill_mm_250.fq.gz \
+              r0_mason_a_laidlawii_250_10k.fq \
+              r0_mason_m_fermentans_250_10k.fq \
+              r0_mason_m_hyorhinis_250_10k.fq \
+              r0_mason_m_hominis_250_10k.fq \
+              r0_mason_m_globosa_250_10k.fq \
+              r0_mason_p_acnes_250_10k.fq
+
+READS_PAIR_100=../simulated_reads/various_genomes/r1_mason_ill_hg38_100.fq.gz \
                ../simulated_reads/various_genomes/r1_mason_ill_mm_100.fq.gz \
                r1_mason_a_laidlawii_100_10k.fq \
                r1_mason_m_fermentans_100_10k.fq \
@@ -184,7 +252,7 @@ READS_PAIR_100=../simulated_reads/various_genomes/r1_mason_ill_hg_100.fq.gz \
                r1_mason_m_hominis_100_10k.fq \
                r1_mason_m_globosa_100_10k.fq \
                r1_mason_p_acnes_100_10k.fq \
-               ../simulated_reads/various_genomes/r2_mason_ill_hg_100.fq.gz \
+               ../simulated_reads/various_genomes/r2_mason_ill_hg38_100.fq.gz \
                ../simulated_reads/various_genomes/r2_mason_ill_mm_100.fq.gz \
                r2_mason_a_laidlawii_100_10k.fq \
                r2_mason_m_fermentans_100_10k.fq \
@@ -193,7 +261,24 @@ READS_PAIR_100=../simulated_reads/various_genomes/r1_mason_ill_hg_100.fq.gz \
                r2_mason_m_globosa_100_10k.fq \
                r2_mason_p_acnes_100_10k.fq
 
-READS_PAIR_250=../simulated_reads/various_genomes/r1_mason_ill_hg_250.fq.gz \
+READS_PAIR_CHM1_100=../simulated_reads/various_genomes_chm1/r1_mason_ill_hg38_100.fq.gz \
+               ../simulated_reads/various_genomes/r1_mason_ill_mm_100.fq.gz \
+               r1_mason_a_laidlawii_100_10k.fq \
+               r1_mason_m_fermentans_100_10k.fq \
+               r1_mason_m_hyorhinis_100_10k.fq \
+               r1_mason_m_hominis_100_10k.fq \
+               r1_mason_m_globosa_100_10k.fq \
+               r1_mason_p_acnes_100_10k.fq \
+               ../simulated_reads/various_genomes_chm1/r2_mason_ill_hg38_100.fq.gz \
+               ../simulated_reads/various_genomes/r2_mason_ill_mm_100.fq.gz \
+               r2_mason_a_laidlawii_100_10k.fq \
+               r2_mason_m_fermentans_100_10k.fq \
+               r2_mason_m_hyorhinis_100_10k.fq \
+               r2_mason_m_hominis_100_10k.fq \
+               r2_mason_m_globosa_100_10k.fq \
+               r2_mason_p_acnes_100_10k.fq
+
+READS_PAIR_250=../simulated_reads/various_genomes/r1_mason_ill_hg38_250.fq.gz \
                ../simulated_reads/various_genomes/r1_mason_ill_mm_250.fq.gz \
                r1_mason_a_laidlawii_250_10k.fq \
                r1_mason_m_fermentans_250_10k.fq \
@@ -201,7 +286,7 @@ READS_PAIR_250=../simulated_reads/various_genomes/r1_mason_ill_hg_250.fq.gz \
                r1_mason_m_hominis_250_10k.fq \
                r1_mason_m_globosa_250_10k.fq \
                r1_mason_p_acnes_250_10k.fq \
-               ../simulated_reads/various_genomes/r2_mason_ill_hg_250.fq.gz \
+               ../simulated_reads/various_genomes/r2_mason_ill_hg38_250.fq.gz \
                ../simulated_reads/various_genomes/r2_mason_ill_mm_250.fq.gz \
                r2_mason_a_laidlawii_250_10k.fq \
                r2_mason_m_fermentans_250_10k.fq \
@@ -210,8 +295,35 @@ READS_PAIR_250=../simulated_reads/various_genomes/r1_mason_ill_hg_250.fq.gz \
                r2_mason_m_globosa_250_10k.fq \
                r2_mason_p_acnes_250_10k.fq
 
-r0_mason_human_mixture_100.fq: $(READS_UNP_100)
-	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg_100.fq.gz | head -n `expr 930000 \* 4` > $@
+READS_PAIR_CHM1_250=../simulated_reads/various_genomes_chm1/r1_mason_ill_hg38_250.fq.gz \
+               ../simulated_reads/various_genomes/r1_mason_ill_mm_250.fq.gz \
+               r1_mason_a_laidlawii_250_10k.fq \
+               r1_mason_m_fermentans_250_10k.fq \
+               r1_mason_m_hyorhinis_250_10k.fq \
+               r1_mason_m_hominis_250_10k.fq \
+               r1_mason_m_globosa_250_10k.fq \
+               r1_mason_p_acnes_250_10k.fq \
+               ../simulated_reads/various_genomes_chm1/r2_mason_ill_hg38_250.fq.gz \
+               ../simulated_reads/various_genomes/r2_mason_ill_mm_250.fq.gz \
+               r2_mason_a_laidlawii_250_10k.fq \
+               r2_mason_m_fermentans_250_10k.fq \
+               r2_mason_m_hyorhinis_250_10k.fq \
+               r2_mason_m_hominis_250_10k.fq \
+               r2_mason_m_globosa_250_10k.fq \
+               r2_mason_p_acnes_250_10k.fq
+
+r0_mason_hg38_mixture_100.fq: $(READS_UNP_100)
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg38_100.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_100.fq.gz | head -n 40000 | $(RENAME) >> $@
+	cat r0_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_fermentans_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_hyorhinis_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_hominis_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_globosa_100_10k.fq | $(RENAME) >> $@
+	cat r0_mason_p_acnes_100_10k.fq | $(RENAME) >> $@
+
+r0_mason_hg38chm1_mixture_100.fq: $(READS_UNP_CHM1_100)
+	gzip -dc ../simulated_reads/various_genomes_chm1/r0_mason_ill_hg38_100.fq.gz | head -n `expr 930000 \* 4` > $@
 	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_100.fq.gz | head -n 40000 | $(RENAME) >> $@
 	cat r0_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $@
 	cat r0_mason_m_fermentans_100_10k.fq | $(RENAME) >> $@
@@ -222,7 +334,7 @@ r0_mason_human_mixture_100.fq: $(READS_UNP_100)
 
 r0_mason_mouse_mixture_100.fq: $(READS_UNP_100)
 	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_100.fq.gz | head -n `expr 930000 \* 4` > $@
-	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg_100.fq.gz | head -n 40000 | $(RENAME) >> $@
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg38_100.fq.gz | head -n 40000 | $(RENAME) >> $@
 	cat r0_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $@
 	cat r0_mason_m_fermentans_100_10k.fq | $(RENAME) >> $@
 	cat r0_mason_m_hyorhinis_100_10k.fq | $(RENAME) >> $@
@@ -230,8 +342,18 @@ r0_mason_mouse_mixture_100.fq: $(READS_UNP_100)
 	cat r0_mason_m_globosa_100_10k.fq | $(RENAME) >> $@
 	cat r0_mason_p_acnes_100_10k.fq | $(RENAME) >> $@
 
-r0_mason_human_mixture_250.fq: $(READS_UNP_250)
-	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg_250.fq.gz | head -n `expr 930000 \* 4` > $@
+r0_mason_hg38_mixture_250.fq: $(READS_UNP_250)
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg38_250.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_250.fq.gz | head -n 40000 | $(RENAME) >> $@
+	cat r0_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_fermentans_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_hyorhinis_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_hominis_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_m_globosa_250_10k.fq | $(RENAME) >> $@
+	cat r0_mason_p_acnes_250_10k.fq | $(RENAME) >> $@
+
+r0_mason_hg38chm1_mixture_250.fq: $(READS_UNP_CHM1_250)
+	gzip -dc ../simulated_reads/various_genomes_chm1/r0_mason_ill_hg38_250.fq.gz | head -n `expr 930000 \* 4` > $@
 	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_250.fq.gz | head -n 40000 | $(RENAME) >> $@
 	cat r0_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
 	cat r0_mason_m_fermentans_250_10k.fq | $(RENAME) >> $@
@@ -242,7 +364,7 @@ r0_mason_human_mixture_250.fq: $(READS_UNP_250)
 
 r0_mason_mouse_mixture_250.fq: $(READS_UNP_250)
 	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_mm_250.fq.gz | head -n `expr 930000 \* 4` > $@
-	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg_250.fq.gz | head -n 40000 | $(RENAME) >> $@
+	gzip -dc ../simulated_reads/various_genomes/r0_mason_ill_hg38_250.fq.gz | head -n 40000 | $(RENAME) >> $@
 	cat r0_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
 	cat r0_mason_m_fermentans_250_10k.fq | $(RENAME) >> $@
 	cat r0_mason_m_hyorhinis_250_10k.fq | $(RENAME) >> $@
@@ -250,9 +372,27 @@ r0_mason_mouse_mixture_250.fq: $(READS_UNP_250)
 	cat r0_mason_m_globosa_250_10k.fq | $(RENAME) >> $@
 	cat r0_mason_p_acnes_250_10k.fq | $(RENAME) >> $@
 
-r1_mason_human_mixture_100.fq: $(READS_PAIR_100)
-	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg_100.fq.gz | head -n `expr 930000 \* 4` > $@
-	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg_100.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
+r1_mason_hg38_mixture_100.fq: $(READS_PAIR_100)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg38_100.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg38_100.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_100.fq.gz | head -n 40000 | $(RENAME) >> $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_mm_100.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r1_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_fermentans_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_hyorhinis_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_hominis_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_globosa_100_10k.fq | $(RENAME) >> $@
+	cat r1_mason_p_acnes_100_10k.fq | $(RENAME) >> $@
+	cat r2_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_fermentans_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_hyorhinis_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_hominis_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_globosa_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_p_acnes_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+
+r1_mason_hg38chm1_mixture_100.fq: $(READS_PAIR_CHM1_100)
+	gzip -dc ../simulated_reads/various_genomes_chm1/r1_mason_ill_hg38_100.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes_chm1/r2_mason_ill_hg38_100.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
 	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_100.fq.gz | head -n 40000 | $(RENAME) >> $@
 	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_mm_100.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
 	cat r1_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $@
@@ -271,8 +411,8 @@ r1_mason_human_mixture_100.fq: $(READS_PAIR_100)
 r1_mason_mouse_mixture_100.fq: $(READS_PAIR_100)
 	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_100.fq.gz | head -n `expr 930000 \* 4` > $@
 	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_mm_100.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
-	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg_100.fq.gz | head -n 40000 | $(RENAME) >> $@
-	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg_100.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg38_100.fq.gz | head -n 40000 | $(RENAME) >> $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg38_100.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
 	cat r1_mason_a_laidlawii_100_10k.fq | $(RENAME) >> $@
 	cat r1_mason_m_fermentans_100_10k.fq | $(RENAME) >> $@
 	cat r1_mason_m_hyorhinis_100_10k.fq | $(RENAME) >> $@
@@ -286,9 +426,27 @@ r1_mason_mouse_mixture_100.fq: $(READS_PAIR_100)
 	cat r2_mason_m_globosa_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
 	cat r2_mason_p_acnes_100_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
 
-r1_mason_human_mixture_250.fq: $(READS_PAIR_250)
-	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg_250.fq.gz | head -n `expr 930000 \* 4` > $@
-	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg_250.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
+r1_mason_hg38_mixture_250.fq: $(READS_PAIR_250)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg38_250.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg38_250.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_250.fq.gz | head -n 40000 | $(RENAME) >> $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_mm_250.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r1_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_fermentans_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_hyorhinis_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_hominis_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_m_globosa_250_10k.fq | $(RENAME) >> $@
+	cat r1_mason_p_acnes_250_10k.fq | $(RENAME) >> $@
+	cat r2_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_fermentans_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_hyorhinis_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_hominis_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_m_globosa_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+	cat r2_mason_p_acnes_250_10k.fq | $(RENAME) >> $(@:r1_%=r2_%)
+
+r1_mason_hg38chm1_mixture_250.fq: $(READS_PAIR_CHM1_250)
+	gzip -dc ../simulated_reads/various_genomes_chm1/r1_mason_ill_hg38_250.fq.gz | head -n `expr 930000 \* 4` > $@
+	gzip -dc ../simulated_reads/various_genomes_chm1/r2_mason_ill_hg38_250.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
 	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_250.fq.gz | head -n 40000 | $(RENAME) >> $@
 	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_mm_250.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
 	cat r1_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
@@ -307,8 +465,8 @@ r1_mason_human_mixture_250.fq: $(READS_PAIR_250)
 r1_mason_mouse_mixture_250.fq: $(READS_PAIR_250)
 	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_mm_250.fq.gz | head -n `expr 930000 \* 4` > $@
 	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_mm_250.fq.gz | head -n `expr 930000 \* 4` > $(@:r1_%=r2_%)
-	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg_250.fq.gz | head -n 40000 | $(RENAME) >> $@
-	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg_250.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
+	gzip -dc ../simulated_reads/various_genomes/r1_mason_ill_hg38_250.fq.gz | head -n 40000 | $(RENAME) >> $@
+	gzip -dc ../simulated_reads/various_genomes/r2_mason_ill_hg38_250.fq.gz | head -n 40000 | $(RENAME) >> $(@:r1_%=r2_%)
 	cat r1_mason_a_laidlawii_250_10k.fq | $(RENAME) >> $@
 	cat r1_mason_m_fermentans_250_10k.fq | $(RENAME) >> $@
 	cat r1_mason_m_hyorhinis_250_10k.fq | $(RENAME) >> $@
@@ -359,62 +517,52 @@ decoy_reads: \
   r1_mason_hg19_decoy_100.fq \
   r1_mason_hg19_decoy_250.fq
 
+.PHONY: chm1_reads
+chm1_reads: \
+  r0_mason_hg38_chm1_100.fq \
+  r0_mason_hg38_chm1_250.fq \
+  r0_mason_hg19_chm1_100.fq \
+  r0_mason_hg19_chm1_250.fq \
+  r1_mason_hg38_chm1_100.fq \
+  r1_mason_hg38_chm1_250.fq \
+  r1_mason_hg19_chm1_100.fq \
+  r1_mason_hg19_chm1_250.fq
+
+# GRCh38 100 nt alignments (all 3)
 r0_mason_hg38_%_100.sam: r0_mason_hg38_%_100.fq
 	$(BT2) \
-	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
 	    --sam-no-qname-trunc \
 	    -U $< \
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
+# GRCh38-CHM1 100 nt reads
 r0_mason_hg38_chm1_100.fq: $(ASM_HG38_CHM1) $(MASON)
 	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
 
+# GRCh38-decoy 100 nt reads
 r0_mason_hg38_decoy_100.fq: $(ASM_HG38_DECOY) $(MASON)
 	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
 
+# GRCh38 250 nt alignments (all 3)
 r0_mason_hg38_%_250.sam: r0_mason_hg38_%_250.fq
 	$(BT2) \
-	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
 	    --sam-no-qname-trunc \
 	    -U $< \
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
+# GRCh38-CHM1 250 nt reads
 r0_mason_hg38_chm1_250.fq: $(ASM_HG38_CHM1) $(MASON)
 	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
 
+# GRCh38-decoy 250 nt reads
 r0_mason_hg38_decoy_250.fq: $(ASM_HG38_DECOY) $(MASON)
 	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
 
-r0_mason_hg38_%_250.sam: r0_mason_hg38_%_250.fq
-	$(BT2) \
-	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
-	    --sam-no-qname-trunc \
-	    -U $< \
-	    -t \
-	    -S $@ 2> >(tee $@.alstats)
-
-r0_mason_hg19_chm1_100.fq: $(ASM_HG19_CHM1) $(MASON)
-	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
-
-r0_mason_hg19_decoy_100.fq: $(ASM_HG19_DECOY) $(MASON)
-	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
-
-r0_mason_hg19_%_100.sam: r0_mason_hg19_%_100.fq
-	$(BT2) \
-	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG19).fa \
-	    --sam-no-qname-trunc \
-	    -U $< \
-	    -t \
-	    -S $@ 2> >(tee $@.alstats)
-
-r0_mason_hg19_chm1_250.fq: $(ASM_HG19_CHM1) $(MASON)
-	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
-
-r0_mason_hg19_decoy_250.fq: $(ASM_HG19_DECOY) $(MASON)
-	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
-
+# GRCh37 100 nt alignments (all 3)
 r0_mason_hg19_%_250.sam: r0_mason_hg19_%_250.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG19).fa \
@@ -423,19 +571,35 @@ r0_mason_hg19_%_250.sam: r0_mason_hg19_%_250.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r1_mason_hg38_chm1_100.fq: $(ASM_HG38_CHM1) $(MASON)
-	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
-	mv .$(@)_1.fq $@
-	mv .$(@)_2.fq $(@:r1_%=r2_%)
+# GRCh37-CHM1 100 nt reads
+r0_mason_hg19_chm1_100.fq: $(ASM_HG19_CHM1) $(MASON)
+	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
 
-r1_mason_hg38_decoy_100.fq: $(ASM_HG38_DECOY) $(MASON)
-	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
-	mv .$(@)_1.fq $@
-	mv .$(@)_2.fq $(@:r1_%=r2_%)
+# GRCh37-decoy 100 nt reads
+r0_mason_hg19_decoy_100.fq: $(ASM_HG19_DECOY) $(MASON)
+	$(MASON) illumina -i -s 453 -sq -n 100 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
 
+# GRCh37 250 nt alignments (all 3)
+r0_mason_hg19_%_250.sam: r0_mason_hg19_%_250.fq
+	$(BT2) \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG19).fa \
+	    --sam-no-qname-trunc \
+	    -U $< \
+	    -t \
+	    -S $@ 2> >(tee $@.alstats)
+
+# GRCh37-CHM1 250 nt reads
+r0_mason_hg19_chm1_250.fq: $(ASM_HG19_CHM1) $(MASON)
+	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+# GRCh37-decoy 250 nt reads
+r0_mason_hg19_decoy_250.fq: $(ASM_HG19_DECOY) $(MASON)
+	$(MASON) illumina -i -s 278 -sq -n 250 -N 10000 -o $@ $< 2> .$@.err | tee .$@.out
+
+# GRCh37 100 nt paired-end alignments (all 3)
 r1_mason_hg38_%_100.sam: r1_mason_hg38_%_100.fq
 	$(BT2) \
-	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
 	    --sam-no-qname-trunc \
 	    -1 $< \
 	    -2 $(<:r1%=r2%) \
@@ -443,19 +607,22 @@ r1_mason_hg38_%_100.sam: r1_mason_hg38_%_100.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r1_mason_hg38_chm1_250.fq: $(ASM_HG38_CHM1) $(MASON)
-	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+# GRCh38-CHM1 100 nt paired-end reads
+r1_mason_hg38_chm1_100.fq: $(ASM_HG38_CHM1) $(MASON)
+	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
 	mv .$(@)_1.fq $@
 	mv .$(@)_2.fq $(@:r1_%=r2_%)
 
-r1_mason_hg38_decoy_250.fq: $(ASM_HG38_DECOY) $(MASON)
-	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+# GRCh38-decoy 100 nt paired-end reads
+r1_mason_hg38_decoy_100.fq: $(ASM_HG38_DECOY) $(MASON)
+	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
 	mv .$(@)_1.fq $@
 	mv .$(@)_2.fq $(@:r1_%=r2_%)
 
+# GRCh38 250 nt paired-end alignments (all 3)
 r1_mason_hg38_%_250.sam: r1_mason_hg38_%_250.fq
 	$(BT2) \
-	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HUMAN).fa \
+	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG38).fa \
 	    --sam-no-qname-trunc \
 	    -1 $< \
 	    -2 $(<:r1%=r2%) \
@@ -463,16 +630,19 @@ r1_mason_hg38_%_250.sam: r1_mason_hg38_%_250.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r1_mason_hg19_decoy_100.fq: $(ASM_HG19_DECOY) $(MASON)
-	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+# GRCh38-CHM1 250 nt paired-end reads
+r1_mason_hg38_chm1_250.fq: $(ASM_HG38_CHM1) $(MASON)
+	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
 	mv .$(@)_1.fq $@
 	mv .$(@)_2.fq $(@:r1_%=r2_%)
 
-r1_mason_hg19_chm1_100.fq: $(ASM_HG19_CHM1) $(MASON)
-	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+# GRCh38-decoy 250 nt paired-end reads
+r1_mason_hg38_decoy_250.fq: $(ASM_HG38_DECOY) $(MASON)
+	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
 	mv .$(@)_1.fq $@
 	mv .$(@)_2.fq $(@:r1_%=r2_%)
 
+# GRCh37 100 nt paired-end alignments (all 3)
 r1_mason_hg19_%_100.sam: r1_mason_hg19_%_100.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG19).fa \
@@ -483,16 +653,19 @@ r1_mason_hg19_%_100.sam: r1_mason_hg19_%_100.fq
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
 
-r1_mason_hg19_chm1_250.fq: $(ASM_HG19_CHM1) $(MASON)
-	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+# GRCh37-CHM1 100 nt paired-end reads
+r1_mason_hg19_chm1_100.fq: $(ASM_HG19_CHM1) $(MASON)
+	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
 	mv .$(@)_1.fq $@
 	mv .$(@)_2.fq $(@:r1_%=r2_%)
 
-r1_mason_hg19_decoy_250.fq: $(ASM_HG19_DECOY) $(MASON)
-	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+# GRCh37-decoy 100 nt paired-end reads
+r1_mason_hg19_decoy_100.fq: $(ASM_HG19_DECOY) $(MASON)
+	$(MASON) illumina -i -s 645 -sq -mp -rn 2 -ll 300 -le 100 -n 100 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
 	mv .$(@)_1.fq $@
 	mv .$(@)_2.fq $(@:r1_%=r2_%)
 
+# GRCh37 250 nt paired-end alignments (all 3)
 r1_mason_hg19_%_250.sam: r1_mason_hg19_%_250.fq
 	$(BT2) \
 	    -x $(QTIP_EXPERIMENTS_HOME)/experiments/refs/$(ASM_HG19).fa \
@@ -502,6 +675,18 @@ r1_mason_hg19_%_250.sam: r1_mason_hg19_%_250.fq
 	    -I 500 -X 1000 \
 	    -t \
 	    -S $@ 2> >(tee $@.alstats)
+
+# GRCh37-CHM1 100 nt paired-end reads
+r1_mason_hg19_chm1_250.fq: $(ASM_HG19_CHM1) $(MASON)
+	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
+
+# GRCh37-decoy 100 nt paired-end reads
+r1_mason_hg19_decoy_250.fq: $(ASM_HG19_DECOY) $(MASON)
+	$(MASON) illumina -i -s 502 -sq -mp -rn 2 -ll 750 -le 250 -n 250 -N 10000 -o .$(@).fq $< 2> .$@.err | tee .$@.out
+	mv .$(@)_1.fq $@
+	mv .$(@)_2.fq $(@:r1_%=r2_%)
 
 define reads
 
