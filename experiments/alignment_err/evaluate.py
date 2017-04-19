@@ -145,7 +145,7 @@ for ln in sys.stdin:
     if ln[0] == '@':
         continue
     toks = ln.split('\t')
-    from_contaminant = toks[0][0] != 'r'
+    from_contaminant = toks[0][0] == 'r'
     from_chm = toks[0].startswith('utg718000') or toks[0].startswith('JSAF020')
     assert not from_contaminant or not from_chm
     unal = (int(toks[1]) & 4) != 0
