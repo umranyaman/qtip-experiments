@@ -3,7 +3,8 @@ cat sam_file.sam | evaluate.py {human|mouse}
 
 Iterate through a SAM file produced by the Makefile and count:
 
-- # category-1 errors (contaminant aligned to primary reference)
+- # category-1a errors (contaminant aligned to primary reference)
+- # category-1b errors (same-species non-reference sequence aligned to primary reference)
 - # category-2 errors (reference-derived reads that failed to align)
 - # category-3 errors (aligned to reference but not to point of origin)
 - correct alignments of both kinds (target and contamination)
@@ -137,29 +138,34 @@ def is_mouse_chr(st):
 
 
 wiggle = 30
-cat1, cat2, cat3 = 0, 0, 0
+cat1a, cat1b, cat2, cat3 = 0, 0, 0, 0
 cor_target = 0  # # target reads correctly aligned to target
 cor_contam = 0
 for ln in sys.stdin:
     if ln[0] == '@':
         continue
     toks = ln.split('\t')
-    from_target = toks[0][0] != 'r'
+    from_contaminant = toks[0][0] != 'r'
+    from_chm = toks[0].startswith('utg718000') or toks[0].startswith('JSAF020')
+    assert not from_contaminant or not from_chm
     unal = (int(toks[1]) & 4) != 0
-    if unal and from_target:
+    if unal and not from_contaminant and not from_chm:
         cat2 += 1  # incorrectly failed to align to target
     elif unal:
         cor_contam += 1  # correctly failed to align to target
     else:
         assert sys.argv[1] != 'human' or is_human_chr(toks[2])
         assert sys.argv[1] != 'mouse' or is_mouse_chr(toks[2])
-        if not from_target:
-            cat1 += 1  # incorrectly aligned to target
+        if from_contaminant:
+            cat1a += 1  # incorrectly aligned to target
+        elif from_chm:
+            cat1b += 1  # incorrectly aligned to target
         elif not is_correct(toks, wiggle):
             cat3 += 1  # correctly aligned to target, but to wrong locus
         else:
             cor_target += 1  # correct
 
+cat1 = cat1a + cat1b
 err = cat1 + cat2 + cat3
 tot = err + cor_target + cor_contam
 
@@ -168,5 +174,7 @@ print('error=%d, %0.04f%%' % (err, float(100*err)/tot), file=sys.stderr)
 
 print('type,count,pct_total,pct_error')
 print('1,%d,%0.04f,%0.04f' % (cat1, float(100*cat1)/tot, float(100*cat1)/err))
+print('1a,%d,%0.04f,%0.04f' % (cat1a, float(100*cat1a)/tot, float(100*cat1a)/err))
+print('1b,%d,%0.04f,%0.04f' % (cat1b, float(100*cat1b)/tot, float(100*cat1b)/err))
 print('2,%d,%0.04f,%0.04f' % (cat2, float(100*cat2)/tot, float(100*cat2)/err))
 print('3,%d,%0.04f,%0.04f' % (cat3, float(100*cat3)/tot, float(100*cat3)/err))
