@@ -4,7 +4,7 @@ from __future__ import print_function
 from itertools import product
 
 
-species_list = ['human', 'mouse']
+species_list = ['hg38', 'hg38chm1', 'mouse']
 rdlen_list = ['100', '250']
 paired_prefix_list = ['r0', 'r1']
 
