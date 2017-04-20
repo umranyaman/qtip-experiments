@@ -86,6 +86,7 @@ popd
 pushd qtip-experiments/experiments/refs
 # this may be slow, as it needs to download two human assemblies
 sh get_assemblytics.sh
+popd
 ```
 
 ### `simulated_reads` experiments
@@ -120,6 +121,19 @@ Many jobs are submitted here.  All told, this takes about 4 hours for me on MARC
 
 The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
 
+### Training data formula series
+
+To gather data on many ways of setting the `--sim-function` and `--sim-factor` parameters, which determine how many tandem reads to simulate as a function of the number of input reads, run:
+
+```
+pushd qtip-experiments/experiments/simulated_reads
+sh train_series.sh --wet
+```
+
+Many jobs are submitted here.
+
+The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
+
 ### `platinum` experiments
 
 #### Download reads
@@ -135,7 +149,7 @@ sh get.sh
 sh get_gold_vcf.sh
 ```
 
-### Analyze reads
+#### Analyze reads
 
 ```
 sh fraglen.sh wet
@@ -146,7 +160,7 @@ sh align_full.sh wet
 # very time- and resource-intensive
 ```
 
-### Call variants
+#### Call variants
 
 Calls variants:
 * for all MAPQ thresholds
@@ -160,7 +174,7 @@ sh sbatch_fb.sh wet
 # very time- and resource-intensive
 ```
 
-### Summarize
+#### Summarize
 
 Makes ROCs, and calculates F-scores based on best MAPQ and QUAL thresholds for both original and Qtip-predicted MAPQs.
 
