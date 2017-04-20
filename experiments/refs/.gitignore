@@ -6,3 +6,4 @@
 *.fa.*
 *.2bit
 *.out
+.tmp.bed
