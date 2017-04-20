@@ -80,6 +80,14 @@ sh index_marcc.sh
 popd
 ```
 
+### Obtain CHM1 assemblies and build combined references
+
+```
+pushd qtip-experiments/experiments/refs
+# this may be slow, as it needs to download two human assemblies
+sh get_assemblytics.sh
+```
+
 ### `simulated_reads` experiments
 
 #### Simulate reads
