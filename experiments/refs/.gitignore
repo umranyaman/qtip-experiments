@@ -7,3 +7,6 @@
 *.2bit
 *.out
 .tmp.bed
+*.Assemblytics_results.zip
+assemblytics_37
+assemblytics_38
