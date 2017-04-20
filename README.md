@@ -62,7 +62,7 @@ MARCC note: making mason doesn’t work with `vtune` module loaded.
 
 ### Obtain reference genomes and build indexes
 
-Reference genomes (`hg38`, `mm10` and `zm_AGPv4`) and indexes (`bowtie2`, `bwa mem` and `snap`) are used in these experiments.
+Reference genomes (`hg19`, `hg38`, `mm10` and `zm_AGPv4`) and indexes (`bowtie2`, `bwa mem` and `snap`) are used in these experiments.
 
 ```
 pushd qtip-experiments/experiments/refs
