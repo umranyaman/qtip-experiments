@@ -2,6 +2,31 @@
 
 Scripts for driving all experiments described in the `qtip` manuscript.
 
+**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+
+- [qtip-experiments](#)
+	- [Preliminaries](#)
+		- [Clone repos](#)
+		- [Set up environment](#)
+		- [Build qtip](#)
+		- [Build software in qtip-experiments](#)
+		- [Obtain reference genomes and build indexes](#)
+		- [Obtain CHM1 assemblies and build combined references](#)
+	- [Results](#)
+		- [Alignment error experiments](#)
+		- [simulated_reads experiments](#)
+			- [Simulate reads](#)
+			- [Run qtip](#)
+		- [Training data formula series](#)
+		- [Feature importances](#)
+		- [platinum experiments](#)
+			- [Download reads](#)
+			- [Download platinum variants and high confidence regions](#)
+			- [Analyze reads](#)
+			- [Call variants](#)
+			- [Summarize](#)
+		- [Measuring overhead with real data](#)
+
 ## Preliminaries
 
 ### Clone repos
