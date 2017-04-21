@@ -2,6 +2,8 @@
 
 Scripts for driving all experiments described in the `qtip` manuscript.
 
+## Preliminaries
+
 ### Clone repos
 
 Clone the [`qtip`](https://github.com/BenLangmead/qtip) and [`qtip-experiments`](https://github.com/BenLangmead/qtip-experiments) repos.  `qtip` contains the Qtip software and scripts for building `qtip`-compatible versions of the relevant aligners.  `qtip-experiments` contains everything else needed to run the experiments described in the manuscript.
@@ -89,9 +91,11 @@ sh get_assemblytics.sh
 popd
 ```
 
+## Results
+
 ### Alignment error experiments
 
-For Supplementary Note 2.
+For Supplementary Note 2 and Supplementary Table 1.
 
 ```
 pushd qtip-experiments/experiments/alignment_err
@@ -106,6 +110,8 @@ python evaluate.py > results.csv
 ```
 
 ### `simulated_reads` experiments
+
+For Tables 1--2, Figures 1--2, Supplementary Tables 2--4, and Supplementary Figures 1--2.
 
 #### Simulate reads
 
@@ -139,6 +145,8 @@ The script was written for the MARCC cluster at JHU; you might have to tweak for
 
 ### Training data formula series
 
+For Supplementary Figure 3.
+
 To gather data on many ways of setting the `--sim-function` and `--sim-factor` parameters, which determine how many tandem reads to simulate as a function of the number of input reads, run:
 
 ```
@@ -150,7 +158,13 @@ Many jobs are submitted here.
 
 The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
 
+### Training data for
+
+For Supplementary Figures 4--9.
+
 ### `platinum` experiments
+
+For Table 3.
 
 #### Download reads
 
