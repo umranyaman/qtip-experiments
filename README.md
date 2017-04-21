@@ -2,6 +2,33 @@
 
 Scripts for driving all experiments described in the `qtip` manuscript.
 
+**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+
+- [qtip-experiments](#)
+	- [Preliminaries](#)
+		- [Clone repos](#)
+		- [Set up environment](#)
+		- [Build qtip](#)
+		- [Build software in qtip-experiments](#)
+		- [Obtain reference genomes and build indexes](#)
+		- [Obtain CHM1 assemblies and build combined references](#)
+	- [Results](#)
+		- [Alignment error experiments](#)
+		- [simulated_reads experiments](#)
+			- [Simulate reads](#)
+			- [Run qtip](#)
+		- [Training data formula series](#)
+		- [Feature importances](#)
+		- [platinum experiments](#)
+			- [Download reads](#)
+			- [Download platinum variants and high confidence regions](#)
+			- [Analyze reads](#)
+			- [Call variants](#)
+			- [Summarize](#)
+		- [Measuring overhead with real data](#)
+
+## Preliminaries
+
 ### Clone repos
 
 Clone the [`qtip`](https://github.com/BenLangmead/qtip) and [`qtip-experiments`](https://github.com/BenLangmead/qtip-experiments) repos.  `qtip` contains the Qtip software and scripts for building `qtip`-compatible versions of the relevant aligners.  `qtip-experiments` contains everything else needed to run the experiments described in the manuscript.
@@ -62,7 +89,7 @@ MARCC note: making mason doesn’t work with `vtune` module loaded.
 
 ### Obtain reference genomes and build indexes
 
-Reference genomes (`hg38`, `mm10` and `zm_AGPv4`) and indexes (`bowtie2`, `bwa mem` and `snap`) are used in these experiments.
+Reference genomes (`hg19`, `hg38`, `mm10` and `zm_AGPv4`) and indexes (`bowtie2`, `bwa mem` and `snap`) are used in these experiments.
 
 ```
 pushd qtip-experiments/experiments/refs
@@ -80,7 +107,38 @@ sh index_marcc.sh
 popd
 ```
 
+### Obtain CHM1 assemblies and build combined references
+
+```
+pushd qtip-experiments/experiments/refs
+# this may be slow, as it needs to download two human assemblies
+sh get_assemblytics.sh
+popd
+```
+
+## Results
+
+The main driver script for loading results tables and turning them into LaTeX-ready plots and tables is `qtip-experiments/experiments/qtip_paper.Rmd`.  Most of the work is in obtaining the summaries that are used by that R markdown document.  That is detailed below.
+
+### Alignment error experiments
+
+For Supplementary Note 2 and Supplementary Table 1.
+
+```
+pushd qtip-experiments/experiments/alignment_err
+# obtain contaminant genomes
+sh get_small_refs.sh
+# simulate reads, compose target/foreign mixtures, align, summarize
+make corstats
+# tabulate
+python tabulate.py
+# analyze table
+python evaluate.py > results.csv
+```
+
 ### `simulated_reads` experiments
+
+For Tables 1--2, Figures 1--2, Supplementary Tables 2--4, and Supplementary Figures 1--2.
 
 #### Simulate reads
 
@@ -112,7 +170,30 @@ Many jobs are submitted here.  All told, this takes about 4 hours for me on MARC
 
 The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
 
+### Training data formula series
+
+For Supplementary Figure 3.
+
+To gather data on many ways of setting the `--sim-function` and `--sim-factor` parameters, which determine how many tandem reads to simulate as a function of the number of input reads, run:
+
+```
+pushd qtip-experiments/experiments/simulated_reads
+sh train_series.sh --wet
+```
+
+Many jobs are submitted here.
+
+The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
+
+### Feature importances
+
+For Supplementary Figures 4--9.
+
+Feature importance information is included in the output of the `python gather.py` process described above.
+
 ### `platinum` experiments
+
+For Table 3.
 
 #### Download reads
 
@@ -127,7 +208,7 @@ sh get.sh
 sh get_gold_vcf.sh
 ```
 
-### Analyze reads
+#### Analyze reads
 
 ```
 sh fraglen.sh wet
@@ -138,7 +219,7 @@ sh align_full.sh wet
 # very time- and resource-intensive
 ```
 
-### Call variants
+#### Call variants
 
 Calls variants:
 * for all MAPQ thresholds
@@ -152,12 +233,29 @@ sh sbatch_fb.sh wet
 # very time- and resource-intensive
 ```
 
-### Summarize
+#### Summarize
 
 Makes ROCs, and calculates F-scores based on best MAPQ and QUAL thresholds for both original and Qtip-predicted MAPQs.
 
 ```
 sh sbatch_vcfroc.sh wet
 python table_f.py > ERR194147.csv
+popd
+```
+
+### Measuring overhead with real data
+
+For Table 4.
+
+```
+pushd qtip-experiments/experiments/real_data
+sh get_real_reads.sh  # might want to submit to your DRM
+sh sbatch_align.sh
+# copy and paste all the alignment jobs to submit them
+# ...when those are done, proceed
+sh sbatch_multialign.sh
+# copy and paste all the alignment jobs to submit them
+python perf_tabulate.py > perf.csv
+python overall_tabulate.py
 popd
 ```

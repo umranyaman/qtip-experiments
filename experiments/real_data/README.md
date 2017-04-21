@@ -1,10 +1,6 @@
 Real data
 ---------
 
-The `qtip` manuscript demonstrates how `qtip`-predicted mapping qualities improve performance when analyzing real data.
-
-### Human
-
 We use real data to demonstrate `qtip` performance.  Primarily we use two
 human samples from the [1000 Genomes project](http://www.1000genomes.org):
 
@@ -14,18 +10,6 @@ human samples from the [1000 Genomes project](http://www.1000genomes.org):
 * [ERR050083](http://www.ebi.ac.uk/ena/data/view/ERR050083)
     * 66,391,067 paired-end 100 x 100 nt reads
     * NA11881, CEPH, male
-
-Would be nice to know the sex here.
-
-### Maize
-
-(Future work)
-
-Might also experiment with real data from a more repetitive genome, like maize.  If so, the links below might be relevant.
-
-* http://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR1592709
-* ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR159/009/SRR1592709/SRR1592709_1.fastq.gz
-* ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR159/009/SRR1592709/SRR1592709_2.fastq.gz
 
 ### Steps
 
