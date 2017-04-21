@@ -93,6 +93,8 @@ popd
 
 ## Results
 
+The main driver script for loading results tables and turning them into LaTeX-ready plots and tables is `qtip-experiments/experiments/qtip_paper.Rmd`.  Most of the work is in obtaining the summaries that are used by that R markdown document.  That is detailed below.
+
 ### Alignment error experiments
 
 For Supplementary Note 2 and Supplementary Table 1.
@@ -158,9 +160,11 @@ Many jobs are submitted here.
 
 The script was written for the MARCC cluster at JHU; you might have to tweak for your cluster.
 
-### Training data for
+### Feature importances
 
 For Supplementary Figures 4--9.
+
+Feature importance information is included in the output of the `python gather.py` process described above.
 
 ### `platinum` experiments
 
