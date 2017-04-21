@@ -217,3 +217,20 @@ sh sbatch_vcfroc.sh wet
 python table_f.py > ERR194147.csv
 popd
 ```
+
+### Measuring overhead with real data
+
+For Table 4.
+
+```
+pushd qtip-experiments/experiments/real_data
+sh get_real_reads.sh  # might want to submit to your DRM
+sh sbatch_align.sh
+# copy and paste all the alignment jobs to submit them
+# ...when those are done, proceed
+sh sbatch_multialign.sh
+# copy and paste all the alignment jobs to submit them
+python perf_tabulate.py > perf.csv
+python overall_tabulate.py
+popd
+```
