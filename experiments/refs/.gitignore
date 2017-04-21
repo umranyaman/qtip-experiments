@@ -6,3 +6,10 @@
 *.fa.*
 *.2bit
 *.out
+.tmp.bed
+*.Assemblytics_results.zip
+assemblytics_37
+assemblytics_38
+GCA_000772585.3_ASM77258v3_genomic.*
+human_CHM1htert_25bp_flanked_insertions.*
+chm1_grch*.bed

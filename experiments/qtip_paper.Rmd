@@ -87,6 +87,35 @@ grid_arrange_shared_legend <- function(...) {
         ncol = 1,
         heights = unit.c(unit(1, "npc") - lheight, lheight))
 }
+
+grid_arrange_shared_legend2 <- function(..., ncol = length(list(...)), nrow = 1, position = c("bottom", "right")) {
+
+  plots <- list(...)
+  position <- match.arg(position)
+  g <- ggplotGrob(plots[[1]] + theme(legend.position = position))$grobs
+  legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+  lheight <- sum(legend$height)
+  lwidth <- sum(legend$width)
+  gl <- lapply(plots, function(x) x + theme(legend.position="none"))
+  gl <- c(gl, ncol = ncol, nrow = nrow)
+
+  combined <- switch(position,
+                     "bottom" = arrangeGrob(do.call(arrangeGrob, gl),
+                                            legend,
+                                            ncol = 1,
+                                            heights = unit.c(unit(1, "npc") - lheight, lheight)),
+                     "right" = arrangeGrob(do.call(arrangeGrob, gl),
+                                           legend,
+                                           ncol = 2,
+                                           widths = unit.c(unit(1, "npc") - lwidth, lwidth)))
+
+  grid.newpage()
+  grid.draw(combined)
+
+  # return gtable invisibly
+  invisible(combined)
+
+}
 ```
 
 ### Expand ROCs into CID and CSE curves
@@ -1066,9 +1095,10 @@ ae <- read.table('alignment_err/results.csv', sep=',', quote='', comment.char=''
 
 ```{r}
 ae$paired <- factor(ae$paired, labels=c('Unpaired', 'Paired'))
-ae$species <- factor(ae$species, labels=c('Human', 'Mouse'))
+ae$species <- factor(ae$species, labels=c('GRCh38', 'GRCh38+CHM1', 'Mouse'))
 ae$rdlen <- factor(ae$rdlen)
-ae$type <- factor(ae$type, labels=c('Category 1', 'Category 2', 'Category 3'))
+ae$type <- factor(ae$type, labels=c('Category 1a', 'Category 1b', 'Category 2', 'Category 3'))
+ae <- ae[ae$type != 1,]
 aetab <- tabular(
   (Heading() * species * Heading() * rdlen * Heading() * paired) ~
   (
@@ -1166,22 +1196,7 @@ mtsu$paired <- F
 mtsp$paired <- T
 
 mts <- rbind(mtsu, mtsp)
-colnames(m) <- c('input', 'func', 'trial', 'rca', 'rcar', 'rce', 'rcer', 'paired')
-
-# Adapted from: https://rpubs.com/sjackman/grid_arrange_shared_legend
-# Thanks to Shaun Jackman
-grid_arrange_shared_legend2 <- function(...) {
-    plots <- list(...)
-    g <- ggplotGrob(plots[[1]] + theme(legend.position="right"))$grobs
-    legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
-    lheight <- sum(legend$height)
-    grid.arrange(
-        do.call(arrangeGrob, lapply(plots, function(x)
-            x + theme(legend.position="none"))),
-        legend,
-        ncol = 3,
-        heights = unit.c(unit(1, "npc") - lheight, lheight))
-}
+colnames(mts) <- c('input', 'func', 'trial', 'rca', 'rcar', 'rce', 'rcer', 'paired')
 
 tandem_target_plot <- function(m, want_paired) {
   tt <- paste(if(want_paired) 'Paired' else 'Unpaired', '100bp')
@@ -1214,15 +1229,25 @@ tandem_target_plot <- function(m, want_paired) {
     geom_point(aes(y=rce_med)) +
     theme_bw() +
     ggtitle(tt) +
+    scale_x_continuous(labels = comma) +
+    scale_colour_manual(breaks=mg$func, values = c('cadetblue4',
+                                                   'chartreuse4',
+                                                   'aquamarine3',
+                                                   'red2',
+                                                   'orangered1',
+                                                   'darkred',
+                                                   'dodgerblue3',
+                                                   'blue')) +
     labs(x="# input reads", y="Median RCE, 10 trials") +
-    theme(legend.title=element_blank(), legend.key = element_blank())
+    theme(legend.title=element_blank(), legend.key = element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
 # Write to PDF
 tn_u <- tandem_target_plot(mts, F)
 tn_p <- tandem_target_plot(mts, T)
 pdf(file="tandem_num.pdf", onefile=F)
-grid_arrange_shared_legend2(tn_u, tn_p)
+grid_arrange_shared_legend2(tn_u, tn_p, nrow=2, ncol=1)
 dev.off()
 ```
 
@@ -1251,7 +1276,7 @@ feature_importances_plot_various_genomes <- function(
             else if(want_model == 'b') { 'Bad-end' }
             else                       { 'Unp' }
     tt <- paste0(
-      #aligner, " ",
+      aligner, " ",
       type, ' ',
       #if(want_paired) "paired " else "unpaired ",
       want_readlen, 'nt'
@@ -1355,40 +1380,40 @@ feature_importances_plot_various_genomes <- function(
             legend.title=element_blank(),
             legend.key = element_blank())
 }
-fi_u_100 <- feature_importances_plot_various_genomes('bt2', 'u', 100)
-fi_c_100 <- feature_importances_plot_various_genomes('bt2', 'c', 100)
-fi_d_100 <- feature_importances_plot_various_genomes('bt2', 'd', 100)
-fi_b_100 <- feature_importances_plot_various_genomes('bt2', 'b', 100)
+fi_u_bt2_100 <- feature_importances_plot_various_genomes('bt2', 'u', 100)
+fi_c_bt2_100 <- feature_importances_plot_various_genomes('bt2', 'c', 100)
+fi_d_bt2_100 <- feature_importances_plot_various_genomes('bt2', 'd', 100)
+fi_b_bt2_100 <- feature_importances_plot_various_genomes('bt2', 'b', 100)
 
 pdf(file="feat_import_bt2_100.pdf", onefile=F)
-grid_arrange_shared_legend(fi_u, fi_c, fi_d, fi_b)
+grid_arrange_shared_legend(fi_u_bt2_100, fi_c_bt2_100,
+                           fi_d_bt2_100, fi_b_bt2_100)
 dev.off()
 
-fi_u_250 <- feature_importances_plot_various_genomes('bt2', 'u', 250)
-fi_c_250 <- feature_importances_plot_various_genomes('bt2', 'c', 250)
-fi_d_250 <- feature_importances_plot_various_genomes('bt2', 'd', 250)
-fi_b_250 <- feature_importances_plot_various_genomes('bt2', 'b', 250)
+fi_u_bt2_250 <- feature_importances_plot_various_genomes('bt2', 'u', 250)
+fi_c_bt2_250 <- feature_importances_plot_various_genomes('bt2', 'c', 250)
+fi_d_bt2_250 <- feature_importances_plot_various_genomes('bt2', 'd', 250)
+fi_b_bt2_250 <- feature_importances_plot_various_genomes('bt2', 'b', 250)
 
 pdf(file="feat_import_bt2_250.pdf", onefile=F)
-grid_arrange_shared_legend(fi_u_250, fi_c_250, fi_d_250, fi_b_250)
+grid_arrange_shared_legend(fi_u_bt2_250, fi_c_bt2_250,
+                           fi_d_bt2_250, fi_b_bt2_250)
 dev.off()
 
 fi_u_bwa_100 <- feature_importances_plot_various_genomes('bwamem', 'u', 100)
 fi_c_bwa_100 <- feature_importances_plot_various_genomes('bwamem', 'c', 100)
 fi_d_bwa_100 <- feature_importances_plot_various_genomes('bwamem', 'd', 100)
-#fi_b_bwa_100 <- feature_importances_plot_various_genomes('bwamem', 'b', 100)
 
 pdf(file="feat_import_bwa_100.pdf", onefile=F)
-grid_arrange_shared_legend(fi_u_bwa_100, fi_c_bwa_100, fi_d_bwa_100)
+grid_arrange_shared_legend2(fi_u_bwa_100, fi_c_bwa_100, fi_d_bwa_100, nrow=2, ncol=2)
 dev.off()
 
 fi_u_bwa_250 <- feature_importances_plot_various_genomes('bwamem', 'u', 250)
 fi_c_bwa_250 <- feature_importances_plot_various_genomes('bwamem', 'c', 250)
 fi_d_bwa_250 <- feature_importances_plot_various_genomes('bwamem', 'd', 250)
-#fi_b_bwa_250 <- feature_importances_plot_various_genomes('bwamem', 'b', 250)
 
 pdf(file="feat_import_bwa_250.pdf", onefile=F)
-grid_arrange_shared_legend(fi_u_bwa_250, fi_c_bwa_250, fi_d_bwa_250)
+grid_arrange_shared_legend2(fi_u_bwa_250, fi_c_bwa_250, fi_d_bwa_250, nrow=2, ncol=2)
 dev.off()
 
 fi_u_snap_100 <- feature_importances_plot_various_genomes('snap', 'u', 100)
@@ -1408,4 +1433,77 @@ fi_b_snap_250 <- feature_importances_plot_various_genomes('snap', 'b', 250)
 pdf(file="feat_import_snap_250.pdf", onefile=F)
 grid_arrange_shared_legend(fi_u_snap_250, fi_c_snap_250, fi_d_snap_250, fi_b_snap_250)
 dev.off()
+```
+
+### CHM1 comparisons
+
+```{r various_genomes_chm1_comp_plot}
+various_genomes_cmp_plot <- function(
+  want_paired,
+  want_readlen,
+  want_training,
+  want_cid,
+  want_trial=1)
+{
+    xlab <- paste0(want_readlen, " bp ",
+                   if(want_paired) "paired " else "unpaired ")
+    mtmp <- m %>% filter(name == want_series &
+                         paired == want_paired &
+                         readlen == want_readlen &
+                         training == want_training &
+                         trial_no == want_trial)
+    mtmp <- explode_curves(mtmp, want_cid)
+    mx <- max(abs(mtmp$y))
+    levels(mtmp$species)[levels(mtmp$species)=="hg38"] <- "Human (GRCh38)  "
+    levels(mtmp$species)[levels(mtmp$species)=="hg19"] <- "Human (GRCh37)  "
+    levels(mtmp$species)[levels(mtmp$species)=="mm"] <- "Mouse (GRCm38)  "
+    levels(mtmp$species)[levels(mtmp$species)=="zm"] <- "Zea Mays (AGPv4)  "
+    levels(mtmp$aligner)[levels(mtmp$aligner)=="bt2"] <- "Bowtie 2  "
+    levels(mtmp$aligner)[levels(mtmp$aligner)=="bwamem"] <- "BWA-MEM  "
+    levels(mtmp$aligner)[levels(mtmp$aligner)=="snap"] <- "SNAP  "
+    ggplot(mtmp, aes(x=x, y=y, color=species, linetype=aligner)) +
+      geom_abline(intercept = 0, slope = 0) +
+      coord_trans(y = logmod_trans()) +
+      scale_y_continuous(breaks=logmod_breaks, limits=c(-1.05*mx, 1.05*mx)) +
+      scale_x_continuous(labels=mfmt) +
+      labs(x=xlab, y="") +
+      geom_line() +
+      theme_bw() +
+      guides(colour = guide_legend(override.aes = list(size=1))) +
+      theme(legend.title=element_blank(), legend.key = element_blank(),
+            legend.text=element_text(size=12))
+}
+```
+
+```{r various_genomes_table}
+various_genomes_cmp_table <- function(m, want_training, ...) {
+  mtmp <- m %>% filter(training == want_training &
+                         (name == 'various_genomes' | name == 'various_genomes_chm1'))
+  mtmp <- mtmp %>% filter(species == 'hg19' | species == 'hg38')
+  names <- mtmp$name
+  mtmp <- subset(mtmp, select=c(aligner,
+                                species,
+                                paired,
+                                readlen,
+                                overall_test_auc_diff_pct_round,
+                                overall_test_mse_diff_pct_round))
+  mtmp$species <- factor(paste0(as.character(mtmp$species), ifelse(names == 'various_genomes_chm1', 'chm1', '')))
+  levels(mtmp$aligner)[levels(mtmp$aligner)=="bt2"] <- "Bowtie 2"
+  levels(mtmp$aligner)[levels(mtmp$aligner)=="bwamem"] <- "BWA-MEM"
+  levels(mtmp$aligner)[levels(mtmp$aligner)=="snap"] <- "SNAP"
+  levels(mtmp$species)[levels(mtmp$species)=="hg19"] <- "GRCh37"
+  levels(mtmp$species)[levels(mtmp$species)=="hg38"] <- "GRCh38"
+  levels(mtmp$species)[levels(mtmp$species)=="hg19chm1"] <- "GRCh37+CHM1"
+  levels(mtmp$species)[levels(mtmp$species)=="hg38chm1"] <- "GRCh38+CHM1"
+  colnames(mtmp) <- c('aligner', 'species', 'paired', 'readlen', 'RCA', 'RCE')
+  tabular(((Heading("Unpaired") * (!paired) + Heading("Paired") * paired) * Heading() * aligner * Heading() * species) ~ (Format(sprintf("%.2f")) * (Heading("100 nt") * (readlen == 100) + Heading("250 nt") * (readlen == 250)) * (RCA + RCE) * (mean + sd)), data=mtmp)
+}
+
+fn <- 'various_genomes_cmp.tex_snippet'
+write("\\begin{table}", file=fn)
+write("\\centering", file=fn, append=T)
+capture.output(latex(various_genomes_cmp_table(m, F)), file=fn, append=T)
+write("\\caption{Relative change in area under CID (RCA) and relative change in sum of squared error (RCE) for various aligners and two versions of the human reference genome, expressed as percent change.  Some experiments simulated reads from just the reference (``GRCh37,'' ``GRCh38'') while other simulated from insertions in the CHM1 assembly relative to the reference assembly (``GRCh37+CHM1,'' ``GRCh38+CHM1'').  The experiments used 100 nt or 250 nt reads, and unpaired or paired-end reads, as indicated.  Results are means and standard deviations over \\numtrials random trials, repeated starting from the input modeling step.}", file=fn, append=T)
+write("\\label{genomes_tab}", file=fn, append=T)
+write("\\end{table}", file=fn, append=T)
 ```
