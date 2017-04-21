@@ -89,6 +89,22 @@ sh get_assemblytics.sh
 popd
 ```
 
+### Alignment error experiments
+
+For Supplementary Note 2.
+
+```
+pushd qtip-experiments/experiments/alignment_err
+# obtain contaminant genomes
+sh get_small_refs.sh
+# simulate reads, compose target/foreign mixtures, align, summarize
+make corstats
+# tabulate
+python tabulate.py
+# analyze table
+python evaluate.py > results.csv
+```
+
 ### `simulated_reads` experiments
 
 #### Simulate reads
