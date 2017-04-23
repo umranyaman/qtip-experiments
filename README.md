@@ -2,16 +2,16 @@
 
 Scripts for driving all experiments described in the `qtip` manuscript.
 
-**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+**Table of Contents**
 
 - [qtip-experiments](#)
-	- [Preliminaries](#)
-		- [Clone repos](#)
-		- [Set up environment](#)
-		- [Build qtip](#)
-		- [Build software in qtip-experiments](#)
-		- [Obtain reference genomes and build indexes](#)
-		- [Obtain CHM1 assemblies and build combined references](#)
+	- [Preliminaries](#preliminaries)
+		- [Clone repos](#clone-repos)
+		- [Set up environment](#set-up-environment)
+		- [Build qtip](#build-qtip)
+		- [Build software in qtip-experiments](#build-software-in-qtip-experiments)
+		- [Obtain reference genomes and build indexes](#obtain-reference-genomes-and-build-indexes)
+		- [Obtain CHM1 assemblies and build combined references](#obtain-chm1-assemblies-and-build-combined-references)
 	- [Results](#)
 		- [Alignment error experiments](#)
 		- [simulated_reads experiments](#)
