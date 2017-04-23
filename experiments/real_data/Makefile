@@ -4,6 +4,7 @@ BT2_HOME=$(QTIP_EXPERIMENTS_HOME)/software/bowtie2
 INDEXES=$(QTIP_EXPERIMENTS_HOME)/experiments/refs
 HG_FA=$(INDEXES)/hg38.fa
 PYTHON=python -O
+QTIP=$(QTIP_HOME)/qtip
 
 BT2_QTIP_ARGS=--aligner bowtie2 --bt2-exe $(BT2_HOME)/bowtie2 --index $(HG_FA)
 BT2_ARGS=
@@ -56,7 +57,7 @@ all_new: new_ERR050082_1.unp.csv ERR050083_1.unp.csv
 # #######
 
 new_%.bwa.unp.sam: new_%.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(BWA_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--keep-intermediates \
@@ -71,14 +72,14 @@ new_%.bwa.unp.sam: new_%.fastq
 		-- -t $(NTHREADS_VS) $(BWA_ARGS)
 
 %.bwa.unp.sam: %.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(BWA_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS) $(BWA_ARGS)
 
 %.ext_bwa.unp.sam: %.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(BWA_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--keep-intermediates \
@@ -91,7 +92,7 @@ new_%.bwa.unp.sam: new_%.fastq
 		-- -t $(NTHREADS_VS) $(BWA_ARGS)
 
 %.bwa.pair.sam: %.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(BWA_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
@@ -103,7 +104,7 @@ new_%.bwa.unp.sam: new_%.fastq
 # #######
 
 new_%.bt2.unp.sam: new_%.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(BT2_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--keep-intermediates \
@@ -118,14 +119,14 @@ new_%.bt2.unp.sam: new_%.fastq
 		-- -p $(NTHREADS) $(BT2_ARGS)
 
 %.bt2.unp.sam: %.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(BT2_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -p $(NTHREADS) $(BT2_ARGS)
 
 %.bt2.pair.sam: %.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(BT2_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
@@ -137,7 +138,7 @@ new_%.bt2.unp.sam: new_%.fastq
 # #######
 
 new_%.snap.unp.sam: new_%.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(SNAP_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--keep-intermediates \
@@ -152,14 +153,14 @@ new_%.snap.unp.sam: new_%.fastq
 		-- -t $(NTHREADS) $(SNAP_ARGS)
 
 %.snap.unp.sam: %.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(SNAP_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--U $< \
 		--vanilla-output $@ \
 		-- -t $(NTHREADS) $(SNAP_ARGS)
 
 %.snap.pair.sam: %.fastq
-	$(PYTHON) $(QTIP_HOME)/src/qtip \
+	$(PYTHON) $(QTIP) \
 		$(SNAP_QTIP_ARGS) $(ARGS) $(EXTRA_ARGS) \
 		--m1 $< \
 		--m2 $(<:_1.fastq=_2.fastq) \
