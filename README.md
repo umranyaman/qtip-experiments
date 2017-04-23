@@ -4,28 +4,27 @@ Scripts for driving all experiments described in the `qtip` manuscript.
 
 **Table of Contents**
 
-- [qtip-experiments](#)
-	- [Preliminaries](#preliminaries)
-		- [Clone repos](#clone-repos)
-		- [Set up environment](#set-up-environment)
-		- [Build qtip](#build-qtip)
-		- [Build software in qtip-experiments](#build-software-in-qtip-experiments)
-		- [Obtain reference genomes and build indexes](#obtain-reference-genomes-and-build-indexes)
-		- [Obtain CHM1 assemblies and build combined references](#obtain-chm1-assemblies-and-build-combined-references)
-	- [Results](#)
-		- [Alignment error experiments](#)
-		- [simulated_reads experiments](#)
-			- [Simulate reads](#)
-			- [Run qtip](#)
-		- [Training data formula series](#)
-		- [Feature importances](#)
-		- [platinum experiments](#)
-			- [Download reads](#)
-			- [Download platinum variants and high confidence regions](#)
-			- [Analyze reads](#)
-			- [Call variants](#)
-			- [Summarize](#)
-		- [Measuring overhead with real data](#)
+- [Preliminaries](#preliminaries)
+	- [Clone repos](#clone-repos)
+	- [Set up environment](#set-up-environment)
+	- [Build qtip](#build-qtip)
+	- [Build software in qtip-experiments](#build-software-in-qtip-experiments)
+	- [Obtain reference genomes and build indexes](#obtain-reference-genomes-and-build-indexes)
+	- [Obtain CHM1 assemblies and build combined references](#obtain-chm1-assemblies-and-build-combined-references)
+- [Results](#results)
+	- [Alignment error experiments](#alignment-error-experiments)
+	- [Simulated read experiments](#simulated-read-experiments)
+		- [Simulate reads](#simulate-reads)
+		- [Run qtip](#run-qtip)
+	- [Training data formula series](#training-data-formula-series)
+	- [Feature importances](#feature-importances)
+	- [Platinum genomes variant calling](#platinum-genomes-variant-calling)
+		- [Download reads](#download-reads)
+		- [Download platinum variants and high confidence regions](#download-platinum-variants-and-high-confidence-regions)
+		- [Analyze reads](#analyze-reads)
+		- [Call variants](#call-variants)
+		- [Summarize](#summarize)
+	- [Measuring overhead with real data](#measuring-overhead-with-real-data)
 
 ## Preliminaries
 
@@ -136,7 +135,7 @@ python tabulate.py
 python evaluate.py > results.csv
 ```
 
-### `simulated_reads` experiments
+### Simulated read experiments
 
 For Tables 1--2, Figures 1--2, Supplementary Tables 2--4, and Supplementary Figures 1--2.
 
@@ -191,7 +190,7 @@ For Supplementary Figures 4--9.
 
 Feature importance information is included in the output of the `python gather.py` process described above.
 
-### `platinum` experiments
+### Platinum genomes variant calling
 
 For Table 3.
 
