@@ -1,6 +1,6 @@
-BWA_HOME=$(QTIP_HOME)/software/bwa
-SNAP_HOME=$(QTIP_HOME)/software/snap
-BT2_HOME=$(QTIP_HOME)/software/bowtie2
+BWA_HOME=$(QTIP_EXPERIMENTS_HOME)/software/bwa
+SNAP_HOME=$(QTIP_EXPERIMENTS_HOME)/software/snap
+BT2_HOME=$(QTIP_EXPERIMENTS_HOME)/software/bowtie2
 INDEXES=$(QTIP_EXPERIMENTS_HOME)/experiments/refs
 HG_FA=$(INDEXES)/hg38.fa
 PYTHON=python -O
