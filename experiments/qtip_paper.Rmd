@@ -1050,7 +1050,7 @@ dev.off()
 
 ```{r real_data_perf_tables}
 # from qsim-experiments/experiments/real_data/perf_tabulate.py
-perf <- read.table('real_data/perf.csv', sep=',', quote='', comment.char='', header=T)
+perf <- read.table('real_data/perf_qtip162.csv', sep=',', quote='', comment.char='', header=T)
 ```
 
 ```{r}
