@@ -1097,8 +1097,8 @@ ae <- read.table('alignment_err/results.csv', sep=',', quote='', comment.char=''
 ae$paired <- factor(ae$paired, labels=c('Unpaired', 'Paired'))
 ae$species <- factor(ae$species, labels=c('GRCh38', 'GRCh38+CHM1', 'Mouse'))
 ae$rdlen <- factor(ae$rdlen)
-ae$type <- factor(ae$type, labels=c('Category 1a', 'Category 1b', 'Category 2', 'Category 3'))
 ae <- ae[ae$type != 1,]
+ae$type <- factor(ae$type, labels=c('Category 1a', 'Category 1b', 'Category 2', 'Category 3'))
 aetab <- tabular(
   (Heading() * species * Heading() * rdlen * Heading() * paired) ~
   (
@@ -1118,7 +1118,7 @@ write("\\end{table}", file=fn, append=T)
 ### Variant calling experiments
 
 ```{r}
-m <- read.table('platinum/ERR194147.csv', header=T, sep=',')
+mv <- read.table('platinum/ERR194147.csv', header=T, sep=',')
 
 chr_table_sm <- function(want_chr) {
   df <- chr_table(want_chr)
@@ -1126,23 +1126,23 @@ chr_table_sm <- function(want_chr) {
 }
 
 chr_table <- function(want_chr) {
-  regime_cols <- colnames(m)[grepl('^regime_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  regime_cols <- colnames(mv)[grepl('^regime_[0-9]_[0-9][0-9][0-9]$', colnames(mv))]
   betas <- as.vector(sub('_', '.', sub('regime_', '', regime_cols)))
-  pool_rows_nr <- m$mapq_cutoff == '*' & m$filt == 'cr_filt'
-  m1 <- m[pool_rows_nr & m$regime != '*' & m$chrom == want_chr,]
-  f_cols <- colnames(m)[grepl('^f_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
-  tp_cols <- colnames(m)[grepl('^tp_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
-  fp_cols <- colnames(m)[grepl('^fp_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  pool_rows_nr <- mv$mapq_cutoff == '*' & mv$filt == 'cr_filt'
+  m1 <- mv[pool_rows_nr & mv$regime != '*' & mv$chrom == want_chr,]
+  f_cols <- colnames(mv)[grepl('^f_[0-9]_[0-9][0-9][0-9]$', colnames(mv))]
+  tp_cols <- colnames(mv)[grepl('^tp_[0-9]_[0-9][0-9][0-9]$', colnames(mv))]
+  fp_cols <- colnames(mv)[grepl('^fp_[0-9]_[0-9][0-9][0-9]$', colnames(mv))]
   f_input <- as.vector(t(m1[m1$regime == 'input', f_cols]))
   f_final <- as.vector(t(m1[m1$regime == 'final', f_cols]))
   tp_input <- as.vector(t(m1[m1$regime == 'input', tp_cols]))
   tp_final <- as.vector(t(m1[m1$regime == 'final', tp_cols]))
   fp_input <- as.vector(t(m1[m1$regime == 'input', fp_cols]))
   fp_final <- as.vector(t(m1[m1$regime == 'final', fp_cols]))
-  qual_thresh_cols <- colnames(m)[grepl('^qual_cutoff_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  qual_thresh_cols <- colnames(mv)[grepl('^qual_cutoff_[0-9]_[0-9][0-9][0-9]$', colnames(mv))]
   qual_thresh_input <- sprintf('%0.3g', as.vector(t(m1[m1$regime == 'input', qual_thresh_cols])))
   qual_thresh_final <- sprintf('%0.3g', as.vector(t(m1[m1$regime == 'final', qual_thresh_cols])))
-  mapq_thresh_cols <- colnames(m)[grepl('^mapq_cutoff_[0-9]_[0-9][0-9][0-9]$', colnames(m))]
+  mapq_thresh_cols <- colnames(mv)[grepl('^mapq_cutoff_[0-9]_[0-9][0-9][0-9]$', colnames(mv))]
   mapq_thresh_input <- sprintf('%d', as.integer(as.vector(t(m1[m1$regime == 'input', mapq_thresh_cols]))))
   mapq_thresh_final <- sprintf('%d', as.integer(t(m1[m1$regime == 'final', mapq_thresh_cols])))
   change <- sprintf('%+0.1e', f_final - f_input)
