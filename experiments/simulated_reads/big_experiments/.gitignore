@@ -1,0 +1,6 @@
+*.fq.gz
+*.out
+.*.sh
+.*.e
+.*.o
+Makefile.*

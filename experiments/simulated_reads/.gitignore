@@ -1,6 +1,8 @@
 .*.sh
 .*.e
 .*.o
+*.pyc
+*.pyo
 *.version
 .tss_qsubs
 .read_qsubs
