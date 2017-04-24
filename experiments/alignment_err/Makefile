@@ -56,7 +56,7 @@ corstats: r0_mason_hg38_mixture_100.corstats \
 r0_mason_hg38_%.corstats: r0_mason_hg38_%.sam
 	pypy evaluate.py human < $< > $@
 
-r0_mason_hg38chm1_%.corstats: r0_mason_hg38_%.sam
+r0_mason_hg38chm1_%.corstats: r0_mason_hg38chm1_%.sam
 	pypy evaluate.py human < $< > $@
 
 r0_mason_mouse_%.corstats: r0_mason_mouse_%.sam
