@@ -2,6 +2,7 @@
 
 ALIGNER_CPUS=$1
 [ -z "${ALIGNER_CPUS}" ] && ALIGNER_CPUS=24
+[ -z "${QTIP_HOME}" ] && echo "Must set QTIP_HOME" && exit 1
 
 # 1: NAME
 # 2: FASTQ1
@@ -25,7 +26,7 @@ if [ ! -f "\${ODIR}/final.sam" ] ; then
     TEMP="${NM}.temp"
     rm -rf \${TEMP}
     mkdir -p \${TEMP}
-    ${QTIP_HOME}/src/qtip \
+    ${QTIP_HOME}/qtip \
         --ref ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
         --m1 ${2} --m2 ${3} \
         --index ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
