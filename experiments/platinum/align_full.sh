@@ -2,6 +2,7 @@
 
 ALIGNER_CPUS=$1
 [ -z "${ALIGNER_CPUS}" ] && ALIGNER_CPUS=24
+[ -z "${QTIP_HOME}" ] && echo "Must set QTIP_HOME" && exit 1
 
 # could also do shared?  is that better?
 PARTITION=parallel
