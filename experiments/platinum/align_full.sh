@@ -35,7 +35,7 @@ if [ ! -f "\${ODIR}/final.sam" ] ; then
     TEMP="${NM}.temp"
     rm -rf \${TEMP}
     mkdir -p \${TEMP}
-    ${QTIP_HOME}/src/qtip \
+    ${QTIP_HOME}/qtip \
         --ref ${REFS_DIR}/hg38.fa \
         --m1 ${2} --m2 ${3} \
         --index ${REFS_DIR}/hg38.fa \
