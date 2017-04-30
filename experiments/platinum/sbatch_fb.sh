@@ -46,7 +46,7 @@ for COV in F ; do
 if [ ! -f ${INP_FN}.raw.vcf ] ; then
     ${FB_BASE} ${MINMAPQ_ARG} -v ${INP_FN}.raw.vcf ERR194147.sam/input.sorted.bam
 fi
-if [ ! -f ${INP_FN}.cr_filt.vcf ] ; then
+if [ -f ${INP_FN}.raw.vcf -a ! -f ${INP_FN}.cr_filt.vcf ] ; then
     ${VCFISECT} -b cr_W.bed ${INP_FN}.raw.vcf | \
         gawk '/^#/ {print} match(\$0, /DP=([0-9]+);/, a) {if(a[1] <= ${MAXDEPTH}) {print}}' > ${INP_FN}.cr_filt.vcf
 fi
