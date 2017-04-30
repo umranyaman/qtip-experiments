@@ -220,13 +220,19 @@ sh align_full.sh wet
 
 #### Call variants
 
-Calls variants:
+Sort BAM file:
+
+```
+# assumes slurm-like environment
+sbatch sambamba_sort.sh
+```
+
+Call variants:
 * for all MAPQ thresholds
 * for both original and qtip-predicted MAPQs
 * for chromosomes 1-22 and X
 
 ```
-sh sambamba_sort.sh
 sh sbatch_fb.sh wet
 # pass "dry" instead to just print batch commands
 # very time- and resource-intensive
