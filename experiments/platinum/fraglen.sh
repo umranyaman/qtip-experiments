@@ -1,8 +1,5 @@
 #!/bin/bash
 
-ALIGNER_CPUS=$1
-[ -z "${ALIGNER_CPUS}" ] && ALIGNER_CPUS=24
-
 # 1: NAME
 # 2: FASTQ1
 # 3: FASTQ2
@@ -16,19 +13,19 @@ make_job() {
 #SBATCH --error=.FraglenFull.${NM}.err
 #SBATCH --nodes=1
 #SBATCH --mem=12G
-#SBATCH --partition=shared
-#SBATCH --cpus-per-task=${ALIGNER_CPUS}
+#SBATCH --partition=parallel
+#SBATCH --cpus-per-task=24
 #SBATCH --time=1:00:00
 
 OUTFN="${1}.fraglen.sam"
 if [ ! -f "\${OUTFN}" ] ; then
-    ${QTIP_HOME}/software/bowtie2/bowtie2 \
+    ${QTIP_EXPERIMENTS_HOME}/software/bowtie2/bowtie2 \
         -x ${QTIP_EXPERIMENTS_HOME}/experiments/refs/hg38.fa \
         -1 ${2} -2 ${3} \
         -I 0 -X 2000 \
         -t \
         -s 10000000 -u 10000000 \
-        -p ${ALIGNER_CPUS} \
+        -p 24 \
         -S \${OUTFN}
 
     awk -v FS='\t' '\$9 > 0 && \$1 !~ /^@/ && \$9 < 10000 {h[int(\$9/10)] += 1} END {for(d in h) {print d*10,h[d]}}' \

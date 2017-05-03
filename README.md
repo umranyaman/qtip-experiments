@@ -220,13 +220,19 @@ sh align_full.sh wet
 
 #### Call variants
 
-Calls variants:
+Sort BAM file:
+
+```
+# assumes slurm-like environment
+sbatch sambamba_sort.sh
+```
+
+Call variants:
 * for all MAPQ thresholds
 * for both original and qtip-predicted MAPQs
 * for chromosomes 1-22 and X
 
 ```
-sh sambamba_sort.sh
 sh sbatch_fb.sh wet
 # pass "dry" instead to just print batch commands
 # very time- and resource-intensive
@@ -250,11 +256,6 @@ For Table 4.
 pushd qtip-experiments/experiments/real_data
 sh get_real_reads.sh  # might want to submit to your DRM
 sh sbatch_align.sh
-# copy and paste all the alignment jobs to submit them
-# ...when those are done, proceed
-sh sbatch_multialign.sh
-# copy and paste all the alignment jobs to submit them
 python perf_tabulate.py > perf.csv
-python overall_tabulate.py
 popd
 ```
