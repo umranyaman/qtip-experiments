@@ -5,6 +5,7 @@ FB=$QTIP_EXPERIMENTS_HOME/software/freebayes/freebayes
 FB_BASE="${FB} -X -u --haplotype-length 0 -f $QTIP_EXPERIMENTS_HOME/experiments/refs/hg38.fa"
 VCFLIB_HOME=$QTIP_EXPERIMENTS_HOME/software/vcflib
 VCFISECT=$VCFLIB_HOME/vcflib-git/bin/vcfintersect
+MEM=32
 
 #for COV in F 50 40 30 ; do
 for COV in F ; do
@@ -40,7 +41,7 @@ for COV in F ; do
 #SBATCH --output=.CallFBWhole.${LAB}_inp.out
 #SBATCH --error=.CallFBWhole.${LAB}_inp.err
 #SBATCH --nodes=1
-#SBATCH --mem=12G
+#SBATCH --mem=${MEM}G
 #SBATCH --partition=shared
 #SBATCH --time=48:00:00
 if [ ! -f ${INP_FN}.raw.vcf ] ; then
@@ -63,13 +64,13 @@ EOF
 #SBATCH --output=.CallFBWhole.${LAB}_fin.out
 #SBATCH --error=.CallFBWhole.${LAB}_fin.err
 #SBATCH --nodes=1
-#SBATCH --mem=12G
+#SBATCH --mem=${MEM}G
 #SBATCH --partition=shared
 #SBATCH --time=48:00:00
 if [ ! -f ${FIN_FN}.raw.vcf ] ; then
     ${FB_BASE} ${MINMAPQ_ARG} -v ${FIN_FN}.raw.vcf ERR194147.sam/final.sorted.bam
 fi
-if [ ! -f ${FIN_FN}.cr_filt.vcf ] ; then
+if [ -f ${FIN_FN}.raw.vcf -a ! -f ${FIN_FN}.cr_filt.vcf ] ; then
     ${VCFISECT} -b cr_W.bed ${FIN_FN}.raw.vcf | \
         gawk '/^#/ {print} match(\$0, /DP=([0-9]+);/, a) {if(a[1] <= ${MAXDEPTH}) {print}}' > ${FIN_FN}.cr_filt.vcf
 fi

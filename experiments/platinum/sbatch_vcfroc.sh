@@ -6,6 +6,7 @@ VR="$QTIP_EXPERIMENTS_HOME/software/vcflib/vcflib-git/bin/vcfroc"
 REFDIR="$QTIP_EXPERIMENTS_HOME/experiments/refs"
 NM=ERR194147
 SAMP=NA12878
+MEM=90
 
 #for COV in F 50 40 30 ; do
 for COV in F ; do
@@ -17,7 +18,7 @@ for COV in F ; do
 #SBATCH --output=.VcfRoc.${MINMAPQ}.${COV}.out
 #SBATCH --error=.VcfRoc.${MINMAPQ}.${COV}.err
 #SBATCH --nodes=1
-#SBATCH --mem=12G
+#SBATCH --mem=${MEM}G
 #SBATCH --partition=shared
 #SBATCH --time=4:00:00
 
