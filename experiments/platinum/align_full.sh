@@ -35,6 +35,10 @@ if [ ! -f "\${ODIR}/final.sam" ] ; then
     TEMP="${NM}.temp"
     rm -rf \${TEMP}
     mkdir -p \${TEMP}
+
+    ${BOWTIE2} --version > \${ODIR}/bt2_version
+    ${QTIP_HOME}/qtip --version > \${ODIR}/qtip_version
+
     ${QTIP_HOME}/qtip \
         --ref ${REFS_DIR}/hg38.fa \
         --m1 ${2} --m2 ${3} \
