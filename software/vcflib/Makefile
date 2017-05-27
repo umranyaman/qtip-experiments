@@ -6,7 +6,7 @@ VER=1.0.0-rc1
 EXE=vcfroc
 
 .PHONY: all
-all: $(NM)
+all: $(EXE)
 
 $(EXE): $(NM)-git/bin/$(EXE)
 	ln -s -f $< $@
