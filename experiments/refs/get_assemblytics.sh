@@ -18,13 +18,13 @@ get_assembly chm1_mhap.fa http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/gen
 
 # Get assemblytics files
 AR_37=Homo_sapiens_MHAP_assembly.Assemblytics_results.zip
-URL_37=http://assemblytics.com/user_data/human/${AR_37}
+URL_37=http://assemblytics.com/user_data/human/Homo_sapiens_MHAP_assembly.Assemblytics_results.zip
 BED_37=assemblytics_37/JvA9dvkVNwyE4UQ6Q7sj/Homo_sapiens_MHAP_assembly.Assemblytics_structural_variants.bed
 
 ID_38=sIOvqHUKNaCpU8NXdcTS
 AR_38=CHM1htert_GRCh38.Assemblytics_results.zip
-URL_38=http://assemblytics.com/user_data/${ID_38}/${AR_38}
-BED_38=assemblytics_38/${ID_38}/CHM1htert_GRCh38.Assemblytics_structural_variants.bed
+URL_38=http://assemblytics.com/user_data/sIOvqHUKNaCpU8NXdcTS/CHM1htert_GRCh38.Assemblytics_results.zip
+BED_38=assemblytics_38/sIOvqHUKNaCpU8NXdcTS/CHM1htert_GRCh38.Assemblytics_structural_variants.bed
 
 # Unpack
 unpack() {
