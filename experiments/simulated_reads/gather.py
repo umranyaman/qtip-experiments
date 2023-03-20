@@ -89,14 +89,7 @@ def parse_readlen(target):
     readlen = target.split('_')[-1]
     return 500 if readlen == '50to500' else int(readlen)
 
-
-def parse_name_and_target(combined):
-    """ Based on Makefile target name, parse the read length """
-    toks = combined.split('_')
-    roff = 3
-    if toks[2] == 'r0' or toks[2] == 'r12':
-       
-
+ 
 def parse_name_and_target(combined):
     """ Based on Makefile target name, parse the read length """
     toks = combined.split('_')
