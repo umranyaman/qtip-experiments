@@ -25,6 +25,7 @@ import os
 import re
 import logging
 from os.path import join
+import subprocess
 
 # We identify the experiments by fishing through the Makefiles for output
 # targets.  When this regex matches a line of a Makefile, we know the
@@ -88,6 +89,13 @@ def parse_readlen(target):
     readlen = target.split('_')[-1]
     return 500 if readlen == '50to500' else int(readlen)
 
+
+def parse_name_and_target(combined):
+    """ Based on Makefile target name, parse the read length """
+    toks = combined.split('_')
+    roff = 3
+    if toks[2] == 'r0' or toks[2] == 'r12':
+       
 
 def parse_name_and_target(combined):
     """ Based on Makefile target name, parse the read length """
@@ -326,7 +334,7 @@ def go():
     # Compress the output directory, which is large because of the CID and CSE curves
     os.system('tar -cvzf %s.tar.gz %s' % (summary_fn, summary_fn))
 
-if '--slurm' in sys.argv:
+if '--sge' in sys.argv:
     script_fn = '.gather.sh'
     gather_args = ''
     if '--experiment' in sys.argv:
@@ -335,19 +343,14 @@ if '--slurm' in sys.argv:
         gather_args = '--experiment ' + exp_name
     my_hours = 4
     with open(script_fn, 'w') as ofh:
-        print("#!/bin/bash -l", file=ofh)
-        print("#SBATCH", file=ofh)
-        print("#SBATCH --nodes=1", file=ofh)
-        print("#SBATCH --mem=4G", file=ofh)
-        if '--scavenger' in sys.argv:
-            print('#SBATCH --partition=scavenger', file=ofh)
-            print('#SBATCH --qos=scavenger', file=ofh)
-        else:
-            print('#SBATCH --partition=shared', file=ofh)
-        print('#SBATCH --time=%d:00:00' % my_hours, file=ofh)
-        print('#SBATCH --output=%s.o' % script_fn, file=ofh)
-        print('#SBATCH --error=%s.e' % script_fn, file=ofh)
+        print("#!/bin/bash", file=ofh)
+        print("#$ -S /bin/bash", file=ofh)
+        print("#$ -cwd", file=ofh)
+        print("#$ -l h_rt=%d:00:00" % my_hours, file=ofh)
+        print("#$ -o %s.o" % script_fn, file=ofh)
+        print("#$ -e %s.e" % script_fn, file=ofh)
         print('python gather.py %s' % gather_args, file=ofh)
-    print('sbatch ' + script_fn)
+    print('qsub ' + script_fn)
 else:
     go()
+
