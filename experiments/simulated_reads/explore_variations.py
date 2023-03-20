@@ -1,12 +1,8 @@
-"""
-
-"""
-
 import os
 import sys
 import logging
 import shutil
-from marcc_out import write_slurm
+from marcc_out import write_sge
 
 join = os.path.join
 
@@ -64,16 +60,16 @@ def handle_dir(dr, start_from, global_name, base_args, exp_names, exp_qtip_args,
                 shutil.copy(join(src_dir, 'input.sam'), dest_dir)
                 assert os.path.exists(join(dest_dir, 'input.sam'))
             fn = '.' + rule + '.sh'
-            write_slurm(rule, fn, dr, base_mem_gb, base_hours,
-                        makefile=new_makefile_base,
-                        use_scavenger=use_scavenger,
-                        ncores=1)
-            cmd = 'pushd %s && sbatch %s && popd' % (dr, fn)
+            write_sge(rule, fn, dr, base_mem_gb, base_hours,
+                      makefile=new_makefile_base,
+                      use_scavenger=use_scavenger,
+                      ncores=1)
+            cmd = 'pushd %s && qsub %s && popd' % (dr, fn)
             submit_fh.write(cmd + '\n')
             if wet:
                 os.system(cmd)
-
-
+                              
+                
 def go(args, global_qtip_args, exp_names, exp_qtip_args, exp_aligner_args, targets):
     # Set up logger
     logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',
@@ -113,9 +109,9 @@ def add_args(parser):
     parser.add_argument('--wet', action='store_const', const=True, default=False,
                         help='Submit the jobs as submission scripts are constructed')
     parser.add_argument('--base-mem-gb', metavar='int', type=int, default=8,
-                        help='Set base number of gigabytes to ask slurm for')
+                        help='Set base number of gigabytes to ask SGE for')
     parser.add_argument('--base-hours', metavar='int', type=int, default=4,
-                        help='Set base number of hours to ask slurm for')
+                        help='Set base number of hours to ask SGE for')
 
 
 def parse_qtip_parameters_from_argv(argv):
