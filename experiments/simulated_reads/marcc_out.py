@@ -3,12 +3,9 @@ from __future__ import print_function
 
 """
 python marcc_out.py dry
-
-for dry run: write scripts but doesn't sbatch them
-
+for dry run: write scripts but doesn't qsub them
 python marcc_out.py wet
-
-for normal run: write scripts and also sbatch them
+for normal run: write scripts and also qsub them
 """
 
 import os
@@ -17,7 +14,7 @@ import time
 import re
 
 
-def write_slurm(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False, makefile='Makefile'):
+def write_sge(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False, makefile='Makefile'):
     my_mem_gb, my_hours = mem_gb, hours
     if 'r12' in rule:
         my_mem_gb = int(round(1.5*my_mem_gb))
@@ -41,26 +38,21 @@ def write_slurm(rule, fn, dirname, mem_gb, hours, ncores=8, use_scavenger=False,
     if 'ts_50m_' in rule:
         my_hours *= 4
     pbs_lns = list()
-    pbs_lns.append('#!/bin/bash -l')
-    pbs_lns.append('#SBATCH')
-    pbs_lns.append('#SBATCH --nodes=1')
-    pbs_lns.append('#SBATCH --mem=%dG' % my_mem_gb)
-    if use_scavenger:
-        pbs_lns.append('#SBATCH --partition=scavenger')
-        pbs_lns.append('#SBATCH --qos=scavenger')
-    else:
-        pbs_lns.append('#SBATCH --partition=shared')
-    pbs_lns.append('#SBATCH --cpus-per-task=%d' % ncores)
-    pbs_lns.append('#SBATCH --time=%d:00:00' % my_hours)
-    pbs_lns.append('#SBATCH --output=' + fn + '.o')
-    pbs_lns.append('#SBATCH --error=' + fn + '.e')
+    pbs_lns.append('#!/bin/bash')
+    pbs_lns.append('#$ -S /bin/bash')
+    pbs_lns.append('#$ -cwd')
+    pbs_lns.append('#$ -l mem=%dG' % my_mem_gb)
+    pbs_lns.append('#$ -l h_rt=%d:00:00' % my_hours)
+    pbs_lns.append('#$ -pe smp %d' % ncores)
+    pbs_lns.append('#$ -o ' + fn + '.o')
+    pbs_lns.append('#$ -e ' + fn + '.e')
     pbs_lns.append('export QTIP_EXPERIMENTS_HOME=%s' % os.environ['QTIP_EXPERIMENTS_HOME'])
     pbs_lns.append('cd %s' % os.path.abspath(dirname))
     pbs_lns.append('make -f %s %s/DONE' % (makefile, rule))
     with open(os.path.join(dirname, fn), 'w') as ofh:
         ofh.write('\n'.join(pbs_lns) + '\n')
 
-
+                    
 def handle_dir(dirname, re_out, mem_gb, hours, dry_run=True, use_scavenger=False):
     ncores = 8
     with open(os.path.join(dirname, 'Makefile')) as fh:
@@ -87,12 +79,25 @@ def handle_dir(dirname, re_out, mem_gb, hours, dry_run=True, use_scavenger=False
                         # delete it???
                         pass
                     fn = '.' + target + '.sh'
-                    write_slurm(target, fn, dirname, mem_gb, hours, use_scavenger=use_scavenger, ncores=ncores)
-                    print('pushd %s && sbatch %s && popd' % (dirname, fn))
+                    write_sge(target, fn, dirname, mem_gb, hours, use_scavenger=use_scavenger, ncores=ncores)
+                    print('pushd %s && qsub %s && popd' % (dirname, fn))
                     if not dry_run:
-                        os.system('cd %s && sbatch %s' % (dirname, fn))
+                        os.system('cd %s && qsub %s' % (dirname, fn))
                         time.sleep(0.5)
 
+def write_sge(target, fn, dirname, mem_gb, hours, use_scavenger=False, ncores=8):
+    with open(os.path.join(dirname, fn), 'w') as fh:
+        fh.write('#!/bin/bash\n')
+        fh.write('#$ -S /bin/bash\n')
+        fh.write('#$ -cwd\n')
+        fh.write('#$ -V\n')
+        fh.write('#$ -l h_rt=%d:00:00,h_data=%dG\n' % (hours, mem_gb))
+        if use_scavenger:
+            fh.write('#$ -l scavenger\n')
+        fh.write('#$ -pe smp %d\n' % ncores)
+        fh.write('\n')
+        fh.write('make %s.out\n' % target)
+        fh.write('echo "done" > %s/DONE\n' % target)
 
 def go():
     re_out = re.compile('^outs_[_a-zA-Z01-9]*:.*')
@@ -111,3 +116,4 @@ if __name__ == '__main__':
         print("pass argument 'dry' for dry run, or 'wet' for normal run")
     else:
         go()
+
