@@ -3,12 +3,9 @@ from __future__ import print_function
 
 """
 python marcc_reads.py dry
-
-for dry run: write scripts but doesn't sbatch them
-
+for dry run: write scripts but doesn't qsub them
 python marcc_reads.py wet
-
-for normal run: write scripts and also sbatch them
+for normal run: write scripts and also qsub them
 """
 
 import os
@@ -54,26 +51,23 @@ def handle_dir(dirname, dry_run=True):
                         continue
                     my_mem_gb, my_hours = mem_gb, hours
                     qsub_basename = '.' + target + '.sh'
-                    pbs_lns = list()
-                    pbs_lns.append('#!/bin/bash -l')
-                    pbs_lns.append('#SBATCH')
-                    pbs_lns.append('#SBATCH --nodes=1')
-                    pbs_lns.append('#SBATCH --mem=%dG' % my_mem_gb)
-                    pbs_lns.append('#SBATCH --partition=shared')
-                    pbs_lns.append('#SBATCH --time=%d:00:00' % my_hours)
-                    pbs_lns.append('#SBATCH --output=' + qsub_basename + '.o')
-                    pbs_lns.append('#SBATCH --error=' + qsub_basename + '.e')
-                    pbs_lns.append('export QTIP_EXPERIMENTS_HOME=%s' % os.environ['QTIP_EXPERIMENTS_HOME'])
-                    pbs_lns.append('cd %s' % os.path.abspath(dirname))
-                    pbs_lns.append('make %s' % target)
+                    qsub_lns = list()
+                    qsub_lns.append('#!/bin/bash')
+                    qsub_lns.append('#$ -l h_rt=%d:00:00' % my_hours)
+                    qsub_lns.append('#$ -l h_vmem=%dG' % my_mem_gb)
+                    qsub_lns.append('#$ -o ' + qsub_basename + '.o')
+                    qsub_lns.append('#$ -e ' + qsub_basename + '.e')
+                    qsub_lns.append('export QTIP_EXPERIMENTS_HOME=%s' % os.environ['QTIP_EXPERIMENTS_HOME'])
+                    qsub_lns.append('cd %s' % os.path.abspath(dirname))
+                    qsub_lns.append('make %s' % target)
                     qsub_fullname = os.path.join(dirname, qsub_basename)
                     with open(qsub_fullname, 'w') as ofh:
-                        ofh.write('\n'.join(pbs_lns) + '\n')
+                        ofh.write('\n'.join(qsub_lns) + '\n')
                     idx += 1
-                    print('pushd %s && sbatch %s && popd' % (dirname, qsub_basename))
+                    print('pushd %s && qsub %s && popd' % (dirname, qsub_basename))
                     jobs += 1
                     if not dry_run:
-                        os.system('cd %s && sbatch %s' % (dirname, qsub_basename))
+                        os.system('cd %s && qsub %s' % (dirname, qsub_basename))
                         time.sleep(0.5)
 
 
